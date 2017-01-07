@@ -19,6 +19,8 @@ description: > # this means to ignore newlines until "baseurl:"
   I'm a developer with a background in design.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://ryanparsley.com" # the base hostname & protocol for your site, e.g. http://example.com
+twitter:
+  username: ryanparsley
 twitter_username: ryanparsley
 github_username:  ryanparsley
 
@@ -67,6 +69,14 @@ author:
   uri    : "http://ryanparsley.com"
   twitter: "ryanparsley"
   github : "ryanparsley"
+
+social:
+  links:
+    - "https://twitter.com/ryanparsley"
+    - "https://facebook.com/RyanParsley"
+    - "https://instagram.com/ryanparsley"
+    - "https://www.linkedin.com/in/ryanparsley"
+    - "https://plus.google.com/u/0/+RyanParsleydotcom"
 
 # Analytics
 analytics:
