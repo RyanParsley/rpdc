@@ -1,5 +1,4 @@
 ---
-layout: post
 title:  "AEA Debrief: The Developer's Ampersandwich"
 date:   2014-03-13 15:08:10 -0400
 categories: design code

@@ -1,5 +1,4 @@
 ---
-layout: post
 title: Hello Jekyll 
 ---
 In an effort to avoid distraction and get right to writing, I chose to move

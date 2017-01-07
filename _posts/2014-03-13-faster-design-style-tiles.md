@@ -1,5 +1,4 @@
 ---
-layout: post
 title:  "AEA Debrief: Faster Design Decisions with Style Tiles"
 date:   2014-03-12 12:50:04 -0400
 categories: design code

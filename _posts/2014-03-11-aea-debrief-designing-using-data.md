@@ -1,5 +1,4 @@
 ---
-layout: post
 title:  "AEA Debrief: Designing Using Data"
 date:   2014-03-11 16:47:00 -0400
 categories: conference, design, data

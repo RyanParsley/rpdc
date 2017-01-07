@@ -24,9 +24,52 @@ github_username:  ryanparsley
 
 # Build settings
 markdown: kramdown
-theme: minima
+
+theme: minimal-mistakes-jekyll
+
 gems:
   - jekyll-feed
+
 exclude:
   - Gemfile
   - Gemfile.lock
+
+include: ["_pages"]
+
+paginate: 5 # amount of posts to show
+paginate_path: /page:num/
+
+defaults:
+  # _posts
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: single
+      author_profile: true
+      read_time: true
+      comments: true
+      share: true
+      related: true
+  # _pages
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: single
+      author_profile: true
+
+# Analytics
+analytics:
+  provider: "google-universal"
+  google-universal:
+    tracking_id: UA-474703-2
+google_analytics: "UA-474703-2"
+author:
+  name   : "Ryan Parsley"
+  avatar : "/assets/images/bio-photo.jpg"
+  bio    : "I’m a developer with a background in design."
+  email  : # optional
+  uri    : "http://ryanparsley.com"
+  twitter: "ryanparsley"
+  github : "ryanparsley"
