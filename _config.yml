@@ -59,12 +59,6 @@ defaults:
       layout: single
       author_profile: true
 
-# Analytics
-analytics:
-  provider: "google-universal"
-  google-universal:
-    tracking_id: UA-474703-2
-google_analytics: "UA-474703-2"
 author:
   name   : "Ryan Parsley"
   avatar : "/assets/images/bio-photo.jpg"
@@ -73,3 +67,10 @@ author:
   uri    : "http://ryanparsley.com"
   twitter: "ryanparsley"
   github : "ryanparsley"
+
+# Analytics
+analytics:
+  provider: "google-universal"
+  google:
+    tracking_id: "UA-474703-2"
+
