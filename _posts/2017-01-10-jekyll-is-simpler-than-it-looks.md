@@ -8,8 +8,8 @@ To help illustrate that point, I put together a quick repo minimally configured 
 
 ## Project Source
 
-* https://github.com/RyanParsley/MVJekyll
+* [https://github.com/RyanParsley/MVJekyll](https://github.com/RyanParsley/MVJekyll)
 
 ## Project Demo
 
-* https://ryanparsley.github.io/MVJekyll/
+* [https://ryanparsley.github.io/MVJekyll/](https://ryanparsley.github.io/MVJekyll)
