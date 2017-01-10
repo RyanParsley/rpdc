@@ -1,10 +1,8 @@
 ---
-title: Hello Jekyll 
+title: Hello Jekyll
+published: true
 ---
-In an effort to avoid distraction and get right to writing, I chose to move
-this blog to Jekyll. It's a simple enough tool that lets me draft posts in
-markdown. I'm drafting this post on my phone as I pace the floor trying to get
-my youngest to take a nap.
+In an effort to avoid distraction and get right to writing, I chose to move this blog to [Jekyll](https://jekyllrb.com/). It's a simple enough tool that lets me draft posts in [markdown](https://daringfireball.net/projects/markdown/). I'm drafting this post on my phone as I pace the floor trying to get my youngest to take a nap.
 
 The major, potential, downside with choosing Jekyll is: I'm not familiar with it.
 It is, however, made with familiar stuff. I don't know if it's the perfect tool, 
@@ -29,4 +27,4 @@ drawn to a simpler approach.
 
 ## How is it built?
 
-While hosting via github pages is the simplest way to host a jekyll site, I opted to keep my blog on my Rackspace server. This left me needing to sort out a deploy/build strategy if I am to publish from my phone. While I can run the build script in termux to generate html, or remote into my server and use my phone as a terminal, I opted to set up jenkins to build and deploy on my behalf each time the master branch is updated on github. I'll likely go into more detail on those tools in future posts.
+While hosting via github pages is the simplest way to host a jekyll site, I opted to keep my blog on my Rackspace server. This left me needing to sort out a deploy/build strategy if I am to publish from my phone. While I can run the build script in [termux](https://termux.com/) to generate html, or remote into my server and use my phone as a terminal, I opted to set up [jenkins](https://jenkins.io/) to build and deploy on my behalf each time the master branch is updated on github. I'll likely go into more detail on those tools in future posts.
