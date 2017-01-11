@@ -1,16 +1,26 @@
+---
+title: Resume
+permalink: /resume/
+---
+
 I’m a web developer with a background in design. Additionally, I’ve done a bit of public speaking where I’ve been a proponent of such topics as: HTML5, Sass, web standards and design in the browser. Beyond the web, I’ve worked on a wide range of projects from print to mobile apps.
 
 ## Experience
 
+### Associate Director, Technology 
+#### Rockfish (January 2017 – present)
+
+The Associate Director of Technology is responsible for managing the work and coordinating the efforts of a team of developers including the creating task lists and managing the project budget. The AD, Technology also develops highly complex sites and applications. The AD, Technology architects solutions on complex projects from requirements gathering to data model to implementation.
+
 ### Senior Developer
 
-#### Rockfish (August 2014 – present)
+#### Rockfish (August 2014 – January 2017)
 
 Primarily worked on front end development. Built single page apps with Angular, prototyped with static site generators and crafted custom interfaces for content management systems of many flavors both php and .net based.
 
 ### Interim Web Production&nbsp;Manager
 
-####Antioch College (February 2013 – August 2013)
+#### Antioch College (February 2013 – August 2013)
 
 <p>Established and implemented a stable and usable content management strategy. Migrated thousands of pages of content into Drupal from a mix of <span class="caps">MODX</span> and handwritten static html&nbsp;pages.</p>
 
@@ -38,15 +48,3 @@ Worked as an inhouse Web Designer for an online health and wellness company. Whi
 #### Miami University (June 2003 – May 2005)
 
 Designed and developed web sites for clients including university departments, programs and offices. Expected to be proficient in Photoshop, Dreamweaver, Flash and Acrobat. Strong graphic design and technical skills were required. The ability to develop successful relationships with clients was also crucial.
-
-## Education
-### Miami University, Oxford, Ohio
-* BFA **Graphic Design** 
-* AAS **Computer Technology**  
-
-## Related Technical Skills
-### Right-Brained
-Photoshop, Illustrator, InDesign, public speaking and podcasting
-
-###Left-Brained
-HTML (Haml), CSS (Sass), Vim, Git, JavaScript, Drupal and Middleman

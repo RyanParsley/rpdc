@@ -1,3 +1,7 @@
+---
+title: Presentations
+permalink: /presentations/
+---
 Over the past few years, I've given the following talks. I enjoy sharing the tools, techniques and opinions that help me make things.
 
 ## Modern Web Concepts
@@ -35,7 +39,7 @@ I'd like to share some tools and techniques I've incorporated into my process th
 [View the slides](http://rrh.ryanparsley.com)
 
 ## Responsive Design:
-###Good Idea or Great Idea?
+### Good Idea or Great Idea?
 
 Everyone’s Talking about it… What is is?
 I’ll give an overview on what people are talking about when they say “Responsive” and share some tips on getting up and running faster with this approach.
