@@ -1,3 +1,7 @@
 main:
   - title: "Contact"
     url: /contact/
+  - title: "Resume"
+    url: /resume/
+  - title: "Presentations"
+    url: /presentations/
