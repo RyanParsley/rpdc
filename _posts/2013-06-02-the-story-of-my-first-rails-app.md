@@ -1,7 +1,6 @@
 ---
 title: The story of my first Rails app
 created: 1370197104
-permalink: prose/story-my-first-rails-app
 tags:
 - Confabulation
 - Left Brain

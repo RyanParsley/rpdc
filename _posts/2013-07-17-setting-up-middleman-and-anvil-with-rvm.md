@@ -1,7 +1,6 @@
 ---
 title: Setting up Middleman and Anvil with RVM
 created: 1374063300
-permalink: prose/setting-middleman-and-anvil-rvm
 tags:
 - Left Brain
 ---

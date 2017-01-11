@@ -1,7 +1,6 @@
 ---
 title: The best Android text editor - Draft
 created: 1374184899
-permalink: prose/best-android-text-editor-draft
 tags:
 - Confabulation
 ---

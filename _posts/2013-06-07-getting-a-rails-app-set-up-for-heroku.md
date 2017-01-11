@@ -1,7 +1,6 @@
 ---
 title: Getting a Rails app set up for Heroku
 created: 1370629780
-permalink: prose/getting-rails-app-set-heroku
 tags:
 - Left Brain
 ---

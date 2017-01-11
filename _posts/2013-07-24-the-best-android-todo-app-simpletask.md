@@ -1,7 +1,6 @@
 ---
 title: The best Android todo app - Simpletask
 created: 1374667440
-permalink: prose/best-android-todo-app-simpletask
 tags:
 - Confabulation
 ---

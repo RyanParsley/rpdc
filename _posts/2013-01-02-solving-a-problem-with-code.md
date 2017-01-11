@@ -1,7 +1,6 @@
 ---
 title: Solving a problem with code
 created: 1357153817
-permalink: prose/solving-problem-code
 tags:
 - Left Brain
 ---

@@ -1,7 +1,6 @@
 ---
 title: Simplicity?
 created: 1374631985
-permalink: prose/simplicity
 tags:
 - Confabulation
 ---

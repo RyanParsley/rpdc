@@ -1,7 +1,6 @@
 ---
 title: More content, less system
 created: 1355342592
-permalink: prose/more-content-less-system
 tags:
 - Left Brain
 ---
