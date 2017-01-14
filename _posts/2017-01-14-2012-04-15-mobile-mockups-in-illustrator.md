@@ -1,8 +1,7 @@
 ---
-layout: post
+
 title: Mobile mockups in Illustrator
 created: 1334538725
-permalink: prose/mobile-mockups-illustrator
 tags:
 - Right Brain
 ---
@@ -14,4 +13,4 @@ Since your monitor is almost certainly not 72dpi, this makes Illustrator less th
 2. If you want to view the mockup "actual size" on your monitor, zoom to a degree derived from this familiar looking formula: `[Monitor Resolution]/[Document Resolution] = Zoom`. For instance, if you have a 96dpi monitor and a 72dpi document (all Illustrator documents), you would want to zoom by 133% to see the document "actual size".
 3. When you need to express the size of something in dp, simply multiply the size in pixels by .45 ( 72/160, since Illustrator always assumes 72dpi).
 
-If you liked this, you may want to want to read [my recent post about Android's density independent pixels](/node/4003). Hopefully this little bit of math helps to demystify the size discrepancies that frustrate many designers new to Illustrator. 
+If you liked this, you may want to want to read my recent post about Android's density independent pixels. Hopefully this little bit of math helps to demystify the size discrepancies that frustrate many designers new to Illustrator. 
