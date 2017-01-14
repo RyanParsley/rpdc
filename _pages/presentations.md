@@ -4,6 +4,12 @@ permalink: /presentations/
 ---
 Over the past few years, I've given the following talks. I enjoy sharing the tools, techniques and opinions that help me make things.
 
+## Testing 101
+
+A primer to front-end testing that I presented as a lunch and learn. I introduce concepts, terms and tools to help bootstrap both unit and end to end testing with jasmine.
+
+[View the slides](http://gistdeck.github.io/RyanParsley/e9733f8d472ae7778346#1)
+
 ## Modern Web Concepts
 In this session, I'll share my thoughts and process to creating web sites and apps. It will be frontend centric, as that is my area of expertise, and be more about concepts than code sharing. My goal is to promote some "best practices" that will help you make better websites with less frustration (as well as dispel a few myths).
 ### Presented at:
