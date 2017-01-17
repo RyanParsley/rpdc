@@ -2,7 +2,6 @@
 layout: post
 title: Rule them all
 created: 1313455482
-permalink: prose/rule-them-all
 tags:
 - Right Brain
 ---
