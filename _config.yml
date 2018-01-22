@@ -85,3 +85,4 @@ analytics:
   google:
     tracking_id: "UA-474703-2"
 
+search: true
