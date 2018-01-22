@@ -4,7 +4,7 @@ categories: node cli watson nlp alexa
 ---
 
 
-Here are notes from building a proof of concept around integrating Watson Retrieve and Rank service into an Alexa skill. I'm still learning, so this may not be the best way to do it. This is simply an approach that worked for me. I'm hoping this overview will illustrate how simple it can be to leverage these two complicated sounding platforms together. If I can sort it out, surely someone as clever as yourself can too!
+Here are notes from building a proof of concept around integrating Watson Retrieve and Rank service into an Alexa skill. I'm still learning, so this may not be the best way to do it. This is simply an approach that worked for me. I'm hoping this overview will illustrate how simple it can be to leverage these two complicated sounding platforms together. If I can sort it out, surely someone as clever as yourself can too.
 
 ## Retrieve and Rank
 
@@ -29,8 +29,8 @@ var retrieve = new RetrieveAndRankV1({
 });
 
 var solrClient = retrieve.createSolrClient({
-  cluster\_id: '',
-  collection\_name: ''
+  cluster\\\_id: '',
+  collection\\\_name: ''
 });
 
 // search all documents
@@ -62,8 +62,8 @@ var retrieve = new RetrieveAndRankV1({
 });
 
 var solrClient = retrieve.createSolrClient({
-  cluster\_id: '',
-  collection\_name: ''
+  cluster\\\_id: '',
+  collection\\\_name: ''
 });
 
 function watsonHelper() {
@@ -92,10 +92,10 @@ I then required that helper in an Alexa app heavily based on based on a template
 
 ```
 'use strict';
-var \_ = require('lodash');
+var \\\_ = require('lodash');
 var Alexa = require('alexa-app');
 var app = new Alexa.app('NameOfYourSkill');
-var WatsonHelper = require('./watson\_helper');
+var WatsonHelper = require('./watson\\\_helper');
 
 app.launch(function(req, res) {
   var prompt = 'Ask me questions, I'll answer them from the Cloud.';
@@ -104,7 +104,7 @@ app.launch(function(req, res) {
 
 app.intent('askQuestion', {
   'slots': {
-    'QUESTION': 'QUESTION\_LIST'
+    'QUESTION': 'QUESTION\\\_LIST'
   },
   'utterances': ['{QUESTION}']
 },
@@ -113,8 +113,8 @@ function(req, res) {
   var question = req.slot('QUESTION');
   var reprompt = 'Sorry, not an instant win! Please try again.';
 
-  if (\_.isEmpty(question)) {
-    var prompt = 'I didn\\'t hear a question that I know. Please ask differently.';
+  if (\\\_.isEmpty(question)) {
+    var prompt = 'I didn\\\\'t hear a question that I know. Please ask differently.';
     res.say(prompt).reprompt(reprompt).shouldEndSession(false);
     return true;
   } else {
@@ -125,7 +125,7 @@ function(req, res) {
 });
 
 //hack to support custom utterances in utterance expansion string
-console.log(app.utterances().replace(/\\{\\-\\|/g, '{'));
+console.log(app.utterances().replace(/\\\\{\\\\-\\\\|/g, '{'));
 module.exports = app;
 ```
 
@@ -139,7 +139,7 @@ Since Watson would be doing all the heavy lifting, I only have one utterance. Th
 askQuestion {QUESTION}
 ```
 
-Since I had a list of plain text answers hanging out that were used to train watson, I pasted this list into a Custom Slot of Type `QUESTION\_LIST`. A clever coworker commented that this is an optional step, but considering the list is already compiled, I used it. Custom slots can help Alexa sort out speech to text ambiguity like homonyms and poor enunciation.
+Since I had a list of plain text answers hanging out that were used to train watson, I pasted this list into a Custom Slot of Type `QUESTION\\\_LIST`. A clever coworker commented that this is an optional step, but considering the list is already compiled, I used it. Custom slots can help Alexa sort out speech to text ambiguity like homonyms and poor enunciation.
 
 ## That wasn't so bad
 
