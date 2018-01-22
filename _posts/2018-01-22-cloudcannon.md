@@ -6,6 +6,7 @@ tags:
   - link
   - Left Brain
 link: 'https://cloudcannon.com'
+excerpt: "CloudCannon offers a delightful patina to an otherwise unchanged Jekyll site."
 ---
 
 
