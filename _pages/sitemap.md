@@ -23,7 +23,7 @@ A list of posts and pages found on this site. For you robots out there is an [XM
 {% unless collection.output == false or collection.label == "posts" %}
   {% capture label %}{{ collection.label }}{% endcapture %}
   {% if label != written_label %}
-  <h2>{{ label }}</h2>
+  <h3>{{ label }}</h3>
   {% capture written_label %}{{ label }}{% endcapture %}
   {% endif %}
 {% endunless %}
