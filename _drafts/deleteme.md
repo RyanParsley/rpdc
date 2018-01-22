@@ -1,5 +1,0 @@
----
-title: deleteme
-created:
-tags:
----
