@@ -1,5 +1,4 @@
 ---
-title: 
-created:
+title:
 tags:
 ---
