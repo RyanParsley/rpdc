@@ -32,9 +32,9 @@ It's a little more complicated than that, but that's a pretty good way to frame 
 
 ```
 G1 X1.2 F25
-				Y2.3
-				X0.0 F10
-				Y0.0
+Y2.3
+X0.0 F10
+Y0.0
 ```
 
 ## Shapeways
