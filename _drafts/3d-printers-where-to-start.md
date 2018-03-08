@@ -19,9 +19,7 @@ While it's true the first thing people tend to print are trinkets, that's far fr
 
 1. Model
 2. Slice
-3. ~~Profit~~
-
-   Print
+3. ~~Profit~~ Print
 
 It's a little more complicated than that, but that's a pretty good way to frame it.
 
