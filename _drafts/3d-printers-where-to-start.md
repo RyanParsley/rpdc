@@ -9,7 +9,7 @@ I'm sorry to tell you, we're not early adopters on this one. 3D printing has bee
 
 ## Nicknacks
 
-While it's true the first thing people tend to print are trinkets, that's far from the limits of these devices. I think it's a good strategy to learning by becoming a decent technician before attempting design. As such, in my first year of owning a 3d printer, I mostly printed models made by others that I knew to be "printable".&nbsp;
+While it's true the first thing people tend to print are trinkets, that's far from the limits of these devices. I think it's a good strategy to learning by becoming a decent technician before attempting design. As such, in my first year of owning a 3d printer, I mostly printed models made by others that I knew to be "printable".
 
 * Not a terrible first step
 * That is far from the limit of the technology
