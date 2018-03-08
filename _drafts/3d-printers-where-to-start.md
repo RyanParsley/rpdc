@@ -9,7 +9,7 @@ I'm sorry to tell you, we're not early adopters on this one. 3D printing has bee
 
 ## Nicknacks
 
-While it's true the first thing people tend ot print are trinkets, that's far from the limits of these devices. I think it's a good strategy to learning by becoming a decent technician before attempting design. As such, in my first year of owning a 3d printer, I mostly printed models made by others that I knew to be "printable". Good news! You don't need to do that, the tech team will be your support staff. I've set up sensible defaults on our print server so you can use those until you develop your own opinions.
+While it's true the first thing people tend to print are trinkets, that's far from the limits of these devices. I think it's a good strategy to learning by becoming a decent technician before attempting design. As such, in my first year of owning a 3d printer, I mostly printed models made by others that I knew to be "printable".&nbsp;
 
 * Not a terrible first step
 * That is far from the limit of the technology
@@ -19,7 +19,9 @@ While it's true the first thing people tend ot print are trinkets, that's far fr
 
 1. Model
 2. Slice
-3. <strike>Profit</strike> Print
+3. ~~Profit~~
+
+   Print
 
 It's a little more complicated than that, but that's a pretty good way to frame it.
 
@@ -32,9 +34,9 @@ It's a little more complicated than that, but that's a pretty good way to frame 
 
 ```
 G1 X1.2 F25
-Y2.3
-X0.0 F10
-Y0.0
+				Y2.3
+				X0.0 F10
+				Y0.0
 ```
 
 ## Shapeways
