@@ -41,6 +41,11 @@ include: ["_pages"]
 paginate: 5 # amount of posts to show
 paginate_path: /page:num/
 
+collections:
+  tangents:
+    output: true
+    permalink: /:collection/:path/
+
 defaults:
   # _posts
   - scope:
@@ -60,6 +65,14 @@ defaults:
     values:
       layout: single
       author_profile: true
+  # _tangents
+  - scope:
+      path: ""
+      type: tangents
+    values:
+      layout: single
+      author_profile: true
+      share: true
 
 author:
   name   : "Ryan Parsley"
