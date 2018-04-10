@@ -10,3 +10,5 @@ gallery:
     image_path: 
     alt:
 ---
+
+{% include gallery caption="" %}
