@@ -1,5 +1,4 @@
 ---
-layout: post
 title: Baseline grid in Illustrator
 created: 1336693328
 permalink: prose/baseline-grid-illustrator
