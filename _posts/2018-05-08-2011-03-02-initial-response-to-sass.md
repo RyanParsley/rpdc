@@ -1,8 +1,6 @@
 ---
-layout: post
 title: Initial response to Sass
 created: 1299121241
-permalink: prose/initial-response-sass
 tags:
 - Left Brain
 ---
