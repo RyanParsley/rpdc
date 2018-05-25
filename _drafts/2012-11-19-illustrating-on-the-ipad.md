@@ -1,5 +1,5 @@
 ---
-layout: post
+
 title: Illustrating on the iPad
 created: 1353381351
 permalink: prose/illustrating-ipad
