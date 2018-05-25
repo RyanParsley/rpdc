@@ -1,5 +1,4 @@
 ---
-layout: post
 title: Learning How to Love... Twitter
 created: 1206064773
 permalink: prose/learning-how-love-twitter
