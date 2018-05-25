@@ -1,5 +1,4 @@
 ---
-layout: post
 title: FOWA 08 in 80 words or less
 created: 1213653254
 permalink: prose/fowa-08-80-words-or-less
