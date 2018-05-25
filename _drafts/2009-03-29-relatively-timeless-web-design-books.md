@@ -1,5 +1,4 @@
 ---
-layout: post
 title: Relatively timeless web design books
 created: 1238330138
 permalink: prose/relatively-timeless-web-design-books
