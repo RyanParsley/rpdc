@@ -1,5 +1,4 @@
 ---
-layout: post
 title: CSSOff recap
 created: 1320626452
 permalink: prose/cssoff-recap
