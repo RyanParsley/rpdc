@@ -1,5 +1,4 @@
 ---
-layout: post
 title: I was going to write a punny heading for Plurk, but it is just too quirky all
   by itself
 created: 1212613975
