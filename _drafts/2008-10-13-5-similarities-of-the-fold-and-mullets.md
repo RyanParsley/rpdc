@@ -1,9 +1,7 @@
 ---
-layout: post
-title: !binary |-
-  NSBzaW1pbGFyaXRpZXMgb2Yg4oCcdGhlIGZvbGTigJ0gYW5kIG11bGxldHM=
+title: 5 Similarities of the fold and mullets
 created: 1223933421
-permalink: prose/5-similarities-?fold?-and-mullets
+permalink: prose/5-similarities-fold-and-mullets
 tags:
 - Confabulation
 ---
