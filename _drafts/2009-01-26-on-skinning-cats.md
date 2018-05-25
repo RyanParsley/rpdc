@@ -1,5 +1,4 @@
 ---
-layout: post
 title: On Skinning Cats
 created: 1233009626
 permalink: prose/skinning-cats
