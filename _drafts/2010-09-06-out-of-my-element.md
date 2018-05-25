@@ -1,5 +1,4 @@
 ---
-layout: post
 title: Out of my element
 created: 1283810205
 permalink: prose/out-my-element
