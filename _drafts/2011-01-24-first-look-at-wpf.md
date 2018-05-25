@@ -1,5 +1,4 @@
 ---
-layout: post
 title: First look at WPF
 created: 1295923494
 permalink: prose/first-look-wpf
