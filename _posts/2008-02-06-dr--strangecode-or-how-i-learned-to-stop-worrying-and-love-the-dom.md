@@ -6,7 +6,7 @@ tags:
 - Left Brain
 ---
 
-**Narrator:** For more than 12 years, ominous rumors had been privately circulating among high-level web developers that a world wide consortium had been at work on what was darkly hinted to be the ultimate weapon: a doomsday device. Intelligence sources traced the home bases of this top secret international project to the perpetually fog-shrouded wasteland below the facilities of MIT/CSAIL (USA), ERCIM (France), and Keio Univ. (Japan). What they were building or why it should be located in such remote and desolate places no one could say. <!--base32-c9t6arbb-base32-->
+**Narrator:** For more than 12 years, ominous rumors had been privately circulating among high-level web developers that a world wide consortium had been at work on what was darkly hinted to be the ultimate weapon: a doomsday device. Intelligence sources traced the home bases of this top secret international project to the perpetually fog-shrouded wasteland below the facilities of MIT/CSAIL (USA), ERCIM (France), and Keio Univ. (Japan). What they were building or why it should be located in such remote and desolate places no one could say. 
 
 ## Well, I’ve been to one world fair, a picnic, and a rodeo, and that’s the stupidest thing I ever heard? You sure you got today’s codes?
 
