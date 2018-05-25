@@ -1,5 +1,4 @@
 ---
-layout: post
 title: Who would have thought? It figures
 created: 1282698316
 permalink: prose/who-would-have-thought-it-figures
