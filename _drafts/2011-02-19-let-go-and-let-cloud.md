@@ -1,5 +1,4 @@
 ---
-layout: post
 title: Let go and let cloud
 created: 1298157214
 permalink: prose/let-go-and-let-cloud
