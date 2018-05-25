@@ -1,5 +1,4 @@
 ---
-layout: post
 title: Fast track to nowhere.
 created: 1222207399
 permalink: prose/fast-track-nowhere
