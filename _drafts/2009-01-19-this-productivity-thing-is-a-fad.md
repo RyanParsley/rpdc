@@ -1,5 +1,4 @@
 ---
-layout: post
 title: This productivity thing is a fad
 created: 1232426101
 permalink: prose/productivity-thing-fad
