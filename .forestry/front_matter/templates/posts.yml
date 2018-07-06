@@ -1,0 +1,131 @@
+---
+hide_body: false
+is_partial: false
+fields:
+- name: title
+  label: Title
+  type: text
+  hidden: false
+  default: ''
+- name: created
+  label: Created
+  type: text
+  hidden: false
+  default: ''
+- name: permalink
+  label: Permalink
+  type: text
+  hidden: false
+  default: ''
+- name: tags
+  label: Tags
+  type: tag_list
+  hidden: false
+  default: ''
+- name: date
+  label: Date
+  type: datetime
+  hidden: false
+  default: ''
+- name: layout
+  label: Layout
+  type: text
+  hidden: false
+  default: single
+- name: categories
+  label: Categories
+  type: tag_list
+  hidden: false
+  default: ''
+- name: link
+  label: Link
+  type: text
+  hidden: false
+  default: ''
+- name: excerpt
+  label: Excerpt
+  type: textarea
+  hidden: false
+  default: ''
+- name: author_profile
+  label: Author profile
+  type: boolean
+  hidden: false
+  default: true
+- name: read_time
+  label: Read time
+  type: boolean
+  hidden: false
+  default: true
+- name: comments
+  label: Comments
+  type: boolean
+  hidden: false
+  default: true
+- name: share
+  label: Share
+  type: boolean
+  hidden: false
+  default: true
+- name: related
+  label: Related
+  type: boolean
+  hidden: false
+  default: true
+pages:
+- _posts/2008-02-06-dr--strangecode-or-how-i-learned-to-stop-worrying-and-love-the-dom.md
+- _posts/2008-02-06-monroy-seminar-review.md
+- _posts/2008-03-05-fowa-ftw.md
+- _posts/2008-03-20-learning-how-to-love----twitter.md
+- _posts/2008-06-04-i-was-going-to-write-a-punny-heading-for-plurk-but-it-is-just-too-quirky-all-by-itself.md
+- _posts/2008-06-16-fowa-08-in-80-words-or-less.md
+- _posts/2008-09-23-fast-track-to-nowhere-.md
+- _posts/2008-10-13-5-similarities-of-the-fold-and-mullets.md
+- _posts/2008-10-15-fold-enclosure-for-sheep.md
+- _posts/2009-01-19-this-productivity-thing-is-a-fad.md
+- _posts/2009-01-23-how-to-be-1-on-google.md
+- _posts/2009-01-23-virtually-ok.md
+- _posts/2009-01-26-on-skinning-cats.md
+- _posts/2009-03-29-relatively-timeless-web-design-books.md
+- _posts/2009-09-16-drupal-my-0-02.md
+- _posts/2010-06-14-my-favorite-10-android-apps.md
+- _posts/2010-08-17-one-size-never-fits-all.md
+- _posts/2010-08-24-who-would-have-thought-it-figures.md
+- _posts/2010-09-06-out-of-my-element.md
+- _posts/2011-01-24-first-look-at-wpf.md
+- _posts/2011-02-19-let-go-and-let-cloud.md
+- _posts/2011-03-02-initial-response-to-sass.md
+- _posts/2011-04-10-musical-markup.md
+- _posts/2011-04-27-susy-at-first-blush.md
+- _posts/2011-06-15-stealing-the-underpants.md
+- _posts/2011-08-15-rule-them-all.md
+- _posts/2011-11-06-cssoff-recap.md
+- _posts/2012-01-08-vim-tip-fun-with-tags.md
+- _posts/2012-03-25-what-is-the-point-of-dp.md
+- _posts/2012-04-10-10-drupal-modules-you-should-be-using.md
+- _posts/2012-04-15-mobile-mockups-in-illustrator.md
+- _posts/2012-04-23-horizontal-grids-in-illustrator.md
+- _posts/2012-04-28-easy-on-the-polyfills.md
+- _posts/2012-05-10-baseline-grid-in-illustrator.md
+- _posts/2012-11-19-illustrating-on-the-ipad.md
+- _posts/2012-12-07-illustrator-for-web-layouts.md
+- _posts/2012-12-12-more-content-less-system.md
+- _posts/2012-12-30-drawn-to-profit.md
+- _posts/2013-01-02-solving-a-problem-with-code.md
+- _posts/3d-printers-where-to-start.md
+- _posts/2013-01-21-how-to-use-illustrators-color-guide.md
+- _posts/2013-06-02-the-story-of-my-first-rails-app.md
+- _posts/2013-06-07-getting-a-rails-app-set-up-for-heroku.md
+- _posts/2013-07-17-setting-up-middleman-and-anvil-with-rvm.md
+- _posts/2013-07-18-the-best-android-text-editor-draft.md
+- _posts/2013-07-23-simplicity.md
+- _posts/2014-03-11-aea-debrief-designing-using-data.md
+- _posts/2014-03-13-faster-design-style-tiles.md
+- _posts/2013-07-24-the-best-android-todo-app-simpletask.md
+- _posts/2014-03-14-developer-ampersandwich.md
+- _posts/2017-01-04-comeback.md
+- _posts/2017-01-10-jekyll-simply.md
+- _posts/2017-01-17-styleguide-thoughts.md
+- _posts/2017-06-13-cli-driven-drupal.md
+- _posts/2017-06-16-alexa-watson-integration.md
+- _posts/2018-01-22-cloudcannon.md
