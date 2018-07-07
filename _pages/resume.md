@@ -21,7 +21,7 @@ Responsible for managing work and coordinating the efforts of a team of develope
 
 ### Senior Developer
 
-#### Rockfish (August 2014 – January 2017)
+#### Rockfish (August 2013 – January 2017)
 
 Primarily worked on front end development. Built single page apps with Angular, prototyped with static site generators and crafted custom interfaces for content management systems of many flavors both php and .net based.
 
