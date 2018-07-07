@@ -1,5 +1,5 @@
 ---
-title: How I made a CNC Router in a little over a year
+title: The story of my whittlin' robot
 excerpt: >-
   In an effort to better understand how CNC Routers work, I decided to build one
   from scratch.
