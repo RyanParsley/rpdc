@@ -25,3 +25,5 @@ In an effort to better understand how CNC Routers work, I decided to build one f
 The first step was to build a CNC mostly out of reclaimed electronics. I learned that the motors in many cd rom drives are stepper motors, so I took apart some old computers I had access to. For this build, I only needed to purchase 3 stepper motor drivers and an Arduino. For less than $50 I proved that I am able to build such a thing.
 
 With this success, I had the confidence to buy some NEMA 17 motors and scale the build up. This build worked mostly fine, but the motors would occasionally stick. I got the feeling my naive design was to blame. About that time, I had purchased a 3D Printer and decided to put it to work for me. A little research revealed the [MaduixaCNC](https://www.thingiverse.com/thing:989593).
+
+<iframe src="https://www.youtube.com/embed/TWuP_DbFSsA" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen="" id="fitvid2"></iframe>
