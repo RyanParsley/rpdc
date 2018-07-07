@@ -18,7 +18,7 @@ gallery:
     alt: Final version
 ---
 
-In an effort to better understand how CNC Routers work, I decided to build one from scratch. Having little confidence that I could pull it off, I came up with a plan to break it up into smaller wins.
+In an effort to better understand how CNC Routers work, I decided to build one from scratch. Having little confidence that I could pull it off, I came up with a plan to break this ambitious project up into a series of smaller wins.
 
 {% include gallery caption="Evolution of a DIY CNC from scratch." %}
 
