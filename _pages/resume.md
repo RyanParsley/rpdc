@@ -9,9 +9,15 @@ I’m a web developer with a background in design. Additionally, I’ve done a b
 
 ### Associate Director, Technology
 
-#### Rockfish (January 2017 – present)
+#### VML (January 2018 – present)
 
-The Associate Director of Technology is responsible for managing the work and coordinating the efforts of a team of developers including the creating task lists and managing the project budget. The AD, Technology also develops highly complex sites and applications. The AD, Technology architects solutions on complex projects from requirements gathering to data model to implementation.
+Lead the successful completion of major projects by investigating, analyzing and resolving complex application problems. Designed, coded and testd complex websites and applications. Worked with project management and leadership to provide time estimates and schedules for projects. Worked to improve software engineering standards, processes and techniques.
+
+### Associate Director, Technology
+
+#### Rockfish (January 2017 – January 2018)
+
+Responsible for managing work and coordinating the efforts of a team of developers. This included creating task lists and protecting project budgets. Also, developed highly complex sites and applications. Responsibilities extended to architecting solutions on complex projects from requirements gathering to data model to implementation.
 
 ### Senior Developer
 
