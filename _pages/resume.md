@@ -7,7 +7,7 @@ I’m a web developer with a background in design. Additionally, I’ve done a b
 
 ## Experience
 
-### Associate Director, Technology
+### Lead Developer
 
 #### VML (January 2018 – present)
 
