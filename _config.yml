@@ -29,12 +29,13 @@ markdown: kramdown
 
 theme: minimal-mistakes-jekyll
 
-gems:
+plugins:
   - jekyll-feed
 
 exclude:
   - Gemfile
   - Gemfile.lock
+  - vendor
 
 include: ["_pages"]
 
