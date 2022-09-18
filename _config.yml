@@ -97,6 +97,6 @@ social:
 analytics:
   provider: "google-gtag"
   google:
-    measurement_id: "G-S5QFTVLWSX"
+    tracking_id: "G-S5QFTVLWSX"
 
 search: true
