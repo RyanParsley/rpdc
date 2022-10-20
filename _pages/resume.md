@@ -7,9 +7,24 @@ I’m a web developer with a background in design. Additionally, I’ve done a b
 
 ## Experience
 
+### Expert Software Engineer
+#### J.B. Hunt (February 2021 - Present)
+
+Responsible for ensuring the team's compliance with J.B. Hunt's architectural standards while contributing to bringing new technology to the organization. Provided technical leadership to the team and others through coaching and mentorship. Acted as a technical consultant to the team's management by leveraging technical and domain knowledge to answer questions.
+
+### Sr Software Engineer
+#### J.B. Hunt (February 2019 - February 2021)
+
+Determine technical user requirements by working with their assigned customer and participates in project planning, analysis, design, coding, code review, unit/system testing, test scripting, and installation of software applications.
+
+### Senior Software Engineer
+#### Path Network (September 2018 - January 2019)
+
+Using React to craft the face of the company. Responsible for building the product's web interface as well as the company's website. Expected to find just the right balance of speed and craftsmanship to bring a best in class product to market.
+
 ### Lead Developer
 
-#### VML (January 2018 – present)
+#### VML (January 2018 – August 2018)
 
 Lead the successful completion of major projects by investigating, analyzing and resolving complex application problems. Designed, coded and testd complex websites and applications. Worked with project management and leadership to provide time estimates and schedules for projects. Worked to improve software engineering standards, processes and techniques.
 
