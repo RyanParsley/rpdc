@@ -1,0 +1,64 @@
+---
+import Layout from "@layouts/Page.astro";
+import { Pagination } from "accessible-astro-components";
+import { getCollection } from "astro:content";
+
+import PostLink from "@components/PostLink.astro";
+
+export async function getStaticPaths({
+	paginate,
+}: {
+	paginate: (data: object, config: object) => void;
+}) {
+	const response = await getCollection("blog");
+	const data = response.sort(
+		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+	);
+
+	return paginate(data, { pageSize: 6 });
+}
+
+const { page } = Astro.props;
+---
+
+<style lang="scss">
+	ul {
+		list-style: none;
+		padding: unset;
+		margin: unset;
+	}
+</style>
+
+<Layout title="Things I've written" description="A collection of blog posts">
+	<section>
+		<ul>
+			{
+				page.data.map(
+					(post: {
+						slug: string;
+						data: { pubDate: Date; title: string; description: string };
+					}) => (
+						<li>
+							<PostLink
+								href={`/blog/${post.slug}/`}
+								text={post.data.title}
+								date={post.data.pubDate}
+								description={post.data.description}
+							/>
+						</li>
+					)
+				)
+			}
+		</ul>
+	</section>
+	<Pagination
+		firstPage={page.url.prev ? "/blog" : null}
+		previousPage={page.url.prev ? page.url.prev : null}
+		nextPage={page.url.next ? page.url.next : null}
+		lastPage={page.url.next
+			? `/blog/${Math.round(page.total / page.size)}`
+			: null}
+		currentPage={page.currentPage}
+		totalPages={Math.round(page.total / page.size)}
+	/>
+</Layout>
