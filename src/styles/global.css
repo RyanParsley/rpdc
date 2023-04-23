@@ -1,0 +1,176 @@
+@import url("./nord.css");
+
+html,
+body {
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+}
+
+html {
+	background-color: var(--nord1);
+}
+
+body {
+	font-family: "Roboto Mono", monospace;
+	text-align: left;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	line-height: 1.5;
+	background-color: var(--nord0);
+	color: var(--nord6);
+}
+
+main {
+	margin: auto;
+	padding: 20px;
+	max-width: 65ch;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+strong,
+b {
+	color: var(--nord4);
+}
+
+h1 {
+	font-size: 2.2rem;
+	font-weight: 100;
+	margin: 0.5rem 0;
+	line-height: 1.15;
+}
+
+h2 {
+	font-size: 1.5rem;
+	font-weight: 200;
+	margin: 1.5rem 0 0.25rem;
+	line-height: 1.25;
+	color: var(--nord8);
+}
+
+h3 {
+	font-size: 1.25rem;
+	font-weight: 200;
+	margin: 1.5rem 0 0.25rem;
+	line-height: 1.2;
+	color: var(--nord8);
+}
+
+h4 {
+	font-size: 1rem;
+	font-weight: 200;
+	margin: 0.5rem 0 0.25rem;
+	line-height: 1.2;
+	color: var(--nord9);
+}
+
+h5 {
+	font-size: 2rem;
+	font-weight: 200;
+	margin: 0.25rem 0;
+	line-height: 1.5;
+}
+
+h6 {
+	font-size: 2rem;
+	font-weight: 200;
+	margin: 0.25rem 0;
+	line-height: 1.5;
+}
+
+a {
+	color: var(--nord9);
+}
+
+nav a {
+	margin-right: 10px;
+}
+
+a:visited {
+	color: var(--nord8);
+}
+
+a:hover,
+a:hover h2,
+a:hover h3,
+a:hover p {
+	color: var(--nord10);
+}
+
+textarea,
+input {
+	display: block;
+	background: var(--nord3);
+	border: solid var(--nord9);
+	color: var(--nord6);
+	padding: 0.5rem 0.5rem 0.25rem;
+	margin-bottom: 1rem;
+	font-size: 1rem;
+	border-radius: 3px;
+}
+
+input[type="submit"] {
+	background: var(--nord6);
+	border: solid var(--nord2);
+	color: var(--nord3);
+}
+
+input[type="submit"]:hover {
+	cursor: pointer;
+	background: var(--nord4);
+	color: var(--nord1);
+}
+
+textarea {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+content {
+	line-height: 1.6;
+}
+
+table {
+	width: 100%;
+}
+
+img {
+	max-width: 100%;
+	height: auto;
+}
+
+code {
+	padding: 2px 5px;
+	background-color: var(--nord3);
+}
+
+pre {
+	padding: 1rem;
+}
+
+pre > code {
+	all: unset;
+}
+
+blockquote {
+	border: 1px solid var(--nord10);
+	color: var(--nord10);
+	padding: 2px 0 2px 20px;
+	margin: 0;
+	font-style: italic;
+}
+
+/* stylelint: disable next line selector-class-name */
+.pagination > ul {
+	align-items: center;
+	display: flex;
+	gap: 1rem;
+	list-style: none;
+	justify-content: center;
+	padding: unset;
+}

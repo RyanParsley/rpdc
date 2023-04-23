@@ -1,0 +1,95 @@
+# Read the CloudCannon documentation for more information on how to use this file:
+# https://cloudcannon.com/documentation/articles/setting-global-configuration/?ssg=Astro
+
+# Collections are related sets of content files, typically grouped by folder.
+# Here you can define your collections, as well as any
+# CloudCannon configuration specific to those collections.
+collections_config:
+  {
+    posts:
+      {
+        path: "src/content/blog",
+        output: true,
+        url: "/blog/[slug]",
+        _enable_editors: ["content", "visual"],
+        add_options:
+          [{ name: "Add New Post", schema: "default", icon: "post_add" }],
+        schemas: { default: { name: "New Post", path: "schemas/post.md" } },
+        _inputs:
+          {
+            title: { empty_type: "string" },
+            image: { empty_type: "string" },
+            image_alt: { empty_type: "string" },
+            author: { empty_type: "string" },
+            tags:
+              { type: "multiselect", allow_create: true, empty_type: "array" },
+          },
+      },
+    drafts:
+      {
+        path: "src/content/draft",
+        output: false,
+        url: "/blog/[slug]",
+        _enable_editors: ["content", "visual"],
+        add_options:
+          [{ name: "Add New Post", schema: "default", icon: "post_add" }],
+        schemas: { default: { name: "New Post", path: "schemas/post.md" } },
+        _inputs:
+          {
+            title: { empty_type: "string" },
+            image: { empty_type: "string" },
+            image_alt: { empty_type: "string" },
+            author: { empty_type: "string" },
+            tags:
+              { type: "multiselect", allow_create: true, empty_type: "array" },
+          },
+      },
+    pages:
+      {
+        path: "src/content/page",
+        url: "/[slug]",
+        output: true,
+        icon: "wysiwyg",
+        _enabled_editors: ["visual"],
+        add_options:
+          [{ name: "Add New Page", schema: "default", icon: "note_add" }],
+        schemas:
+          {
+            default:
+              {
+                name: "New Page",
+                path: "schemas/page.md",
+                new_preview_url: "/",
+              },
+            paginated_collection: { path: "schemas/paginated-collection.md" },
+          },
+        _inputs: { content_blocks: { empty_type: "array" } },
+        filter: { base: "strict" },
+      },
+  }
+
+# Control which collections are displayed in the CloudCannon site navigation,
+# and how those collections are grouped.
+collection_groups:
+
+# Control which data sets are available to populate select and multiselect inputs.
+data_config:
+
+# Base path to your source files, relative to the root folder of your repository.
+source:
+
+# The locations of various types of files within your site.
+# Each path is relative to your site's source folder.
+paths:
+  data: ""
+  collections: ""
+  layouts: null
+  static: ""
+  uploads: uploads
+
+# Lets you control the look and behaviour of the Source Editor.
+source_editor:
+
+# Timezone of your site in IANA format. This is used by date and datetime inputs
+# within the CloudCannon Data Editor.
+timezone: Etc/UTC

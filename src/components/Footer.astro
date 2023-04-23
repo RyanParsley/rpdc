@@ -1,0 +1,27 @@
+---
+const today = new Date();
+import HeaderLink from "./HeaderLink.astro";
+---
+
+<footer>
+	&copy; {today.getFullYear()} Ryan Parsley. All rights reserved.
+	<nav>
+		<HeaderLink href="https://twitter.com/ryanparsley" target="_blank">
+			Twitter
+		</HeaderLink>
+		<HeaderLink href="https://github.com/ryanparsley" target="_blank">
+			GitHub
+		</HeaderLink>
+		<HeaderLink href="https://codepen.io/ryanparsley" target="_blank">
+			CodePen
+		</HeaderLink>
+		<HeaderLink href="/rss.xml">Feed</HeaderLink>
+	</nav>
+</footer>
+<style>
+	footer {
+		padding: 25px;
+		text-align: center;
+		background-color: var(--nord1);
+	}
+</style>

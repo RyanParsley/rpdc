@@ -1,0 +1,59 @@
+---
+import HeaderLink from "./HeaderLink.astro";
+import { SITE_TITLE } from "../consts";
+---
+
+<header>
+	<a class="site-title" href="/">
+		{SITE_TITLE}
+	</a>
+	<nav>
+		<HeaderLink href="/blog">Blog</HeaderLink>
+		<HeaderLink href="/resume">Resume</HeaderLink>
+		<HeaderLink href="/presentations">Presentations</HeaderLink>
+		<HeaderLink href="/contact">Contact</HeaderLink>
+	</nav>
+</header>
+<style>
+	header {
+		padding: 1.5rem 1.5rem 1rem;
+		border-bottom: solid 1px var(--nord3);
+		background-color: var(--nord1);
+	}
+
+	nav {
+		margin-top: 0.5rem;
+	}
+
+	.site-title {
+		text-align: left;
+		text-decoration: none;
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--nord14);
+	}
+
+	.site-title:visited {
+		color: var(--nord14);
+	}
+
+	.site-title:hover {
+		color: var(--nord10);
+	}
+
+	@media screen and (width >= 800px) {
+		header {
+			display: flex;
+		}
+
+		nav {
+			flex: 1;
+			text-align: right;
+		}
+
+		.site-title {
+			flex: 0;
+			color: var(--nord14);
+		}
+	}
+</style>
