@@ -18,8 +18,6 @@ gallery:
 
 In an effort to better understand how CNC Routers work, I decided to build one from scratch. Having little confidence that I could pull it off, I came up with a plan to break this ambitious project up into a series of smaller wins.
 
-{% include gallery caption="Evolution of a DIY CNC from scratch." %}
-
 The first step was to build a CNC mostly out of reclaimed electronics. I learned that the motors in many cd rom drives are stepper motors, so I took apart some old computers I had access to. For this build, I only needed to purchase 3 stepper motor drivers and an Arduino. For less than $50 I proved that I am able to build such a device.
 
 With this success, I had the confidence to buy some NEMA 17 motors (at about $15 a piece) and scale the build up. This build worked mostly fine, but the motors would occasionally stick. I got the feeling my naive design was to blame. About that time, I had purchased a 3D Printer and decided to put it to work for me.
