@@ -16,11 +16,16 @@ const { images } = Astro.props;
 		images.map((image: Image, index: number) => (
 			<>
 				<figure>
-					<a href={`#image-${index}`}>
+					<a href={`#image-${index}`} title={image.alt}>
 						<img src={image.url} alt={image.alt} />
 					</a>
 				</figure>
-				<a href="#_" class="lightbox" id={`image-${index}`}>
+				<a
+					href="#_"
+					class="lightbox"
+					id={`image-${index}`}
+					title="Click to return to post"
+				>
 					<div style={`background-image:url(${image.url})`} />
 				</a>
 			</>
