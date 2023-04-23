@@ -1,0 +1,91 @@
+---
+type Image = {
+	url: string;
+	alt: string;
+};
+
+type Props = {
+	images: Image[];
+};
+
+const { images } = Astro.props;
+---
+
+<div class="gallery">
+	{
+		images.map((image: Image, index: number) => (
+			<>
+				<figure>
+					<a href={`#image-${index}`} title={image.alt}>
+						<img src={image.url} alt={image.alt} />
+					</a>
+				</figure>
+				<a
+					href="#_"
+					class="lightbox"
+					id={`image-${index}`}
+					title="Click to return to post"
+				>
+					<div style={`background-image:url(${image.url})`} />
+				</a>
+			</>
+		))
+	}
+</div>
+
+<style lang="scss">
+	.gallery {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		grid-gap: 0.5rem;
+	}
+
+	.gallery img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	.gallery > figure {
+		margin: 0;
+		padding: 0;
+		grid-column: 1fr;
+		grid-row: 1fr;
+	}
+	.lightbox {
+		/* Default to hidden */
+		display: none;
+
+		/* Overlay entire screen */
+		position: fixed;
+		z-index: 999;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+
+		/* A bit of padding around image */
+		padding: 1em;
+
+		/* Translucent background */
+		background: rgba(0, 0, 0, 0.8);
+	}
+
+	/* Unhide the lightbox when it's the target */
+	.lightbox:target {
+		display: block;
+	}
+
+	.lightbox div {
+		/* Full width and height */
+		display: block;
+		width: 100%;
+		height: 100%;
+
+		/* Size and position background image */
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: contain;
+	}
+</style>

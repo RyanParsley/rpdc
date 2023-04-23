@@ -5,23 +5,18 @@ description: >-
   In an effort to better understand how CNC Routers work, I decided to build one
   from scratch.
 header:
-  image: /assets/images/tangents/cnc/cnc_helloworld.jpg
-  teaser: /assets/images/tangents/cnc/cnc_helloworld.jpg
+  image: /tangents/cnc/cnc_helloworld.jpg
+  teaser: /tangents/cnc/cnc_helloworld.jpg
 gallery:
-  - url: /assets/images/tangents/cnc/cnc_dvd.jpg
-    image_path: assets/images/tangents/cnc/cnc_dvd.jpg
+  - url: /tangents/cnc/cnc_dvd.jpg
     alt: Initial proof of concept
-  - url: /assets/images/tangents/cnc/cnc_version2.jpg
-    image_path: assets/images/tangents/cnc/cnc_version2.jpg
+  - url: /tangents/cnc/cnc_version2.jpg
     alt: Upgraded to bigger platform and motors
-  - url: /assets/images/tangents/cnc/cnc_final.jpg
-    image_path: /assets/images/tangents/cnc/cnc_final.jpg
+  - url: /tangents/cnc/cnc_final.jpg
     alt: Final version
 ---
 
 In an effort to better understand how CNC Routers work, I decided to build one from scratch. Having little confidence that I could pull it off, I came up with a plan to break this ambitious project up into a series of smaller wins.
-
-{% include gallery caption="Evolution of a DIY CNC from scratch." %}
 
 The first step was to build a CNC mostly out of reclaimed electronics. I learned that the motors in many cd rom drives are stepper motors, so I took apart some old computers I had access to. For this build, I only needed to purchase 3 stepper motor drivers and an Arduino. For less than $50 I proved that I am able to build such a device.
 
