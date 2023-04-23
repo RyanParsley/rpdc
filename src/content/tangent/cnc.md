@@ -5,17 +5,14 @@ description: >-
   In an effort to better understand how CNC Routers work, I decided to build one
   from scratch.
 header:
-  image: /assets/images/tangents/cnc/cnc_helloworld.jpg
-  teaser: /assets/images/tangents/cnc/cnc_helloworld.jpg
+  image: /tangents/cnc/cnc_helloworld.jpg
+  teaser: /tangents/cnc/cnc_helloworld.jpg
 gallery:
-  - url: /assets/images/tangents/cnc/cnc_dvd.jpg
-    image_path: assets/images/tangents/cnc/cnc_dvd.jpg
+  - url: /tangents/cnc/cnc_dvd.jpg
     alt: Initial proof of concept
-  - url: /assets/images/tangents/cnc/cnc_version2.jpg
-    image_path: assets/images/tangents/cnc/cnc_version2.jpg
+  - url: /tangents/cnc/cnc_version2.jpg
     alt: Upgraded to bigger platform and motors
-  - url: /assets/images/tangents/cnc/cnc_final.jpg
-    image_path: /assets/images/tangents/cnc/cnc_final.jpg
+  - url: /tangents/cnc/cnc_final.jpg
     alt: Final version
 ---
 

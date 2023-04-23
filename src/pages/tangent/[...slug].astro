@@ -1,6 +1,7 @@
 ---
 import { CollectionEntry, getCollection } from "astro:content";
 import BlogPost from "@layouts/BlogPost.astro";
+import BlogGallery from "@components/BlogGallery.astro";
 
 export async function getStaticPaths() {
 	const posts = await getCollection("tangent");
@@ -16,5 +17,6 @@ const { Content } = await post.render();
 ---
 
 <BlogPost {...post.data}>
+	{post.data.gallery && <BlogGallery images={post.data.gallery} />}
 	<Content />
 </BlogPost>

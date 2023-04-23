@@ -72,6 +72,14 @@ const tangentCollection = defineCollection({
 				str ? new Date(str) : undefined
 			),
 		heroImage: z.string().optional(),
+		gallery: z
+			.array(
+				z.object({
+					url: z.string(),
+					alt: z.string(),
+				})
+			)
+			.optional(),
 	}),
 });
 
