@@ -7,6 +7,9 @@ import pagefind from "astro-pagefind";
 
 // https://astro.build/config
 export default defineConfig({
+	experimental: {
+		assets: true,
+	},
 	site: "https://ryanparsley.com",
 	markdown: {
 		remarkPlugins: [[remarkMermaid, {mermaidConfig: { theme: 'dark' }}]],
