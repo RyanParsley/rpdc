@@ -1,0 +1,27 @@
+---
+const { slug, categories = [] } = Astro.props;
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog"))
+	.filter((post) => post.slug !== slug)
+	.filter(({ data }) =>
+		categories.some(
+			(category) => data.categories && data.categories.includes(category)
+		)
+	)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.slice(0, 5);
+---
+
+<h2>Related Posts</h2>
+<ul>
+	{
+		posts.map((post) => (
+			<li>
+				<a href={`/blog/${post.slug}`} title={post.data.title}>
+					{post.data.title}
+				</a>
+			</li>
+		))
+	}
+</ul>

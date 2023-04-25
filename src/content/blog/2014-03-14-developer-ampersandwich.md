@@ -2,7 +2,9 @@
 title: "AEA Debrief: The Developer's Ampersandwich"
 pubDate: 2014-03-13 15:08:10 -0400
 description: ""
-categories: design code
+categories:
+  - design
+  - code
 ---
 
 At <a href="http://aneventapart.com/event/atlanta-2014">An Event Apart</a> in Atlanta, <a href="http://jennlukas.com">Jenn Lukas</a>, presented a developer’s perspective on design for the web. Here’s a collection of take aways that resonated with&nbsp;me.
