@@ -2,7 +2,9 @@
 title: "AEA Debrief: Faster Design Decisions with Style Tiles"
 pubDate: 2014-03-12 12:50:04 -0400
 description: ""
-categories: design code
+categories:
+  - design
+  - code
 ---
 
 At [An Event Apart](http://aneventapart.com/event/atlanta-2014) in Atlanta, [Samantha Warren](http://samanthatoy.com) made a case for why style tiles should be added to your back of tricks. Here’s a collection of take aways that resonated with me.

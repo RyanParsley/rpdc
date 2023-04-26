@@ -8,7 +8,7 @@ type Props = CollectionEntry<"blog">["data"];
 const { title, description, pubDate, updatedpubDate, heroImage } = Astro.props;
 ---
 
-<Layout title={title} description={description}>
+<Layout class="has-aside" title={title} description={description}>
 	<article>
 		{heroImage && <img width={720} height={360} src={heroImage} alt="" />}
 		<FormattedDate date={pubDate} />
@@ -21,4 +21,7 @@ const { title, description, pubDate, updatedpubDate, heroImage } = Astro.props;
 		}
 		<slot />
 	</article>
+	<aside>
+		<slot name="aside" />
+	</aside>
 </Layout>
