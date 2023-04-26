@@ -4,7 +4,7 @@ import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import "@fontsource/roboto-mono";
 import "@fontsource/victor-mono";
-const { title, description } = Astro.props;
+const { title, description, class: className } = Astro.props;
 ---
 
 <html lang="en">
@@ -14,8 +14,10 @@ const { title, description } = Astro.props;
 
 	<body>
 		<Header />
-		<main>
-			<h1>{title}</h1>
+		<main class={className}>
+			<header>
+				<h1>{title}</h1>
+			</header>
 			<slot />
 		</main>
 		<Footer />

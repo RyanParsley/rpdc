@@ -20,7 +20,11 @@ const { Content } = await post.render();
 	<Content />
 	{
 		post.data.categories && (
-			<RelatedPosts categories={post.data.categories} slug={post.slug} />
+			<RelatedPosts
+				slot="aside"
+				categories={post.data.categories}
+				slug={post.slug}
+			/>
 		)
 	}
 </BlogPost>
