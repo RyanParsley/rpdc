@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx,.astro",
@@ -21,6 +21,7 @@
     "*.{css,astro,js,ts,yml,json}": "prettier --write --ignore-unknown"
   },
   "dependencies": {
+    "@astrojs/check": "^0.3.4",
     "@astrojs/mdx": "^2.0.3",
     "@astrojs/rss": "^4.0.1",
     "@astrojs/sitemap": "^3.0.4",
@@ -31,7 +32,8 @@
     "autoprefixer": "^10.4.16",
     "cssnano": "^6.0.2",
     "photoswipe": "^5.4.3",
-    "sass": "^1.69.6"
+    "sass": "^1.69.6",
+    "typescript": "^5.3.3"
   },
   "devDependencies": {
     "@astrojs/partytown": "^2.0.3",

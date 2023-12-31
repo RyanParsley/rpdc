@@ -4,7 +4,7 @@ import FormattedDate from "@components/FormattedDate.astro";
 import Layout from "@layouts/Page.astro";
 
 const posts = (await getCollection("tangent")).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 ---
 
