@@ -27,7 +27,7 @@ const blogCollection = defineCollection({
 			.string()
 			.optional()
 			.transform((str: string | undefined) =>
-				str ? new Date(str) : undefined
+				str ? new Date(str) : undefined,
 			),
 		heroImage: z.string().optional(),
 	}),
@@ -45,13 +45,13 @@ const draftCollection = defineCollection({
 			.or(z.date())
 			.or(z.number())
 			.transform((val: string | Date | number | undefined) =>
-				val ? new Date(val) : new Date()
+				val ? new Date(val) : new Date(),
 			),
 		updatedpubDate: z
 			.string()
 			.optional()
 			.transform((str: string | undefined) =>
-				str ? new Date(str) : undefined
+				str ? new Date(str) : undefined,
 			),
 		heroImage: z.string().optional(),
 	}),
@@ -71,7 +71,7 @@ const tangentCollection = defineCollection({
 			.string()
 			.optional()
 			.transform((str: string | undefined) =>
-				str ? new Date(str) : undefined
+				str ? new Date(str) : undefined,
 			),
 		heroImage: z.string().optional(),
 		gallery: z
@@ -79,7 +79,7 @@ const tangentCollection = defineCollection({
 				z.object({
 					url: z.string(),
 					alt: z.string(),
-				})
+				}),
 			)
 			.optional(),
 	}),

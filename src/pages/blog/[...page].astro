@@ -12,7 +12,7 @@ export async function getStaticPaths({
 }) {
 	const response = await getCollection("blog");
 	const data = response.sort(
-		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 	);
 
 	return paginate(data, { pageSize: 6 });
@@ -46,7 +46,7 @@ const { page } = Astro.props;
 								description={post.data.description}
 							/>
 						</li>
-					)
+					),
 				)
 			}
 		</ul>
