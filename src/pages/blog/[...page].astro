@@ -18,7 +18,17 @@ export async function getStaticPaths({
 	return paginate(data, { pageSize: 6 });
 }
 
-const { page } = Astro.props;
+const {
+	page,
+}: {
+	page: {
+		data: [];
+		url: { prev: string; next: string };
+		currentPage: string;
+		size: number;
+		total: number;
+	};
+} = Astro.props;
 ---
 
 <style lang="scss">
