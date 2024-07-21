@@ -85,9 +85,38 @@ const tangentCollection = defineCollection({
 	}),
 });
 
+const noteCollection = defineCollection({
+	// Type-check frontmatter using a schema
+	schema: z.object({
+		title: z.string(),
+		description: z.string(),
+		// Transform string to Date object
+		pubDate: z
+			.string()
+			.or(z.date())
+			.transform((val: string | Date) => new Date(val)),
+		updatedpubDate: z
+			.string()
+			.optional()
+			.transform((str: string | undefined) =>
+				str ? new Date(str) : undefined,
+			),
+		heroImage: z.string().optional(),
+		gallery: z
+			.array(
+				z.object({
+					url: z.string(),
+					alt: z.string(),
+				}),
+			)
+			.optional(),
+	}),
+});
+
 export const collections = {
 	blog: blogCollection,
 	draft: draftCollection,
 	tangent: tangentCollection,
 	page: pageCollection,
+	note: noteCollection,
 };

@@ -1,0 +1,34 @@
+---
+import { getCollection } from "astro:content";
+import FormattedDate from "@components/FormattedDate.astro";
+import Layout from "@layouts/Page.astro";
+
+const posts = (await getCollection("note")).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<Layout
+	title="Notes"
+	description="A collection of raw materials that I'm still sorting out"
+>
+	<p>
+		The notes section is my take on a digital garden. This is a place for me to
+		learn in public and share things I've made without minimal friction.
+	</p>
+	<section>
+		<h2>Featured Notes</h2>
+		<ul>
+			{
+				posts.map((post) => (
+					<li>
+						<h3>
+							<a href={`/note/${post.slug}/`}>{post.data.title}</a>
+						</h3>
+						<FormattedDate date={post.data.pubDate} />
+					</li>
+				))
+			}
+		</ul>
+	</section>
+</Layout>
