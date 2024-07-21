@@ -6,6 +6,8 @@ import Layout from "@layouts/Page.astro";
 const posts = (await getCollection("note")).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+
+const featuredPosts = posts.filter((post) => post.data.featured === true);
 ---
 
 <Layout
@@ -17,7 +19,22 @@ const posts = (await getCollection("note")).sort(
 		learn in public and share things I've made without minimal friction.
 	</p>
 	<section>
-		<h2>Featured Notes</h2>
+		<h2>Featured</h2>
+		<ul>
+			{
+				featuredPosts.map((post) => (
+					<li>
+						<h3>
+							<a href={`/note/${post.slug}/`}>{post.data.title}</a>
+						</h3>
+						<FormattedDate date={post.data.pubDate} />
+					</li>
+				))
+			}
+		</ul>
+	</section>
+	<section>
+		<h2>All</h2>
 		<ul>
 			{
 				posts.map((post) => (

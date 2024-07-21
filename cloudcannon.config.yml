@@ -6,6 +6,25 @@
 # CloudCannon configuration specific to those collections.
 collections_config:
   {
+    notes:
+      {
+        path: "src/content/note",
+        output: true,
+        url: "/note/[slug]",
+        _enable_editors: ["content", "visual"],
+        add_options:
+          [{ name: "Add New Note", schema: "default", icon: "post_add" }],
+        schemas: { default: { name: "New Noe", path: "schemas/note.md" } },
+        _inputs:
+          {
+            title: { empty_type: "string" },
+            image: { empty_type: "string" },
+            image_alt: { empty_type: "string" },
+            author: { empty_type: "string" },
+            tags:
+              { type: "multiselect", allow_create: true, empty_type: "array" },
+          },
+      },
     posts:
       {
         path: "src/content/blog",

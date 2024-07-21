@@ -23,7 +23,7 @@ const blogCollection = defineCollection({
 			.or(z.date())
 			.or(z.number())
 			.transform((val: string | Date | number) => new Date(val)),
-		updatedpubDate: z
+		updatedDate: z
 			.string()
 			.optional()
 			.transform((str: string | undefined) =>
@@ -47,7 +47,7 @@ const draftCollection = defineCollection({
 			.transform((val: string | Date | number | undefined) =>
 				val ? new Date(val) : new Date(),
 			),
-		updatedpubDate: z
+		updatedDate: z
 			.string()
 			.optional()
 			.transform((str: string | undefined) =>
@@ -67,7 +67,7 @@ const tangentCollection = defineCollection({
 			.string()
 			.or(z.date())
 			.transform((val: string | Date) => new Date(val)),
-		updatedpubDate: z
+		updatedDate: z
 			.string()
 			.optional()
 			.transform((str: string | undefined) =>
@@ -90,12 +90,13 @@ const noteCollection = defineCollection({
 	schema: z.object({
 		title: z.string(),
 		description: z.string(),
+		featured: z.boolean().optional(),
 		// Transform string to Date object
 		pubDate: z
 			.string()
 			.or(z.date())
 			.transform((val: string | Date) => new Date(val)),
-		updatedpubDate: z
+		updatedDate: z
 			.string()
 			.optional()
 			.transform((str: string | undefined) =>

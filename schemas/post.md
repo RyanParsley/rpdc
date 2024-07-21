@@ -1,8 +1,11 @@
 ---
-date:
 title: ""
+description: ""
+categories: []
 tags:
   - blog
+pubDate:
+updatedDate:
 author: Ryan Parsley
 thumb_image:
   image: ""
