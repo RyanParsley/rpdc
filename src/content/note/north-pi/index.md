@@ -1,6 +1,7 @@
 ---
 title: Fractal North Pi
 pubDate: 2024-07-21
+updatedDate: 2024-07-21
 description: >-
   I made an oddly involved case for a raspberry pi
 header:

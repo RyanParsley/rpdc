@@ -1,6 +1,7 @@
 ---
 title: The story of my whittlin' robot
 pubDate: 2018-04-10
+updatedDate: 2018-04-10
 description: >-
   In an effort to better understand how CNC Routers work, I decided to build one
   from scratch.

@@ -26,8 +26,10 @@ const blogCollection = defineCollection({
 		updatedDate: z
 			.string()
 			.optional()
-			.transform((str: string | undefined) =>
-				str ? new Date(str) : undefined,
+			.or(z.date())
+			.or(z.number())
+			.transform((val: string | Date | number | undefined) =>
+				val ? new Date(val) : new Date(),
 			),
 		heroImage: z.string().optional(),
 	}),
@@ -50,8 +52,10 @@ const draftCollection = defineCollection({
 		updatedDate: z
 			.string()
 			.optional()
-			.transform((str: string | undefined) =>
-				str ? new Date(str) : undefined,
+			.or(z.date())
+			.or(z.number())
+			.transform((val: string | Date | number | undefined) =>
+				val ? new Date(val) : new Date(),
 			),
 		heroImage: z.string().optional(),
 	}),
@@ -70,8 +74,9 @@ const tangentCollection = defineCollection({
 		updatedDate: z
 			.string()
 			.optional()
-			.transform((str: string | undefined) =>
-				str ? new Date(str) : undefined,
+			.or(z.date())
+			.transform((val: string | Date | undefined) =>
+				val ? new Date(val) : new Date(),
 			),
 		heroImage: z.string().optional(),
 		gallery: z
@@ -98,10 +103,8 @@ const noteCollection = defineCollection({
 			.transform((val: string | Date) => new Date(val)),
 		updatedDate: z
 			.string()
-			.optional()
-			.transform((str: string | undefined) =>
-				str ? new Date(str) : undefined,
-			),
+			.or(z.date())
+			.transform((val: string | Date) => new Date(val)),
 		heroImage: z.string().optional(),
 		gallery: z
 			.array(
