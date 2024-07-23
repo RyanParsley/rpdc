@@ -43,6 +43,14 @@ Here is a shot of my custom PCB wired up to my Gameboy Advance SP.
 
 ![Soldered up](./arduinoboy_soldered_up.jpg)
 
+## In a slick Enclosure
+
+And here it is all finished up in a [custom
+enclosure](https://www.printables.com/model/783225-arduinoboy-enclosure) I
+designed.
+
+![Arduinoboy Finished](./Arduinoboy_Enclosed.jpg)
+
 ## Parts
 
 - [Everdrive GB x5](https://amzn.to/4fd8AX4)
