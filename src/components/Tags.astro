@@ -1,0 +1,33 @@
+---
+import { getCollection } from "astro:content";
+
+const tags = [
+	...new Set(
+		(await getCollection("note"))
+			.filter((note) => !!note.data.tags)
+			.map((note) => note.data.tags)
+			.flat()
+			.filter((tag) => tag !== "note"),
+	),
+];
+---
+
+<h2>Tags</h2>
+<ul>
+	{
+		tags.map((tag) => (
+			<li>
+				<a href={`/note/tag/${tag}`} title={tag}>
+					{tag}
+				</a>
+			</li>
+		))
+	}
+</ul>
+
+<style lang="scss">
+	ul {
+		margin: 0.75rem 0 0 0;
+		padding: 0 0 0 1rem;
+	}
+</style>
