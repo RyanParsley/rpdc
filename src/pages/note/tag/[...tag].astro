@@ -1,0 +1,42 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@layouts/Page.astro";
+
+export async function getStaticPaths() {
+	const notes = await getCollection("note");
+	const uniqueTags = [
+		...new Set(
+			notes
+				.filter((note) => !!note.data.tags)
+				.map((note) => note.data.tags)
+				.flat(),
+		),
+	];
+
+	return uniqueTags.map((tag) => {
+		if (tag == undefined) return;
+
+		const filteredNotes = notes.filter((note) => note.data.tags?.includes(tag));
+
+		return {
+			params: { tag },
+			props: { notes: filteredNotes },
+		};
+	});
+}
+
+const tag = Astro.params?.tag || "?";
+const { notes } = Astro.props;
+---
+
+<Layout title=`Notes tagged with ${tag}`>
+	<ul>
+		{
+			notes.map((note) => (
+				<li>
+					<a href={`/note/${note.slug}`}>{note.data.title}</a>
+				</li>
+			))
+		}
+	</ul>
+</Layout>
