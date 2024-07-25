@@ -1,15 +1,15 @@
 ---
-import { getCollection } from "astro:content";
-
+const { collection, baseRoute } = Astro.props;
+type Collection = { data: { tags: string[] } };
 const tags = [
 	...new Set(
-		(await getCollection("note"))
-			.filter((note) => !!note.data.tags)
-			.map((note) => note.data.tags)
+		collection
+			.filter((note: Collection) => !!note.data.tags)
+			.map((note: Collection) => note.data.tags)
 			.flat()
-			.filter((tag) => tag !== "note"),
+			.filter((tag: string) => tag !== "note"),
 	),
-];
+] as string[];
 ---
 
 <h2>Tags</h2>
@@ -17,7 +17,7 @@ const tags = [
 	{
 		tags.map((tag) => (
 			<li>
-				<a href={`/note/tag/${tag}`} title={tag}>
+				<a href={`/${baseRoute}/${tag}`} title={tag}>
 					{tag}
 				</a>
 			</li>
