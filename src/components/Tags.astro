@@ -1,13 +1,19 @@
 ---
+import type { CollectionEntry } from "astro:content";
+
 const { collection, baseRoute } = Astro.props;
-type Collection = { data: { tags: string[] } };
+
+interface Props {
+	collection: CollectionEntry<"blog">[] | CollectionEntry<"note">[];
+	baseRoute: string;
+}
 const tags = [
 	...new Set(
 		collection
-			.filter((note: Collection) => !!note.data.tags)
-			.map((note: Collection) => note.data.tags)
+			.filter((note) => !!note.data.tags)
+			.map((note) => note.data.tags)
 			.flat()
-			.filter((tag: string) => tag !== "note"),
+			.filter((tag) => tag !== "note"),
 	),
 ] as string[];
 ---
