@@ -7,15 +7,16 @@ interface Props {
 	collection: CollectionEntry<"blog">[] | CollectionEntry<"note">[];
 	baseRoute: string;
 }
+
 const tags = [
 	...new Set(
 		collection
-			.filter((note) => !!note.data.tags)
-			.map((note) => note.data.tags)
+			.filter((entry) => !!entry.data.tags)
+			.map((entry) => entry.data.tags)
 			.flat()
 			.filter((tag) => tag !== "note"),
 	),
-] as string[];
+];
 ---
 
 <h2>Tags</h2>
