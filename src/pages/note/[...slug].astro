@@ -5,14 +5,17 @@ import BlogPost from "@layouts/BlogPost.astro";
 import BlogGallery from "@components/BlogGallery.astro";
 import Tags from "@components/Tags.astro";
 
+const posts = await getCollection("note");
+type Props = CollectionEntry<"note">;
+
 export async function getStaticPaths() {
 	const posts = await getCollection("note");
+
 	return posts.map((post) => ({
 		params: { slug: post.slug },
 		props: post,
 	}));
 }
-type Props = CollectionEntry<"note">;
 
 const post = Astro.props;
 const { Content } = await post.render();
@@ -21,5 +24,5 @@ const { Content } = await post.render();
 <BlogPost {...post.data}>
 	{post.data.gallery && <BlogGallery images={post.data.gallery} />}
 	<Content />
-	<Tags slot="aside" />
+	<Tags Props collection={posts} baseRoute="note/tag" slot="aside" />
 </BlogPost>

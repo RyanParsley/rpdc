@@ -1,6 +1,9 @@
 ---
+import { getCollection } from "astro:content";
 import Layout from "@layouts/Page.astro";
 import Tags from "@components/Tags.astro";
+
+const notes = await getCollection("note");
 ---
 
 <Layout
@@ -9,6 +12,6 @@ import Tags from "@components/Tags.astro";
 >
 	<p>Tags are one way to navigate through notes.</p>
 	<section>
-		<Tags />
+		<Tags collection={notes} baseRoute="note/tag" />
 	</section>
 </Layout>
