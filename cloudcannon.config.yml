@@ -85,6 +85,26 @@ collections_config:
         _inputs: { content_blocks: { empty_type: "array" } },
         filter: { base: "strict" },
       },
+    tangents:
+      {
+        path: "src/content/tangent",
+        output: true,
+        url: "/tangent/[slug]",
+        _enable_editors: ["content", "visual"],
+        add_options:
+          [{ name: "Add New Tangent", schema: "default", icon: "post_add" }],
+        schemas:
+          { default: { name: "New Tangent", path: "schemas/tangent.md" } },
+        _inputs:
+          {
+            title: { empty_type: "string" },
+            image: { empty_type: "string" },
+            image_alt: { empty_type: "string" },
+            author: { empty_type: "string" },
+            tags:
+              { type: "multiselect", allow_create: true, empty_type: "array" },
+          },
+      },
   }
 
 # Control which collections are displayed in the CloudCannon site navigation,
