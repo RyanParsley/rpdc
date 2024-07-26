@@ -1,11 +1,8 @@
 ---
 title: ""
 description: ""
-_inputs:
-    categories:
-      type: array
-    categories[*]:
-    type: string
+categories:
+  - ""
 tags:
   - tangent
 pubDate:
