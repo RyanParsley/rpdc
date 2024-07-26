@@ -10,4 +10,4 @@ tags:
 ---
 [Fractal released stls](https://www.fractal-design.com/north-pi-3d-files/) so anyone can make the cute little pi case that's been getting attention on various youtube channels.
 
-The case is a fun parody of their popular <a href="" target="_blank" rel="noopener">North</a> case.
+The case is a fun parody of their popular [North](https://amzn.to/3WiCqAN) case.
