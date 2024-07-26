@@ -1,22 +1,26 @@
 ---
+_schema: default
 title: The story of my whittlin' robot
-pubDate: 2018-04-10
-updatedDate: 2018-04-10
 description: >-
   In an effort to better understand how CNC Routers work, I decided to build one
   from scratch.
-header:
-  image: /tangents/cnc/cnc_helloworld.jpg
-  teaser: /tangents/cnc/cnc_helloworld.jpg
-gallery:
-  - url: /tangents/cnc/cnc_dvd.jpg
-    alt: Initial proof of concept
-  - url: /tangents/cnc/cnc_version2.jpg
-    alt: Upgraded to bigger platform and motors
-  - url: /tangents/cnc/cnc_final.jpg
-    alt: Final version
+categories:
+  - diy
+tags:
+  - tangent
+pubDate: 2018-04-10T00:00:00Z
+updatedDate: 2018-04-10T00:00:00Z
+author: Ryan Parsley
+thumb_image:
+  image: ''
+  image_alt: ''
+featured_image:
+  image: ''
+  image_alt: ''
+seo:
+  open_graph_type: article
+  no_index: false
 ---
-
 In an effort to better understand how CNC Routers work, I decided to build one from scratch. Having little confidence that I could pull it off, I came up with a plan to break this ambitious project up into a series of smaller wins.
 
 The first step was to build a CNC mostly out of reclaimed electronics. I learned that the motors in many cd rom drives are stepper motors, so I took apart some old computers I had access to. For this build, I only needed to purchase 3 stepper motor drivers and an Arduino. For less than $50 I proved that I am able to build such a device.
