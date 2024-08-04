@@ -1,6 +1,6 @@
 ---
 title: Arduinoboy Build Notes
-description: I made a thing so I can controll midi via a gameboy and so can you!
+description: I made a thing so I can control midi via a gameboy and so can you!
 pubDate: 2024-02-26
 updatedDate: 2024-07-22
 ---
