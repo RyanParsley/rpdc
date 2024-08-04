@@ -34,6 +34,10 @@ main.has-aside {
 	gap: 0 2rem;
 }
 
+main > article {
+	overflow: hidden;
+}
+
 main.has-aside > header {
 	grid-column: 1;
 }
