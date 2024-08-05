@@ -1,6 +1,6 @@
 ---
 _schema: default
-title: Add GPS to A T-Deck
+title: Add GPS to a T-Deck
 description: A simple but powerful upgrade for your T-Deck
 pubDate: 2024-08-05T00:00:00Z
 updatedDate: 2024-08-05T00:00:00Z
