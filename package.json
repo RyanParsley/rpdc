@@ -29,6 +29,7 @@
     "@fontsource/victor-mono": "^5.0.13",
     "accessible-astro-components": "^2.3.6",
     "astro": "^4.12.2",
+    "astro-embed": "^0.7.2",
     "autoprefixer": "^10.4.19",
     "cssnano": "^7.0.4",
     "photoswipe": "^5.4.4",
