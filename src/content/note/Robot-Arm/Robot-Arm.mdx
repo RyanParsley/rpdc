@@ -1,16 +1,16 @@
 ---
-_schema: default
 title: Robot Arm
 description: I attempt to drive a cheap yellow robot with rust
-pubDate: 2024-04-09T00:00:00Z
-updatedDate: 2024-08-05T00:00:00Z
+pubDate: 2024-04-09
+updatedDate: 2024-08-05
 featured: true
 tags:
   - note
   - rust
   - electronics
 ---
-import \{ Tweet, Vimeo, YouTube \} from 'astro-embed';
+
+import { Tweet, Vimeo, YouTube } from 'astro-embed';
 
 I'm on a journey to drive an [EEZYbotARM](http://www.eezyrobots.it/eba_mk1.html)
 with Rust. I have no idea what I'm doing. I'm learning electronics, rust, and
@@ -20,51 +20,60 @@ repo](https://github.com/RyanParsley/robotArm) such as it is.
 
 ## 2024-04-09
 
-<youtube id="https://www.youtube.com/embed/Ci5oKUUZFZ8">
-<p>If you want to follow along, you'll need a Pi Pico and a Debug Probe (or second
-Pico flashed to operate as one).</p>
-<p>I picked the EEZYbotARM MK1 because it is made with the cheapest servos you can
+<YouTube id="https://www.youtube.com/embed/Ci5oKUUZFZ8" />
+
+If you want to follow along, you'll need a Pi Pico and a Debug Probe (or second
+Pico flashed to operate as one).
+
+I picked the EEZYbotARM MK1 because it is made with the cheapest servos you can
 find and I happened to have 5 of them already. This is fine for me because I'm
 just looking for a platform to throw code at. There are more robust robot arms
-out there if that's what you're looking for.</p>
-<h2>Programming the pico</h2>
-<p>Cargo is set up such that <code>cargo build</code> will automatically upload your compiled
+out there if that's what you're looking for.
+
+## Programming the pico
+
+Cargo is set up such that `cargo build` will automatically upload your compiled
 code to the pico so long as it and the Debug Probe are connected. If either are
-absent, it won't work.</p>
-<h2>Next actions</h2>
-<ul>
-<li>learn how to drive a servo with embassy</li>
-<li>I'll use PWM, but will I use it directly or is there a lib/crate/utility to
-simplify the process?</li>
-<li>learn how to serve up a web interface on the pico w</li>
-<li>learn more about OTA firmware updates</li>
-<li>write code to move a servo based on the potentiometer values</li>
-</ul>
-<h2>This is a big wad of stuff I don't understand</h2>
-<pre><code class="language-rust">bind_interrupts!(struct Irqs {
-    ADC_IRQ_FIFO =&gt; InterruptHandler;
+absent, it won't work.
+
+## Next actions
+
+- learn how to drive a servo with embassy
+- I'll use PWM, but will I use it directly or is there a lib/crate/utility to
+  simplify the process?
+- learn how to serve up a web interface on the pico w
+- learn more about OTA firmware updates
+- write code to move a servo based on the potentiometer values
+
+## This is a big wad of stuff I don't understand
+
+```rust
+bind_interrupts!(struct Irqs {
+    ADC_IRQ_FIFO => InterruptHandler;
 });
-</code></pre>
-<h3>What is that <code>bind_interrupts</code> macro about?</h3>
-<blockquote>
-<p>This defines the right interrupt handlers, and creates a unit struct (like <code>struct Irqs;</code>)
-and implements the right [<code>Binding</code>]s for it. You can pass this struct to drivers to
-prove at compile-time that the right interrupts have been bound.
-—<a href="https://github.com/embassy-rs/embassy/blob/b2d236ee390081ec6aeef1a27da06098f9febbf9/embassy-stm32/src/lib.rs#L101C5-L103C69">embassy source</a></p>
-</blockquote>
-<h3>What is Irqs?</h3>
-<p>The <a href="https://docs.embassy.dev/embassy-rp/git/rp2040/pio/struct.Irq.html">struct</a> says:</p>
-<blockquote>
-<p>Type representing a PIO interrupt</p>
-</blockquote>
-<h4>Ok, but what is PIO?</h4>
-<p><a href="https://www.raspberrypi.com/news/what-is-pio/">PIO</a> is a standardized way to communicate with tech that doesn't support protocols such as SPI and I2C. It's a more formalized and performant means of <a href="https://en.wikipedia.org/wiki/Bit_banging">bit banging</a>. The "What is PIO" video went so far as to call out PIO is good for controlling robot arms. Sounds like I need to follow up and read [this hackspace] article(https://hackspace.raspberrypi.com/articles/what-is-programmable-i-o-on-raspberry-pi-pico).</p>
-<h2>Resources</h2>
-<ul>
-<li><a href="https://github.com/embassy-rs/embassy/blob/main/examples/rp/src/bin/adc.rs">ADC example code (embassy source)</a>.</li>
-<li><a href="https://docs.embassy.dev/embassy-rp/git/rp2040/trait.Peripheral.html">Peripheral Trait (embassy docs)</a></li>
-<li><a href="http://www.eezyrobots.it/eba_mk1.html">EEZYbotARM</a></li>
-<li><a href="https://www.raspberrypi.com/news/what-is-pio/">What is PIO (raspberrypi.com)</a></li>
-<li><a href="https://hackspace.raspberrypi.com/articles/what-is-programmable-i-o-on-raspberry-pi-pico">What is Programmable I/O on Raspberry Pi Pico? (hackspace)</a>.</li>
-</ul>
-</youtube>
+```
+
+### What is that `bind_interrupts` macro about?
+
+> This defines the right interrupt handlers, and creates a unit struct (like `struct Irqs;`)
+> and implements the right [`Binding`]s for it. You can pass this struct to drivers to
+> prove at compile-time that the right interrupts have been bound.
+> —[embassy source](https://github.com/embassy-rs/embassy/blob/b2d236ee390081ec6aeef1a27da06098f9febbf9/embassy-stm32/src/lib.rs#L101C5-L103C69)
+
+### What is Irqs?
+
+The [struct](https://docs.embassy.dev/embassy-rp/git/rp2040/pio/struct.Irq.html) says:
+
+> Type representing a PIO interrupt
+
+#### Ok, but what is PIO?
+
+[PIO](https://www.raspberrypi.com/news/what-is-pio/) is a standardized way to communicate with tech that doesn't support protocols such as SPI and I2C. It's a more formalized and performant means of [bit banging](https://en.wikipedia.org/wiki/Bit_banging). The "What is PIO" video went so far as to call out PIO is good for controlling robot arms. Sounds like I need to follow up and read [this hackspace] article(https://hackspace.raspberrypi.com/articles/what-is-programmable-i-o-on-raspberry-pi-pico).
+
+## Resources
+
+- [ADC example code (embassy source)](https://github.com/embassy-rs/embassy/blob/main/examples/rp/src/bin/adc.rs).
+- [Peripheral Trait (embassy docs)](https://docs.embassy.dev/embassy-rp/git/rp2040/trait.Peripheral.html)
+- [EEZYbotARM](http://www.eezyrobots.it/eba_mk1.html)
+- [What is PIO (raspberrypi.com)](https://www.raspberrypi.com/news/what-is-pio/)
+- [What is Programmable I/O on Raspberry Pi Pico? (hackspace)](https://hackspace.raspberrypi.com/articles/what-is-programmable-i-o-on-raspberry-pi-pico).
