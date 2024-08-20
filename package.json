@@ -12,7 +12,8 @@
     "lint:style": "npx stylelint '**/*.{css,astro}' --fix",
     "format": "prettier **/*.{css,astro,js,ts,yml,json} --write",
     "postinstall": "npx playwright install chromium",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postbuild": "pagefind --site dist"
   },
   "lint-staged": {
     "!(public/**/*)*.{js,ts,astro}": [
@@ -48,6 +49,7 @@
     "eslint-plugin-astro": "^1.2.3",
     "husky": "^9.1.1",
     "lint-staged": "^15.2.7",
+    "pagefind": "^1.1.0",
     "playwright": "^1.46.0",
     "postcss-html": "^1.7.0",
     "prettier": "^3.3.3",
