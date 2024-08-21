@@ -3,8 +3,8 @@ title: Life on SMARS
 description: >-
   I'm hooked on tinkering with these cute little rover robots
 pubDate: 2023-08-20
-updatedDate: 2024-08-20
-featured: false
+updatedDate: 2024-08-21
+featured: true
 tags:
   - note
   - SMARS
@@ -15,7 +15,7 @@ tags:
 I came about the SMARS (Screwless Modular Assembleable Robotic System) by way of
 [Kevin McAleer](https://www.smarsfan.com/), but the creator is Kevin Thomas.
 Thomas shares his [original
-designs](https://www.thingiverse.com/thing:2662828)as Noncommercial Creative
+designs](https://www.thingiverse.com/thing:2662828) as Noncommercial Creative
 Commons and sells newer iterations like the
 [V4](https://cults3d.com/en/3d-model/gadget/smars-v4), [V4
 Lite](https://cults3d.com/en/3d-model/gadget/smars-v4-lite) and
@@ -88,6 +88,12 @@ chassis design. I like 2 design characteristics of the lite that I wanted to
 work with. First, I like how the treads are replaced with silicone bracelets.
 That seems like a fun and cheap way to get better traction. Secondly, I liked
 the look of the raspberry pi adapter.
+
+Lite seems like a funny name to separate this design from V4. The printed parts
+for a V4 weigh about 109g. That means the complete printed parts for a V4 cost
+you about $1.64 at the price I've been buying it for recently. The Lite version
+requires $20 worth of bearings and $1 worth of bracelets, so saving money by way
+of saving filament should not be the reason to pick the lite option.
 
 ### Motor Hat
 
