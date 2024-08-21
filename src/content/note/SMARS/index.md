@@ -143,6 +143,8 @@ the pi on with the hat on. I have a power cord coming to account for that.
 
 ## V4 Price
 
+### Amazon
+
 | Part              |  Price |
 | ----------------- | -----: |
 | Arduino R4        | $28.00 |
@@ -151,3 +153,15 @@ the pi on with the hat on. I have a power cord coming to account for that.
 | servos            |  $4.00 |
 | power switch      |  $0.50 |
 | Total             | $43.00 |
+
+### AliExpress
+
+| Part                                                                  | Price |
+| --------------------------------------------------------------------- | ----: |
+| [Generic Uno R3 with Wifi](https://s.click.aliexpress.com/e/_DkZEL6L) | $2.44 |
+| [Motors 6V 150RPM (x2)](https://s.click.aliexpress.com/e/_DlC1aJ1)    | $2.08 |
+| [Motor Driver](https://s.click.aliexpress.com/e/_DknzDN1)             | $0.33 |
+| [Power Switch](https://s.click.aliexpress.com/e/_DlyUewn)             | $0.04 |
+| [Servos (x2)](https://s.click.aliexpress.com/e/_DE00ODl)              | $2.42 |
+| [Distance Sensor](https://s.click.aliexpress.com/e/_DltYRfV)          | $1.09 |
+| Total                                                                 | $8.40 |
