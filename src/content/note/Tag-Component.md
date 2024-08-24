@@ -1,5 +1,5 @@
 ---
-title: Astro Tag Component
+title: Fancy types enable simpler code
 description: Thoughts on type safety and generic types in astro
 pubDate: 2024-07-25
 updatedDate: 2024-07-25
@@ -12,9 +12,10 @@ tags:
   - zod
 ---
 
-Let's say you want to create a list of tags for notes. The following seems
-reasonable. It works fine because it presumes you only want to consider tags for
-one type of content.
+I was implementing a feature in this blog and it hit me as a nice case study in
+how generics can improve readability by enabling inference. Let's say you want
+to create a list of tags for notes. The following seems reasonable. It works
+fine because it presumes you only want to consider tags for one type of content.
 
 ## Naive first draft
 
@@ -38,7 +39,7 @@ _tags_, but they're not guaranteed to be the same or stay similar beyond that.
 My first thought was to move the logic such that this component only dealt with
 an array of strings, but if the responsibility of deriving tags moved to the
 parent component, it seems there's more likelihood of logic duplication. As this
-component is responsible for `tags` an not simply making a list from strings,
+component is responsible for `tags` and not simply making a list from strings,
 the `Tags` component feels like where this logic should live.
 
 ## Problematic second draft
@@ -68,9 +69,9 @@ type when the component is implemented, so let them declare that at that level.
 ### The bad
 
 The problematic bits are around that Collection type. I created it because, once
-I passed a collection in, all the clever type inference broke and I needed to
-explicitly type all the things. That's not what you want. This works as
-intended, but we can do better.
+I passed a collection in, all the clever type inference broke. At that point I
+needed to explicitly type all the things to keep my pedantic linter happy.
+That's not what you want. This works as intended, but we can do better.
 
 Note, if you find yourself using `as` consider you're doing something wrong.
 Maybe you're not, but consider it. It exists for a reason, but I find I usually
@@ -79,9 +80,9 @@ don't need it when I'm "done" refactoring.
 ## Chef's Kiss third draft
 
 The trick to getting inferred types back in action hinges around leveraging a
-Props interface. I presume I want to do more often than not. In this interface,
-I opted to make use a type union that expresses all the collection types that
-I'm accounting for.
+Props interface. I'm new to Astro, but I suspect you want to make use of this
+interface more often than not. In this interface, I opted to make use a type
+union that expresses all the collection types that I'm accounting for.
 
 ```typescript
 import type { CollectionEntry } from "astro:content";
@@ -101,12 +102,15 @@ const tags = [
 ];
 ```
 
-With this, the compiler is back to inferring properly without the need to
-explicitly type my arrow functions and no need to create that lying Collection
-type that is doomed to drift away from reality.
-
 ## Alternative idea
 
 I could have defined that union in the content config by creating some generic
 type but that feels presumptuous and the wrong level of abstraction for my
 purposes, but I'll have to write about why later.
+
+## Conclusion
+
+With this, the compiler is back to inferring properly without the need to
+explicitly type every callback. There is no need to create that _lying_ Collection
+type that is doomed to drift away from reality. Through explicitely typing a
+little up front, I can enjoy type safety implicitly downstream.
