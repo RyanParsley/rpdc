@@ -11,6 +11,7 @@
     "lint": "npx eslint ./src --ext .js,.jsx,.ts,.tsx,.astro",
     "lint:style": "npx stylelint '**/*.{css,astro}' --fix",
     "format": "prettier **/*.{css,astro,js,ts,yml,json} --write",
+    "postinstall": "npx playwright install chromium",
     "prepare": "husky"
   },
   "lint-staged": {
