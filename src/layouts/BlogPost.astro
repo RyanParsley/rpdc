@@ -2,10 +2,17 @@
 import type { CollectionEntry } from "astro:content";
 import Layout from "@layouts/Page.astro";
 import FormattedDate from "@components/FormattedDate.astro";
+import Webmentions from "@components/Webmentions.astro";
 
 type Props = CollectionEntry<"blog">["data"];
 
 const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const webmentionsUrl = import.meta.env.PROD
+	? `https://webmention.io/api/mentions.jf2?target=https://ryanparsley.com${Astro.url.pathname}`
+	: `https://webmention.io/api/mentions.jf2?target=https://ryanparsley.com${Astro.url.pathname}/`;
+const response = await fetch(webmentionsUrl);
+const json = await response.json();
+const webmentions = json.children;
 ---
 
 <Layout class="has-aside" title={title} description={description}>
@@ -20,6 +27,7 @@ const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
 			)
 		}
 		<slot />
+		<Webmentions webmentions={webmentions} />
 	</article>
 	<aside>
 		<slot name="aside" />
