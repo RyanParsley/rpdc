@@ -6,13 +6,17 @@ import HeaderLink from "./HeaderLink.astro";
 <footer>
 	&copy; {today.getFullYear()} Ryan Parsley. All rights reserved.
 	<nav>
-		<HeaderLink href="https://mastodon.social/@RyanParsley" target="_blank">
+		<HeaderLink
+			href="https://mastodon.social/@RyanParsley"
+			rel="me"
+			target="_blank"
+		>
 			Mastodon
 		</HeaderLink>
-		<HeaderLink href="https://github.com/ryanparsley" target="_blank">
+		<HeaderLink href="https://github.com/ryanparsley" rel="me" target="_blank">
 			GitHub
 		</HeaderLink>
-		<HeaderLink href="https://codepen.io/RyanParsley" target="_blank">
+		<HeaderLink href="https://codepen.io/RyanParsley" rel="me" target="_blank">
 			CodePen
 		</HeaderLink>
 		<HeaderLink href="/presentations"> Presentations </HeaderLink>
