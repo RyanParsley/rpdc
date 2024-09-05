@@ -3,6 +3,7 @@ import mdx from "@astrojs/mdx";
 import partytown from "@astrojs/partytown";
 import sitemap from "@astrojs/sitemap";
 import remarkMermaid from "remark-mermaidjs";
+import pagefind from "astro-pagefind";
 
 // https://astro.build/config
 export default defineConfig({
@@ -10,6 +11,9 @@ export default defineConfig({
 	markdown: {
 		remarkPlugins: [[remarkMermaid, {mermaidConfig: { theme: 'dark' }}]],
 	},
+	build: {
+    format: "file",
+  },
 	integrations: [
 		mdx(),
 		sitemap(),
@@ -19,5 +23,6 @@ export default defineConfig({
 				forward: ["dataLayer.push"],
 			},
 		}),
+		pagefind()
 	],
 });

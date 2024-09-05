@@ -1,25 +1,50 @@
 ---
+import Search from "astro-pagefind/components/Search";
 import BaseHead from "@components/BaseHead.astro";
 import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import "@fontsource/roboto-mono";
 import "@fontsource/victor-mono";
-const { title, description, class: className } = Astro.props;
+const {
+	title,
+	description,
+	class: className,
+	url,
+	shouldShowSearch,
+	frontmatter,
+} = Astro.props;
+const isSearchVisible = url == "/404.html" || shouldShowSearch;
 ---
 
 <html lang="en">
 	<head>
 		<BaseHead title={title} description={description} />
 	</head>
-
 	<body>
 		<Header />
 		<main class={className}>
 			<header>
-				<h1>{title}</h1>
+				<h1>{title || frontmatter?.title}</h1>
 			</header>
+			{
+				isSearchVisible && (
+					<Search
+						id="search"
+						className="pagefind-ui"
+						uiOptions={{ showImages: false }}
+					/>
+				)
+			}
 			<slot />
 		</main>
 		<Footer />
 	</body>
 </html>
+
+<style lang="scss" is:global>
+	.pagefind-ui__drawer {
+		background: var(--nord4);
+		padding: 0 1rem;
+		margin: 0 1rem;
+	}
+</style>
