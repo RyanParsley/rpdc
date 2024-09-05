@@ -17,7 +17,6 @@ const { title, description, image = "/bio-photo.jpg" } = Astro.props;
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-
 <link
 	rel="apple-touch-icon"
 	sizes="180x180"
@@ -39,6 +38,11 @@ const { title, description, image = "/bio-photo.jpg" } = Astro.props;
 <link rel="mask-icon" href="/favicons/safari-pinned-tab.svg" color="#5bbad5" />
 <meta name="msapplication-TileColor" content="#da532c" />
 <meta name="theme-color" content="#ffffff" />
+
+<link
+	rel="webmention"
+	href="https://webmention.io/ryanparsley.com/webmention"
+/>
 
 <meta name="generator" content={Astro.generator} />
 
