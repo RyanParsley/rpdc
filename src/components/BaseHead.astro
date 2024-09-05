@@ -68,6 +68,9 @@ const { title, description, image = "/bio-photo.jpg" } = Astro.props;
 <meta property="twitter:description" content={description} />
 <meta property="twitter:image" content={new URL(image, Astro.url)} />
 
+<link rel="authorization_endpoint" href="https://indieauth.com/auth" />
+<link rel="token_endpoint" href="https://tokens.indieauth.com/token" />
+
 <script
 	is:inline
 	type="text/partytown"
