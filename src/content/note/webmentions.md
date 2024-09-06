@@ -6,7 +6,7 @@ updatedDate: 2024-09-04T00:00:00Z
 featured: true
 tags:
   - note
-  - indyWeb
+  - indieWeb
 ---
 
 I rather like the idea of a static site blog, but wouldn't mind enabling
