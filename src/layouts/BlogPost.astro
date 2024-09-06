@@ -26,7 +26,16 @@ const webmentions = json.children;
 				</div>
 			)
 		}
-		<slot />
+		<section class="e-content">
+			<slot />
+			<p>
+				Published by <a
+					rel="author"
+					class="p-author h-card"
+					href="http://ryanparsley.com">Ryan Parsley</a
+				>
+			</p>
+		</section>
 		<Webmentions webmentions={webmentions} />
 	</article>
 	<aside>
