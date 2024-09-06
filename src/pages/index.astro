@@ -16,7 +16,7 @@ const posts = (await getCollection("blog"))
 				posts.map((post) => (
 					<li>
 						<PostLink
-							href={`/blog/${post.slug}/`}
+							href={`/blog/${post.slug}`}
 							text={post.data.title}
 							date={post.data.pubDate}
 							description={post.data.description}
