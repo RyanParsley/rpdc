@@ -41,7 +41,7 @@ const featuredPosts = posts.filter((post) => post.data.featured === true);
 				posts.map((post) => (
 					<li>
 						<h3>
-							<a href={`/note/${post.slug}/`}>{post.data.title}</a>
+							<a href={`/note/${post.slug}`}>{post.data.title}</a>
 						</h3>
 						<FormattedDate date={post.data.pubDate} />
 					</li>
