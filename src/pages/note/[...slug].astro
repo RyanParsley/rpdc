@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import BlogPost from "@layouts/BlogPost.astro";
 import BlogGallery from "@components/BlogGallery.astro";
 import Tags from "@components/Tags.astro";
+import EmailSignUp from "@components/EmailSignUp.astro";
 
 const posts = await getCollection("note");
 
@@ -22,5 +23,6 @@ const { Content } = await post.render();
 <BlogPost {...post.data}>
 	{post.data.gallery && <BlogGallery images={post.data.gallery} />}
 	<Content />
+	<EmailSignUp slot="aside" />
 	<Tags collection={posts} baseRoute="note/tag" slot="aside" />
 </BlogPost>
