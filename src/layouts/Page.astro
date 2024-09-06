@@ -24,7 +24,7 @@ const isSearchVisible = url == "/404.html" || shouldShowSearch;
 		<Header />
 		<main class={className}>
 			<header>
-				<h1>{title || frontmatter?.title}</h1>
+				<h1 class="p-name">{title || frontmatter?.title}</h1>
 			</header>
 			{
 				isSearchVisible && (
@@ -35,7 +35,11 @@ const isSearchVisible = url == "/404.html" || shouldShowSearch;
 					/>
 				)
 			}
-			<slot />
+			<slot class="e-content" />
+			<p>
+				Published by <a class="p-author h-card" href="http://ryanparsley.com"
+					>Ryan Parsley</a>
+			</p>
 		</main>
 		<Footer />
 	</body>
