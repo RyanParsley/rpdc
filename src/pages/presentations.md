@@ -4,8 +4,6 @@ permalink: /presentations/
 layout: "@layouts/Page.astro"
 ---
 
-# Presentations
-
 Over the past few years, I've given the following talks. I enjoy sharing the tools, techniques and opinions that help me make things.
 
 ## Testing 101
@@ -18,7 +16,7 @@ A primer to front-end testing that I presented as a lunch and learn. I introduce
 
 In this session, I'll share my thoughts and process to creating web sites and apps. It will be frontend centric, as that is my area of expertise, and be more about concepts than code sharing. My goal is to promote some "best practices" that will help you make better websites with less frustration (as well as dispel a few myths).
 
-### Presented at:
+### Presented at
 
 - South West Florida Code Camp - September 2010
 - Tampa Code Camp - November 2010
@@ -33,7 +31,7 @@ In this session, I'll share my thoughts and process to creating web sites and ap
 
 I'd like to share some tools and techniques I've incorporated into my process that help me jump straight from paper to text editor. Sometimes, fiddling around with layouts in Photoshop feels kludgy and distracting. Solving layout issues with markup can help you focus on why bits of content are important and ultimately help you make better designs. We've covered what tools like Sass and Compass are in the past. This time, I'll share how these things fit into an actual workflow.
 
-### Presented at:
+### Presented at
 
 - Design Miami - January 2012
 
@@ -43,7 +41,7 @@ I'd like to share some tools and techniques I've incorporated into my process th
 
 The simplicity of CSS is one of it’s greatest strengths, but sometimes you want more elegant solutions. That’s where Sass comes in. Sass is an extension of CSS3, adding nested rules, variables, mixins, selector inheritance, and more. I’ll show you how Sass can help you write better, more bullet resistant, and easier to maintain style sheets. I’ll also share how Sass has helped me solve real world challenges such as creating responsive layouts.
 
-### Presented at:
+### Presented at
 
 - South Florida Code Camp - February 2012
 - Barcamp Miami - February 2012
@@ -54,20 +52,20 @@ The simplicity of CSS is one of it’s greatest strengths, but sometimes you wan
 
 I'd like to share some tools and techniques I've incorporated into my process that help me jump straight from paper to text editor. Sometimes, fiddling around with layouts in Photoshop feels kludgy and distracting. Solving layout issues with markup can help you focus on why bits of content are important and ultimately help you make better designs. We've covered what tools like Sass and Compass are in the past. This time, I'll share how these things fit into an actual workflow.
 
-### Presented at:
+### Presented at
 
 - Design Miami - April 2012
 
 [View the slides](http://rrh.ryanparsley.com)
 
-## Responsive Design:
+## Responsive Design
 
 ### Good Idea or Great Idea?
 
 Everyone’s Talking about it… What is is?
 I’ll give an overview on what people are talking about when they say “Responsive” and share some tips on getting up and running faster with this approach.
 
-### Presented at:
+### Presented at
 
 - The South Florida User Experience Meetup - April 2012
 
