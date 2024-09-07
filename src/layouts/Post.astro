@@ -3,6 +3,7 @@ import type { CollectionEntry } from "astro:content";
 import Layout from "@layouts/Page.astro";
 import FormattedDate from "@components/FormattedDate.astro";
 import Webmentions from "@components/Webmentions.astro";
+import WebmentionShare from "@components/WebmentionShare.astro";
 
 type Props = CollectionEntry<"blog">["data"];
 
@@ -28,6 +29,7 @@ const webmentions = json.children;
 		}
 		<section class="e-content">
 			<slot />
+			<WebmentionShare postUrl={Astro.url.href} postTitle={title} />
 			<p>
 				Published by <a
 					rel="author"

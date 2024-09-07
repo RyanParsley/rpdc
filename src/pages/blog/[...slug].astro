@@ -1,9 +1,8 @@
 ---
 import type { CollectionEntry } from "astro:content";
 import { getCollection } from "astro:content";
-import BlogPost from "@layouts/BlogPost.astro";
+import Post from "@layouts/Post.astro";
 import RelatedPosts from "@components/RelatedPosts.astro";
-import WebmentionShare from "@components/WebmentionShare.astro";
 
 export async function getStaticPaths() {
 	const posts = await getCollection("blog");
@@ -18,9 +17,8 @@ const post = Astro.props;
 const { Content } = await post.render();
 ---
 
-<BlogPost {...post.data}>
+<Post {...post.data}>
 	<Content />
-	<WebmentionShare postUrl={Astro.url.href} postTitle={post.data.title} />
 	{
 		post.data.categories && (
 			<RelatedPosts
@@ -30,4 +28,4 @@ const { Content } = await post.render();
 			/>
 		)
 	}
-</BlogPost>
+</Post>
