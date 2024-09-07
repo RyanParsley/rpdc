@@ -1,0 +1,43 @@
+---
+import { collectBacklinks } from "../utils/backlinks";
+
+import { getCollection } from "astro:content";
+
+export interface Props {
+	currentSlug: string;
+}
+
+const { currentSlug } = Astro.props;
+
+const posts = await getCollection("note");
+
+// Collect backlinks during build time
+const backlinks = Object.entries(collectBacklinks(posts))
+	.filter(([key]) => key == `/note/${currentSlug}`)
+	.map(([, value]) => value)
+	.flat();
+---
+
+{
+	backlinks.length > 0 && (
+		<aside class="backlinks">
+			<h2>Backlinks</h2>
+			<nav>
+				<ul>
+					{backlinks.map((link) => (
+						<li>
+							<a href={`/note/${link.slug}`}>{link.title}</a>
+						</li>
+					))}
+				</ul>
+			</nav>
+		</aside>
+	)
+}
+
+<style lang="scss">
+	ul {
+		margin: 0.75rem 0 0 0;
+		padding: 0 0 0 1rem;
+	}
+</style>
