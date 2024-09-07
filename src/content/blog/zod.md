@@ -36,7 +36,10 @@ both compile-time type inference and runtime data validation.
 ## I'm already using TypeScript, why do I need another tool!?
 
 The two tools sound like they're addressing the same thing, but they have subtly
-different stregths that complement each other.
+different strengths that complement each other. If you're skeptical about
+typescript helping readability, I'd recommend [this
+post](/blog/2024-08-24-fancy-types-enable-simple-code) that I recently wrote on the
+subject.
 
 1. Runtime vs. Compile-time Checking
 

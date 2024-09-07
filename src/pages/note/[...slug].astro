@@ -23,6 +23,6 @@ const { Content } = await post.render();
 <Post {...post.data}>
 	{post.data.gallery && <BlogGallery images={post.data.gallery} />}
 	<Content />
-	<Backlinks currentSlug={slug} slot="aside" />
+	<Backlinks currentSlug=`/note/${slug}` slot="aside" />
 	<Tags collection={posts} baseRoute="note/tag" slot="aside" />
 </Post>

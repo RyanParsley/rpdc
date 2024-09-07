@@ -1,19 +1,22 @@
 ---
 import { collectBacklinks } from "../utils/backlinks";
-
 import { getCollection } from "astro:content";
-
 export interface Props {
 	currentSlug: string;
 }
 
 const { currentSlug } = Astro.props;
 
-const posts = await getCollection("note");
+const blog = await getCollection("blog");
+const notes = await getCollection("note");
+const posts = [
+	...blog.map((post) => ({ ...post, slug: `/blog/${post.slug}` })),
+	...notes.map((post) => ({ ...post, slug: `/note/${post.slug}` })),
+];
 
 // Collect backlinks during build time
 const backlinks = Object.entries(collectBacklinks(posts))
-	.filter(([key]) => key == `/note/${currentSlug}`)
+	.filter(([key]) => key == `${currentSlug}`)
 	.map(([, value]) => value)
 	.flat();
 ---
@@ -26,7 +29,7 @@ const backlinks = Object.entries(collectBacklinks(posts))
 				<ul>
 					{backlinks.map((link) => (
 						<li>
-							<a href={`/note/${link.slug}`}>{link.title}</a>
+							<a href={`${link.slug}`}>{link.title}</a>
 						</li>
 					))}
 				</ul>
