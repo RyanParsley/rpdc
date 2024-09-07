@@ -4,6 +4,8 @@ description: "Explore how Zod can complement TypeScript to provide runtime valid
 pubDate: 2024-08-31
 updatedDate: 2024-08-31
 featured: false
+categories:
+  - code
 tags:
   - TypeScript
   - Zod
