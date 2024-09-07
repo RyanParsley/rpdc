@@ -13,18 +13,26 @@
 </article>
 <style lang="scss">
 	.bio {
-		display: flex;
-		gap: 1.5rem;
 		padding: 2rem 1rem;
 		.image {
-			flex: none;
+			text-align: center;
+			display: block;
+			padding-bottom: 1rem;
 			img {
 				max-width: 100px;
 				border-radius: 50px;
 			}
 		}
-		.words {
-			flex: 2;
+
+		@media (min-width: 600px) {
+			display: flex;
+			gap: 1.5rem;
+			.image {
+				flex: none;
+			}
+			.words {
+				flex: 2;
+			}
 		}
 	}
 </style>
