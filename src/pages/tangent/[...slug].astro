@@ -3,6 +3,7 @@ import type { CollectionEntry } from "astro:content";
 import { getCollection } from "astro:content";
 import Page from "@layouts/Page.astro";
 import BlogGallery from "@components/BlogGallery.astro";
+import WebmentionShare from "@components/WebmentionShare.astro";
 
 export async function getStaticPaths() {
 	const posts = await getCollection("tangent");
@@ -20,4 +21,5 @@ const { Content } = await post.render();
 <Page {...post.data}>
 	{post.data.gallery && <BlogGallery images={post.data.gallery} />}
 	<Content />
+	<WebmentionShare postUrl={Astro.url.href} postTitle={post.data.title} />
 </Page>

@@ -1,0 +1,106 @@
+---
+interface Props {
+	postUrl: string;
+	postTitle: string;
+}
+
+const { postUrl, postTitle } = Astro.props;
+
+const encodedTitle = encodeURIComponent(postTitle);
+const encodedUrl = encodeURIComponent(postUrl);
+
+const blueskyShareText = `${postTitle} ${postUrl}`;
+const encodedBlueskyShareText = encodeURIComponent(blueskyShareText);
+const blueskyShareUrl = `https://bsky.app/intent/compose?text=${encodedBlueskyShareText}`;
+
+const mastodonShareUrl = `https://mastodon.social/share?text=${encodedTitle}&url=${encodedUrl}`;
+---
+
+<div class="webmention-share-prompt">
+	<h3>Continue the converstion elsewhere</h3>
+	<h4>Let's chat more on the platform of your choice.</h4>
+	<div class="share-buttons">
+		<a
+			href={blueskyShareUrl}
+			target="_blank"
+			rel="noopener noreferrer"
+			class="share-button bluesky"
+		>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="24"
+				height="24"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<title>Bluesky</title><path
+					d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"
+				></path></svg
+			>
+			Share on Bluesky
+		</a>
+		<a
+			href={mastodonShareUrl}
+			target="_blank"
+			rel="noopener noreferrer"
+			class="share-button mastodon"
+		>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="24"
+				height="24"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			>
+				<path
+					d="M21.58 13.913c-.29 1.469-2.592 3.121-5.238 3.396-1.379.184-2.737.368-4.185.276-2.368-.092-4.237-.551-4.237-.551 0 .225.014.439.043.642.308 2.294 2.317 2.432 4.222 2.494 1.924.031 3.641-.459 3.641-.459l.079 1.693s-1.346.714-3.74.846c-1.325.072-2.97-.033-4.889-.51-4.146-1.043-4.86-5.255-4.972-9.516-.032-1.224-.012-2.38-.012-3.35 0-4.223 2.76-5.42 2.76-5.42 1.391-.635 3.775-.955 6.255-.974h.061c2.479.019 4.864.339 6.255.974 0 0 2.76 1.197 2.76 5.42 0 0 .035 3.089-.523 5.23"
+				></path>
+			</svg>
+			Share on Mastodon
+		</a>
+	</div>
+</div>
+
+<style>
+	.webmention-share-prompt {
+		background-color: var(--nord1);
+		padding: 0.25rem 1rem 1rem;
+		margin-top: 1.5rem;
+		border-radius: 0.5rem;
+	}
+
+	.share-buttons {
+		display: flex;
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+
+	.share-button {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		border: none;
+		border-radius: 0.25rem;
+		cursor: pointer;
+		font-size: 1rem;
+		text-decoration: none;
+		color: white;
+	}
+
+	.bluesky {
+		background-color: var(--nord10);
+	}
+
+	.mastodon {
+		background-color: var(--nord15);
+	}
+</style>
