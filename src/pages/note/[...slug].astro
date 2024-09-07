@@ -1,11 +1,10 @@
 ---
 import { getCollection } from "astro:content";
-import BlogPost from "@layouts/BlogPost.astro";
+import Post from "@layouts/Post.astro";
 import BlogGallery from "@components/BlogGallery.astro";
 import Tags from "@components/Tags.astro";
 import Backlinks from "@components/Backlinks.astro";
 const { slug } = Astro.props;
-import WebmentionShare from "@components/WebmentionShare.astro";
 const posts = await getCollection("note");
 
 export async function getStaticPaths() {
@@ -21,10 +20,9 @@ const post = Astro.props;
 const { Content } = await post.render();
 ---
 
-<BlogPost {...post.data}>
+<Post {...post.data}>
 	{post.data.gallery && <BlogGallery images={post.data.gallery} />}
 	<Content />
-	<WebmentionShare postUrl={Astro.url.href} postTitle={post.data.title} />
 	<Backlinks currentSlug={slug} slot="aside" />
 	<Tags collection={posts} baseRoute="note/tag" slot="aside" />
-</BlogPost>
+</Post>
