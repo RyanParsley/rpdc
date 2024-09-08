@@ -18,9 +18,11 @@ export async function getStaticPaths() {
 
 const post = Astro.props;
 const { Content } = await post.render();
+
+const canonicalURL = new URL(`note/${slug}`, Astro.site).toString();
 ---
 
-<Post {...post.data}>
+<Post {...post.data} canonicalURL={canonicalURL}>
 	{post.data.gallery && <BlogGallery images={post.data.gallery} />}
 	<Content />
 	<Backlinks currentSlug=`/note/${slug}` slot="aside" />

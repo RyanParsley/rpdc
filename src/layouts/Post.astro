@@ -1,19 +1,10 @@
 ---
-import type { CollectionEntry } from "astro:content";
 import Layout from "@layouts/Page.astro";
 import FormattedDate from "@components/FormattedDate.astro";
-import Webmentions from "@components/Webmentions.astro";
 import WebmentionShare from "@components/WebmentionShare.astro";
-
-type Props = CollectionEntry<"blog">["data"];
-
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
-const webmentionsUrl = import.meta.env.PROD
-	? `https://webmention.io/api/mentions.jf2?target=https://ryanparsley.com${Astro.url.pathname}`
-	: `https://webmention.io/api/mentions.jf2?target=https://ryanparsley.com${Astro.url.pathname}/`;
-const response = await fetch(webmentionsUrl);
-const json = await response.json();
-const webmentions = json.children;
+const { title, description, pubDate, updatedDate, heroImage, canonicalURL } =
+	Astro.props;
+import Webmentions from "@components/Webmentions.astro";
 ---
 
 <Layout class="has-aside" title={title} description={description}>
@@ -30,6 +21,7 @@ const webmentions = json.children;
 		<section class="e-content">
 			<slot />
 			<WebmentionShare postUrl={Astro.url.href} postTitle={title} />
+			<Webmentions target={canonicalURL} />
 			<p>
 				Published by <a
 					rel="author"
@@ -38,7 +30,6 @@ const webmentions = json.children;
 				>
 			</p>
 		</section>
-		<Webmentions webmentions={webmentions} />
 	</article>
 	<aside>
 		<slot name="aside" />
