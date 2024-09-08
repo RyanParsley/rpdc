@@ -3,8 +3,8 @@ title: My POSSE on Broadband
 description: Thoughts on how to own your data and play well with others
 pubDate: 2024-09-08
 updatedDate: 2024-09-08
-category: [writing, code]
-tags: [posse, indieWeb]
+categories: [writing, code]
+tags: [posse, indieWeb, digitalGarden]
 ---
 
 I signed up for Twitter back in 2007. It was a simpler time. It was a simpler
@@ -108,12 +108,12 @@ flowchart
 I'm currently folding ideas from this post into my blog. At the moment, I don't
 have syndication automated. I'm cautious about appearing overly promotional as I
 navigate this new approach. I've shared a couple posts to
-[mastodon](https://mastodon.social/@RyanParsley/113082555966252676) and
+[Mastodon](https://mastodon.social/@RyanParsley/113082555966252676) and
 [replies](https://mastodon.social/@RyanParsley/113082577656954796)
 [prove](/note/webmentions) my workflow is functioning as intended.
 
 If you find this useful, hit me up on
 [Mastodon](https://mastodon.social/@RyanParsley) or
-[bluesky](https://bsky.app/profile/ryanparsley.bsky.social). If I have something
+[Bluesky](https://bsky.app/profile/ryanparsley.bsky.social). If I have something
 wrong or you find a bug in my blog, I'd love to see it as an
 [issue](https://github.com/RyanParsley/rpdc/issues/new).
