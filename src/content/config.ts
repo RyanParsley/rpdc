@@ -35,6 +35,7 @@ const postSchema = {
 	...dateFields,
 	categories: z.array(z.string()).optional(),
 	tags: z.array(z.string()).optional(),
+	featured: z.boolean().optional(),
 };
 
 // Define collections
@@ -48,9 +49,15 @@ const blogCollection = defineCollection({
 	}),
 });
 
+const noteCollection = defineCollection({
+	schema: z.object({
+		...postSchema,
+	}),
+});
+
 const draftCollection = defineCollection({
 	schema: z.object({
-		...baseSchema,
+		...postSchema,
 		pubDate: z
 			.string()
 			.or(z.date())
@@ -68,23 +75,9 @@ const draftCollection = defineCollection({
 	}),
 });
 
-const tangentCollection = defineCollection({
-	schema: z.object({
-		...postSchema,
-	}),
-});
-
-const noteCollection = defineCollection({
-	schema: z.object({
-		...postSchema,
-		featured: z.boolean().optional(),
-	}),
-});
-
 export const collections = {
 	blog: blogCollection,
 	draft: draftCollection,
-	tangent: tangentCollection,
 	page: pageCollection,
 	note: noteCollection,
 };
