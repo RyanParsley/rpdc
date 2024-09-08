@@ -1,6 +1,5 @@
 ---
 title: Make a pi feel more like a mac
-tags:
 ---
 
 1. Invert scrolling<br>[https://raspberrypi.stackexchange.com/questions/75440/how-to-invert-scrolling-directi](https://raspberrypi.stackexchange.com/questions/75440/how-to-invert-scrolling-directi)

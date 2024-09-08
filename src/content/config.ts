@@ -1,127 +1,83 @@
 import { defineCollection, z } from "astro:content";
 
+// Reusable date transformer
+const dateTransformer = (val: string | Date | number | undefined) =>
+	val ? new Date(val) : new Date();
+
+// Date fields schema
+const dateFields = {
+	pubDate: z.string().or(z.date()).or(z.number()).transform(dateTransformer),
+	updatedDate: z
+		.string()
+		.optional()
+		.or(z.date())
+		.or(z.number())
+		.transform(dateTransformer),
+};
+
+// Base schema for common fields
+const baseSchema = {
+	title: z.string(),
+	description: z.string(),
+	heroImage: z.string().optional(),
+	gallery: z
+		.array(
+			z.object({
+				url: z.string(),
+				alt: z.string(),
+			}),
+		)
+		.optional(),
+};
+
+const postSchema = {
+	...baseSchema,
+	...dateFields,
+	categories: z.array(z.string()).optional(),
+	tags: z.array(z.string()).optional(),
+	featured: z.boolean().optional(),
+};
+
+// Define collections
 const pageCollection = defineCollection({
-	// Type-check frontmatter using a schema
-	schema: z.object({
-		title: z.string(),
-		description: z.string(),
-		// Transform string to Date object
-		heroImage: z.string().optional(),
-	}),
+	schema: z.object(baseSchema),
 });
 
 const blogCollection = defineCollection({
-	// Type-check frontmatter using a schema
 	schema: z.object({
-		title: z.string(),
-		description: z.string(),
-		categories: z.array(z.string()).optional(),
-		tags: z.array(z.string()).optional(),
-		// Transform string to Date object
-		pubDate: z
-			.string()
-			.or(z.date())
-			.or(z.number())
-			.transform((val: string | Date | number) => new Date(val)),
-		updatedDate: z
-			.string()
-			.optional()
-			.or(z.date())
-			.or(z.number())
-			.transform((val: string | Date | number | undefined) =>
-				val ? new Date(val) : new Date(),
-			),
-		heroImage: z.string().optional(),
-	}),
-});
-
-const draftCollection = defineCollection({
-	// Type-check frontmatter using a schema
-	schema: z.object({
-		title: z.string(),
-		description: z.string().optional(),
-		// Transform string to Date object
-		pubDate: z
-			.string()
-			.optional()
-			.or(z.date())
-			.or(z.number())
-			.transform((val: string | Date | number | undefined) =>
-				val ? new Date(val) : new Date(),
-			),
-		updatedDate: z
-			.string()
-			.optional()
-			.or(z.date())
-			.or(z.number())
-			.transform((val: string | Date | number | undefined) =>
-				val ? new Date(val) : new Date(),
-			),
-		heroImage: z.string().optional(),
-	}),
-});
-
-const tangentCollection = defineCollection({
-	// Type-check frontmatter using a schema
-	schema: z.object({
-		title: z.string(),
-		description: z.string(),
-		// Transform string to Date object
-		pubDate: z
-			.string()
-			.or(z.date())
-			.transform((val: string | Date) => new Date(val)),
-		updatedDate: z
-			.string()
-			.optional()
-			.or(z.date())
-			.transform((val: string | Date | undefined) =>
-				val ? new Date(val) : new Date(),
-			),
-		heroImage: z.string().optional(),
-		gallery: z
-			.array(
-				z.object({
-					url: z.string(),
-					alt: z.string(),
-				}),
-			)
-			.optional(),
+		...postSchema,
 	}),
 });
 
 const noteCollection = defineCollection({
-	// Type-check frontmatter using a schema
 	schema: z.object({
-		title: z.string(),
-		description: z.string(),
-		tags: z.array(z.string()).optional(),
-		featured: z.boolean().optional(),
-		// Transform string to Date object
+		...postSchema,
+	}),
+});
+
+const draftCollection = defineCollection({
+	schema: z.object({
+		...postSchema,
 		pubDate: z
 			.string()
 			.or(z.date())
-			.transform((val: string | Date) => new Date(val)),
+			.or(z.number())
+			.transform(dateTransformer)
+			.optional(),
 		updatedDate: z
 			.string()
+			.optional()
 			.or(z.date())
-			.transform((val: string | Date) => new Date(val)),
-		heroImage: z.string().optional(),
-		gallery: z
-			.array(
-				z.object({
-					url: z.string(),
-					alt: z.string(),
-				}),
-			)
+			.or(z.number())
+			.transform(dateTransformer)
 			.optional(),
+		description: z.string().optional(),
 	}),
 });
 
 export const collections = {
 	blog: blogCollection,
 	draft: draftCollection,
-	tangent: tangentCollection,
 	page: pageCollection,
 	note: noteCollection,
 };

@@ -1,6 +1,6 @@
 ---
 title: "3D printers: Where to start"
-tags:
+tags: []
 ---
 
 ## This isn't all that new
@@ -25,7 +25,7 @@ While it's true the first thing people tend to print are trinkets, that's far fr
 
 It's a little more complicated than that, but that's a pretty good way to frame it.
 
-## No model, no problem!
+## No model, no problem
 
 - Thingiverse
 - MyMiniFactory
@@ -34,9 +34,9 @@ It's a little more complicated than that, but that's a pretty good way to frame 
 
 ```
 G1 X1.2 F25
-				Y2.3
-				X0.0 F10
-				Y0.0
+    Y2.3
+    X0.0 F10
+    Y0.0
 ```
 
 ## Shapeways
