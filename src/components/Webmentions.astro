@@ -1,74 +1,135 @@
 ---
-import { Image } from "astro:assets";
+interface Props {
+	target: string;
+}
 
-interface AuthorProps {
+const { target } = Astro.props;
+
+const API_TOKEN = import.meta.env.WEBMENTION_IO_TOKEN;
+const encodedTarget = encodeURIComponent(target);
+const apiUrl = `https://webmention.io/api/mentions.jf2?target=${encodedTarget}&token=${API_TOKEN}`;
+
+const response = await fetch(apiUrl);
+const { children } = await response.json();
+
+const likesAndRepostsCount = children.filter(
+	(item: WebmentionEntry) =>
+		item["wm-property"] === "like-of" || item["wm-property"] === "repost-of",
+).length;
+const mentionsCount = children.filter(
+	(item: WebmentionEntry) => item["wm-property"] === "mention-of",
+).length;
+const repliesCount = children.filter(
+	(item: WebmentionEntry) => item["wm-property"] === "in-reply-to",
+).length;
+
+interface WebmentionEntry {
+	type: "entry";
+	author: WebmentionCard;
+	url: string;
+	published: string;
+	"wm-received": string;
+	"wm-id": number;
+	"wm-source": string;
+	"wm-target": string;
+	"wm-protocol": string;
+	content: WebmentionContent;
+	"in-reply-to": string;
+	"wm-property": string;
+	"wm-private": boolean;
+}
+
+interface WebmentionCard {
+	type: "card";
 	name: string;
 	photo: string;
 	url: string;
 }
 
-interface WebmentionProps {
-	author: AuthorProps;
-	"wm-received": string;
-	"wm-property": string;
+interface WebmentionContent {
+	html: string;
+	text: string;
 }
-
-interface Props {
-	webmentions: WebmentionProps[];
-}
-
-const { webmentions } = Astro.props;
-
-const showDate = (webmention: string) =>
-	new Date(webmention).toLocaleDateString(undefined, {
-		day: "numeric",
-		month: "long",
-		year: "numeric",
-	});
 ---
 
 {
-	webmentions.length > 0 ? (
-		<section aria-label="Webmentions">
-			<h2>Webmentions</h2>
-
-			<ul>
-				{webmentions.map((webmention: WebmentionProps) => (
-					<li>
-						<div class="avatar-and-author">
-							{webmention.author.photo ? (
-								<Image
-									alt=""
-									height="50"
-									src={webmention.author.photo}
-									width="50"
-								/>
-							) : null}
-							<a href={webmention.author.url} rel="author">
-								{webmention.author.name}
-							</a>
+	children.length > 0 && (
+		<div class="webmentions">
+			<h3>Webmentions</h3>
+			<p>
+				{likesAndRepostsCount} likes & reposts,
+				{mentionsCount} mentions,
+				{repliesCount} replies
+			</p>
+			<ul class="mentions">
+				{children.map((mention: WebmentionEntry) => (
+					<li class="mention">
+						<div class="author">
+							<a href={mention.url} target="_blank" rel="noopener noreferrer">
+								{mention.author?.photo && (
+									<img src={mention.author.photo} class="author-photo" />
+								)}
+								{mention.author ? mention.author.name : "Someone"}
+							</a>{" "}
+							{mention["wm-property"] === "in-reply-to"
+								? "replied"
+								: mention["wm-property"] === "like-of"
+									? "liked"
+									: mention["wm-property"] === "repost-of"
+										? "reposted"
+										: "mentioned"}
 						</div>
-						<div class="information">
-							{webmention["wm-property"] === "like-of" ? (
-								<p>
-									Liked on
-									<time aria-hidden="true" datetime={webmention["wm-received"]}>
-										{showDate(webmention["wm-received"])}
-									</time>
-								</p>
-							) : null}
-							{webmention["wm-property"] === "repost-of" ? (
-								<p>
-									Reposted on
-									<time aria-hidden="true" datetime={webmention["wm-received"]}>
-										{showDate(webmention["wm-received"])}
-									</time>
-								</p>
-							) : null}
-						</div>
+						{mention.content && <blockquote>{mention.content.text}</blockquote>}
 					</li>
 				))}
 			</ul>
-		</section>
-	) : null
+		</div>
+	)
 }
+
+<style>
+	.webmentions {
+		margin-top: 2rem;
+		border-top: 1px solid var(--nord3);
+		padding-top: 1rem;
+	}
+
+	.webmentions ul {
+		list-style-type: none;
+		padding: 0;
+	}
+
+	.webmentions li {
+		margin-bottom: 1rem;
+	}
+
+	.webmentions blockquote {
+		margin: 0.5rem 0 0 1rem;
+		padding-left: 1rem;
+		border-left: 2px solid var(--nord10);
+	}
+
+	.mention {
+		border: solid 1px var(--nord3);
+		padding: 1.5rem;
+		border-radius: 0.5rem;
+	}
+
+	.author {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+
+		& > a {
+			align-items: center;
+			display: flex;
+		}
+	}
+
+	.author-photo {
+		height: 3rem;
+		width: 3rem;
+		border-radius: 1.5rem;
+		margin: 0.5rem;
+	}
+</style>
