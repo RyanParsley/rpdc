@@ -2,27 +2,53 @@
 interface Props {
 	target: string;
 }
-
 const { target } = Astro.props;
 
 const API_TOKEN = import.meta.env.WEBMENTION_IO_TOKEN;
-const encodedTarget = encodeURIComponent(target);
-const apiUrl = `https://webmention.io/api/mentions.jf2?target=${encodedTarget}&token=${API_TOKEN}`;
 
-const response = await fetch(apiUrl);
-const { children } = await response.json();
+const fetchWebmentions = async (target: string) => {
+	const encodedTarget = encodeURIComponent(target);
+	const apiUrl = `https://webmention.io/api/mentions.jf2?target=${encodedTarget}&token=${API_TOKEN}`;
+	const response = await fetch(apiUrl);
+	return (await response.json()).children;
+};
 
-const likesAndRepostsCount = children.filter(
-	(item: WebmentionEntry) =>
-		item["wm-property"] === "like-of" || item["wm-property"] === "repost-of",
-).length;
-const mentionsCount = children.filter(
-	(item: WebmentionEntry) => item["wm-property"] === "mention-of",
-).length;
-const repliesCount = children.filter(
-	(item: WebmentionEntry) => item["wm-property"] === "in-reply-to",
-).length;
+const isProperty = (item: WebmentionEntry, property: string): boolean => {
+	return item["wm-property"] === property;
+};
 
+const children = [
+	...(await fetchWebmentions(target)),
+	...(await fetchWebmentions(`${target}.html`)),
+];
+
+const counts = children.reduce(
+	(
+		{ likesAndRepostsCount, mentionsCount, repliesCount },
+		item: WebmentionEntry,
+	) => ({
+		likesAndRepostsCount:
+			likesAndRepostsCount +
+			(isProperty(item, "like-of") || isProperty(item, "repost-of") ? 1 : 0),
+		mentionsCount: mentionsCount + (isProperty(item, "mention-of") ? 1 : 0),
+		repliesCount: repliesCount + (isProperty(item, "in-reply-to") ? 1 : 0),
+	}),
+	{ likesAndRepostsCount: 0, mentionsCount: 0, repliesCount: 0 },
+);
+
+const { likesAndRepostsCount, mentionsCount, repliesCount } = counts;
+
+interface WebmentionContent {
+	html: string;
+	text: string;
+}
+
+interface WebmentionCard {
+	type: "card";
+	name: string;
+	photo: string;
+	url: string;
+}
 interface WebmentionEntry {
 	type: "entry";
 	author: WebmentionCard;
@@ -37,18 +63,6 @@ interface WebmentionEntry {
 	"in-reply-to": string;
 	"wm-property": string;
 	"wm-private": boolean;
-}
-
-interface WebmentionCard {
-	type: "card";
-	name: string;
-	photo: string;
-	url: string;
-}
-
-interface WebmentionContent {
-	html: string;
-	text: string;
 }
 ---
 
