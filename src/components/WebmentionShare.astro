@@ -11,8 +11,8 @@ const encodedUrl = encodeURIComponent(postUrl);
 
 const blueskyShareText = `${postTitle} ${postUrl}`;
 const encodedBlueskyShareText = encodeURIComponent(blueskyShareText);
-const blueskyShareUrl = `https://bsky.app/intent/compose?text=${encodedBlueskyShareText}`;
 
+const blueskyShareUrl = `https://bsky.app/intent/compose?text=${encodedBlueskyShareText}`;
 const mastodonShareUrl = `https://mastodon.social/share?text=${encodedTitle}&url=${encodedUrl}`;
 ---
 
