@@ -1,0 +1,32 @@
+---
+type Props = {
+	caption: string;
+	file: string;
+};
+
+const { caption, file } = Astro.props;
+---
+
+<figure>
+	<figcaption>{caption}</figcaption>
+	<audio class="u-audio" controls src={file}></audio>
+	<a href={file}> Download audio </a>
+</figure>
+
+<style>
+	figure {
+		display: block;
+		margin: 1.5rem 0;
+		background-color: var(--nord1);
+		border-radius: 0.5rem;
+		padding: 1rem;
+	}
+
+	figure > * {
+		display: block;
+	}
+
+	figure > audio {
+		margin: 1rem 0;
+	}
+</style>
