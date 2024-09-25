@@ -1,9 +1,18 @@
 ---
 import Layout from "@layouts/Page.astro";
+import Gallery from "@components/ImageGallery.astro";
 import FormattedDate from "@components/FormattedDate.astro";
 import WebmentionShare from "@components/WebmentionShare.astro";
-const { title, description, pubDate, updatedDate, heroImage, canonicalURL } =
-	Astro.props;
+const {
+	title,
+	description,
+	pubDate,
+	updatedDate,
+	heroImage,
+	canonicalURL,
+	gallery,
+	galleryPath,
+} = Astro.props;
 import Webmentions from "@components/Webmentions.astro";
 ---
 
@@ -19,6 +28,7 @@ import Webmentions from "@components/Webmentions.astro";
 			)
 		}
 		<section class="e-content">
+			{gallery && <Gallery images={gallery} path={galleryPath} />}
 			<slot />
 			<WebmentionShare postUrl={Astro.url.href} postTitle={title} />
 			<Webmentions target={canonicalURL} />
