@@ -8,12 +8,12 @@ featured: false
 tags:
   - note
 header:
-  image: /note/fractal-north-pi-inside.jpg
-  teaser: /note/fractal-north-pi-inside.jpg
+  image: ./fractal-north-pi-inside.jpg
+  teaser: ./fractal-north-pi-inside.jpg
 gallery:
-  - url: /note/fractal-north-pi-inside.jpg
+  - url: ./fractal-north-pi-inside.jpg
     alt: On a Kallax
-  - url: /note/fractal-north-pi-outside.jpg
+  - url: ./fractal-north-pi-outside.jpg
     alt: Took the pi outside for a photo shoot
 ---
 

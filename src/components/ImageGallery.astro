@@ -1,23 +1,51 @@
 ---
-type Image = {
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+type ImageData = {
 	url: string;
 	alt: string;
 };
 
 type Props = {
-	images: Image[];
+	images: ImageData[];
+	path: string;
 };
 
-const { images } = Astro.props;
+const { images, path } = Astro.props;
+
+const getFullPath = (url: string) =>
+	url.startsWith("./")
+		? `/src/content${path}/${url.replace("./", "")}`
+		: `/src/assets/${url.replace("./", "")}`;
+
+const imagePaths = images.map((img) => ({
+	...img,
+	url: getFullPath(img.url),
+}));
+
+const imageAssets = import.meta.glob<{ default: ImageMetadata }>(
+	`/src/**/*.{jpeg,jpg,png,gif}`,
+);
+
+const deriveSrc = async (image: ImageData) => {
+	const source = imageAssets?.[image?.url]?.();
+	if (source === undefined) {
+		throw new Error(
+			`"${image.url}" does not exist in glob: "src/assets/*.{jpeg,jpg,png,gif}"`,
+		);
+	}
+	return source;
+};
 ---
 
 <div class="gallery">
 	{
-		images.map((image: Image, index: number) => (
+		imagePaths.map((image: ImageData, index: number) => (
 			<>
 				<figure>
 					<a href={`#image-${index}`} title={image.alt}>
-						<img src={image.url} alt={image.alt} />
+						<Image src={deriveSrc(image)} alt={image.alt} />
 					</a>
 				</figure>
 				<a

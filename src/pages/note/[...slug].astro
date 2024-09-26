@@ -1,7 +1,6 @@
 ---
 import { getCollection } from "astro:content";
 import Post from "@layouts/Post.astro";
-import BlogGallery from "@components/BlogGallery.astro";
 import Tags from "@components/Tags.astro";
 import Backlinks from "@components/Backlinks.astro";
 const { slug } = Astro.props;
@@ -24,8 +23,7 @@ const canonicalURL = new URL(`note/${slug}`, Astro.site)
 	.replace(".html", "");
 ---
 
-<Post {...post.data} canonicalURL={canonicalURL}>
-	{post.data.gallery && <BlogGallery images={post.data.gallery} />}
+<Post {...post.data} canonicalURL={canonicalURL} galleryPath={`/note/${slug}`}>
 	<Content />
 	<Backlinks currentSlug=`/note/${slug}` slot="aside" />
 	<Tags collection={posts} baseRoute="note/tag" slot="aside" />

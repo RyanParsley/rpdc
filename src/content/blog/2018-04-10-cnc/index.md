@@ -12,14 +12,19 @@ pubDate: 2018-04-10T00:00:00Z
 updatedDate: 2018-04-10T00:00:00Z
 author: Ryan Parsley
 thumb_image:
-  image: ""
+  image: "./cnc_helloworld.jpg"
   image_alt: ""
 featured_image:
-  image: ""
+  image: "./cnc_helloworld.jpg"
   image_alt: ""
 seo:
   open_graph_type: article
   no_index: false
+gallery:
+  - url: ./cnc_final.jpg
+    alt: final.bak.cnc
+  - url: ./cnc_helloworld.jpg
+    alt: Hello World!
 ---
 
 In an effort to better understand how CNC Routers work, I decided to build one
@@ -32,16 +37,22 @@ old computers I had access to. For this build, I only needed to purchase 3
 stepper motor drivers and an Arduino. For less than $50 I proved that I am able
 to build such a device.
 
+![Minimum Viable CNC from found parts](./cnc_dvd.jpg)
+
 With this success, I had the confidence to buy some NEMA 17 motors (at about $15
 a piece) and scale the build up. This build worked mostly fine, but the motors
 would occasionally stick. I got the feeling my naive design was to blame. About
 that time, I had purchased a 3D Printer and decided to put it to work for me.
+
+![Less minimal, more viable](./cnc_version2.jpg)
 
 A little research revealed the
 [MaduixaCNC](https://www.thingiverse.com/thing:989593). It's an open source
 design based on a handful of 3d printed parts coupled with fairly accessible
 hardware. While not perfect, this design strikes me as a fairly nice jumping off
 point if you wanted to make your own CNC.
+
+![It's alive!](./cnc_helloworld.jpg)
 
 In the end, I built a CNC over the course of a year for a little over $200. If
 you simply want to have a CNC, this may not be the most practical way to get

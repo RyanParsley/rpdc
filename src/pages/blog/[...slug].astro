@@ -22,7 +22,7 @@ const canonicalURL = new URL(`blog/${slug}`, Astro.site)
 	.replace(".html", "");
 ---
 
-<Post {...post.data} canonicalURL={canonicalURL}>
+<Post {...post.data} canonicalURL={canonicalURL} galleryPath={`/blog/${slug}`}>
 	<Content />
 	<Backlinks currentSlug=`/blog/${slug}` slot="aside" />
 	{

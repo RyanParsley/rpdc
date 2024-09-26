@@ -19,7 +19,6 @@ const dateFields = {
 const baseSchema = {
 	title: z.string(),
 	description: z.string(),
-	heroImage: z.string().optional(),
 	gallery: z
 		.array(
 			z.object({
@@ -40,39 +39,49 @@ const postSchema = {
 
 // Define collections
 const pageCollection = defineCollection({
-	schema: z.object(baseSchema),
+	schema: ({ image }) =>
+		z.object({
+			...baseSchema,
+			heroImage: image().optional(),
+		}),
 });
 
 const blogCollection = defineCollection({
-	schema: z.object({
-		...postSchema,
-	}),
+	schema: ({ image }) =>
+		z.object({
+			...postSchema,
+			heroImage: image().optional(),
+		}),
 });
 
 const noteCollection = defineCollection({
-	schema: z.object({
-		...postSchema,
-	}),
+	schema: ({ image }) =>
+		z.object({
+			...postSchema,
+			heroImage: image().optional(),
+		}),
 });
 
 const draftCollection = defineCollection({
-	schema: z.object({
-		...postSchema,
-		pubDate: z
-			.string()
-			.or(z.date())
-			.or(z.number())
-			.transform(dateTransformer)
-			.optional(),
-		updatedDate: z
-			.string()
-			.optional()
-			.or(z.date())
-			.or(z.number())
-			.transform(dateTransformer)
-			.optional(),
-		description: z.string().optional(),
-	}),
+	schema: ({ image }) =>
+		z.object({
+			...postSchema,
+			heroImage: image().optional(),
+			pubDate: z
+				.string()
+				.or(z.date())
+				.or(z.number())
+				.transform(dateTransformer)
+				.optional(),
+			updatedDate: z
+				.string()
+				.optional()
+				.or(z.date())
+				.or(z.number())
+				.transform(dateTransformer)
+				.optional(),
+			description: z.string().optional(),
+		}),
 });
 
 export const collections = {
