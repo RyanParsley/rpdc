@@ -14,9 +14,14 @@ type Props = {
 
 const { images, path } = Astro.props;
 
+const getFullPath = (url: string) =>
+	url.startsWith("./")
+		? `/src/content${path}/${url.replace("./", "")}`
+		: `/src/assets/${url.replace("./", "")}`;
+
 const imagePaths = images.map((img) => ({
 	...img,
-	url: `/src/content${path}/${img.url.replace("./", "")}`,
+	url: getFullPath(img.url),
 }));
 
 const imageAssets = import.meta.glob<{ default: ImageMetadata }>(
