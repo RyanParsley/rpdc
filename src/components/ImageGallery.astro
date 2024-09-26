@@ -54,7 +54,9 @@ const deriveSrc = async (image: ImageData) => {
 					id={`image-${index}`}
 					title="Click to return to post"
 				>
-					<div style={`background-image:url(${image.url})`} />
+					<div>
+						<Image src={deriveSrc(image)} alt={image.alt} />
+					</div>
 				</a>
 			</>
 		))
@@ -106,14 +108,12 @@ const deriveSrc = async (image: ImageData) => {
 	}
 
 	.lightbox div {
-		/* Full width and height */
-		display: block;
 		width: 100%;
 		height: 100%;
-
-		/* Size and position background image */
-		background-position: center;
-		background-repeat: no-repeat;
-		background-size: contain;
+		justify-content: center;
+		align-items: center;
+	}
+	.lightbox div img {
+		object-fit: contain;
 	}
 </style>
