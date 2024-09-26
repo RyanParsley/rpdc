@@ -70,6 +70,14 @@ const deriveSrc = async (image: ImageData) => {
 		grid-gap: 0.5rem;
 	}
 
+	.gallery > figure {
+		margin: 0;
+		padding: 0;
+		grid-column: 1fr;
+		grid-row: 1fr;
+		aspect-ratio: 1 / 1;
+	}
+
 	.gallery img {
 		width: 100%;
 		height: 100%;
@@ -77,12 +85,6 @@ const deriveSrc = async (image: ImageData) => {
 		display: block;
 	}
 
-	.gallery > figure {
-		margin: 0;
-		padding: 0;
-		grid-column: 1fr;
-		grid-row: 1fr;
-	}
 	.lightbox {
 		/* Default to hidden */
 		display: none;
