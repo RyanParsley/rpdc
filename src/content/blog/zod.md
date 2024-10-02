@@ -7,8 +7,8 @@ featured: false
 categories:
   - code
 tags:
-  - TypeScript
-  - Zod
+  - typeScript
+  - zod
 ---
 
 ## Introduction

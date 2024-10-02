@@ -7,8 +7,7 @@ categories:
   - code
 tags:
   - Left Brain
-  - Unix
-  - Linux
+  - unix
 ---
 
 Sometimes 1000 words doesn't paint a very good picture.

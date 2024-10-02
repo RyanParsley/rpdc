@@ -9,7 +9,7 @@ categories:
 tags:
   - code
   - astro
-  - typescript
+  - typeScript
   - zod
 ---
 
