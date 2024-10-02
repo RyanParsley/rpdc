@@ -2,6 +2,7 @@
 title: Life on SMARS
 description: >-
   I'm hooked on tinkering with these cute little rover robots
+OGImage: ./SMARS.jpg
 pubDate: 2023-08-20
 updatedDate: 2024-08-21
 featured: true

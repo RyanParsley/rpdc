@@ -4,6 +4,7 @@ title: Add GPS to a T-Deck
 description: A simple but powerful upgrade for your T-Deck
 pubDate: 2024-08-05T00:00:00Z
 updatedDate: 2024-08-05T00:00:00Z
+OGImage: ./tdeck.jpg
 featured: false
 tags:
   - note
@@ -36,7 +37,7 @@ GPS module.
 ## Solution
 
 With your device ready to be paired with your computer, visit
-https://client.meshtastic.org/ and connect. Once you see your T-Deck is connected,
+<https://client.meshtastic.org/> and connect. Once you see your T-Deck is connected,
 navigate to `Config` and select the `Position` tab. Under `Position Settings`
 you'll find GPS Mode. Select `Enabled` and hit save. After your device reboots you
 should be good to go.
