@@ -11,6 +11,7 @@ const {
 	class: className,
 	url,
 	shouldShowSearch,
+	image,
 	frontmatter,
 } = Astro.props;
 const isSearchVisible = url == "/404.html" || shouldShowSearch;
@@ -18,7 +19,7 @@ const isSearchVisible = url == "/404.html" || shouldShowSearch;
 
 <html lang="en">
 	<head>
-		<BaseHead title={title} description={description} />
+		<BaseHead title={title} description={description} image={image} />
 	</head>
 	<body>
 		<Header />

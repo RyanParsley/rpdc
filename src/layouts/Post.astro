@@ -12,11 +12,17 @@ const {
 	canonicalURL,
 	gallery,
 	galleryPath,
+	OGImage,
 } = Astro.props;
 import Webmentions from "@components/Webmentions.astro";
 ---
 
-<Layout class="has-aside" title={title} description={description}>
+<Layout
+	class="has-aside"
+	title={title}
+	description={description}
+	image={OGImage}
+>
 	<article class="h-entry">
 		{heroImage && <img width={720} height={360} src={heroImage} alt="" />}
 		<FormattedDate date={pubDate} />
