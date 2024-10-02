@@ -1,0 +1,18 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@layouts/Page.astro";
+import Tags from "@components/Tags.astro";
+
+const posts = await getCollection("blog");
+---
+
+<Layout
+	title="Post Tags"
+	description="A loose categorization of posts I've written"
+	shouldShowSearch="true"
+>
+	<p>Tags are one way to navigate through posts.</p>
+	<section>
+		<Tags collection={posts} baseRoute="blog/tag" />
+	</section>
+</Layout>
