@@ -1,0 +1,40 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+const { collection, baseRoute } = Astro.props;
+
+interface Props {
+	collection: CollectionEntry<"blog">[] | CollectionEntry<"note">[];
+	baseRoute: string;
+}
+
+const categories = [
+	...new Set(
+		collection
+			.filter((entry) => !!entry.data.categories)
+			.map((entry) => entry.data.categories)
+			.flat()
+			.filter((category) => category !== "post"),
+	),
+];
+---
+
+<h2>Categories</h2>
+<ul>
+	{
+		categories.map((category) => (
+			<li>
+				<a href={`/${baseRoute}/${category}`} title={category}>
+					{category}
+				</a>
+			</li>
+		))
+	}
+</ul>
+
+<style lang="scss">
+	ul {
+		margin: 0.75rem 0 0 0;
+		padding: 0 0 0 1rem;
+	}
+</style>

@@ -1,0 +1,44 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@layouts/Page.astro";
+
+export async function getStaticPaths() {
+	const posts = await getCollection("blog");
+	const uniqueCategories = [
+		...new Set(
+			posts
+				.filter((post) => !!post.data.categories)
+				.map((post) => post.data.categories)
+				.flat(),
+		),
+	];
+
+	return uniqueCategories.map((category) => {
+		if (category == undefined) return;
+
+		const filteredCategories = posts.filter((post) =>
+			post.data.categories?.includes(category),
+		);
+
+		return {
+			params: { category },
+			props: { posts: filteredCategories },
+		};
+	});
+}
+
+const category = Astro.params?.category || "?";
+const { posts } = Astro.props;
+---
+
+<Layout title=`Posts about ${category}`>
+	<ul>
+		{
+			posts.map((post) => (
+				<li>
+					<a href={`/blog/${post.slug}`}>{post.data.title}</a>
+				</li>
+			))
+		}
+	</ul>
+</Layout>

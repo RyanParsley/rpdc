@@ -1,0 +1,13 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@layouts/Page.astro";
+import Categories from "@components/Categories.astro";
+
+const posts = await getCollection("blog");
+---
+
+<Layout title="Blog (Categories)" description="" shouldShowSearch="true">
+	<section>
+		<Categories collection={posts} baseRoute="blog/category" />
+	</section>
+</Layout>
