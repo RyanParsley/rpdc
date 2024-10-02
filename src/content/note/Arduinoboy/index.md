@@ -1,6 +1,7 @@
 ---
 title: Arduinoboy Build Notes
 description: I made a thing so I can control MIDI via a Game Boy, and so can you!
+OGImage: ./arduinoboy_soldered_up.jpg
 pubDate: 2024-02-26
 updatedDate: 2024-09-27
 ---

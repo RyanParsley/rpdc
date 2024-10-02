@@ -11,6 +11,7 @@ tags:
 pubDate: 2018-04-10T00:00:00Z
 updatedDate: 2018-04-10T00:00:00Z
 author: Ryan Parsley
+OGImage: ./cnc_helloworld.jpg
 thumb_image:
   image: "./cnc_helloworld.jpg"
   image_alt: ""

@@ -4,6 +4,7 @@ title: Fractal North Pi
 description: I made an oddly involved case for a raspberry pi
 pubDate: 2024-07-21T00:00:00Z
 updatedDate: 2024-07-21T00:00:00Z
+OGImage: ./fractal-north-pi-outside.jpg
 featured: false
 tags:
   - note
