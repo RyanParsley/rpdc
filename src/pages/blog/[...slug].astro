@@ -5,6 +5,9 @@ import Post from "@layouts/Post.astro";
 import RelatedPosts from "@components/RelatedPosts.astro";
 import Backlinks from "@components/Backlinks.astro";
 const { slug } = Astro.props;
+import Tags from "@components/Tags.astro";
+
+const posts = await getCollection("blog");
 
 export async function getStaticPaths() {
 	const posts = await getCollection("blog");
@@ -30,11 +33,18 @@ const canonicalURL = new URL(`blog/${slug}`, Astro.site)
 >
 	<Content />
 	<Backlinks currentSlug=`/blog/${slug}` slot="aside" />
+	<Tags
+		collection={posts}
+		currentTags={post.data.tags}
+		baseRoute="blog/tag"
+		slot="aside"
+	/>
 	{
 		post.data.categories && (
 			<RelatedPosts
 				slot="aside"
 				categories={post.data.categories}
+				tags={post.data.tags}
 				slug={post.slug}
 			/>
 		)

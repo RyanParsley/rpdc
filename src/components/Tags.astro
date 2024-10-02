@@ -1,20 +1,34 @@
 ---
 import type { CollectionEntry } from "astro:content";
-
-const { collection, baseRoute } = Astro.props;
+const { collection, baseRoute, currentTags } = Astro.props;
 
 interface Props {
 	collection: CollectionEntry<"blog">[] | CollectionEntry<"note">[];
+	currentTags?: string[] | undefined;
 	baseRoute: string;
 }
 
-const tags = [
+const tags: string[] = collection
+	.filter((entry) => !!entry.data.tags)
+	.map((entry) => entry.data.tags)
+	.flat()
+	.filter((tag) => tag !== undefined);
+
+const tagCount = (tags: string[] | undefined, tag: string) =>
+	[...(tags || [])].filter((t) => t === tag).length;
+
+const uniqueTags = [
 	...new Set(
-		collection
-			.filter((entry) => !!entry.data.tags)
-			.map((entry) => entry.data.tags)
-			.flat()
-			.filter((tag) => tag !== "note"),
+		tags
+			.filter((tag) => tag !== "note")
+			.filter((tag) => tag !== undefined)
+			.filter(
+				(tag) =>
+					currentTags === undefined ||
+					currentTags
+						.map((currentTag) => currentTag.toLowerCase())
+						.includes(tag.toLowerCase()),
+			),
 	),
 ];
 ---
@@ -22,10 +36,10 @@ const tags = [
 <h2>Tags</h2>
 <ul>
 	{
-		tags.map((tag) => (
+		uniqueTags.map((tag) => (
 			<li>
 				<a href={`/${baseRoute}/${tag}`} title={tag}>
-					{tag}
+					{tag} ({tagCount(tags, tag)})
 				</a>
 			</li>
 		))

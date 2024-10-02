@@ -7,8 +7,8 @@ featured: true
 categories:
   - code
 tags:
-  - TypeScript
-  - Astro
+  - typeScript
+  - astro
 ---
 
 One of the first components I wrote for this blog migration was a naive image
