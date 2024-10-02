@@ -50,6 +50,7 @@ const blogCollection = defineCollection({
 	schema: ({ image }) =>
 		z.object({
 			...postSchema,
+			OGImage: image().optional(),
 			heroImage: image().optional(),
 		}),
 });
@@ -58,6 +59,7 @@ const noteCollection = defineCollection({
 	schema: ({ image }) =>
 		z.object({
 			...postSchema,
+			OGImage: image().optional(),
 			heroImage: image().optional(),
 		}),
 });
@@ -66,6 +68,7 @@ const draftCollection = defineCollection({
 	schema: ({ image }) =>
 		z.object({
 			...postSchema,
+			OGImage: image().optional(),
 			heroImage: image().optional(),
 			pubDate: z
 				.string()
