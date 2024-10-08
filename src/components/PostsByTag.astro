@@ -12,15 +12,15 @@ interface Props {
 
 const items = collection
 	.filter((post) => post.data.tags?.includes(desiredTag))
-	.map(({ slug, data: { title, description, tags, image } }) => ({
+	.map(({ slug, data: { title, description, tags, OGImage } }) => ({
 		name: title,
 		description,
-		tags: tags.map((tag) => ({
+		tags: tags?.map((tag) => ({
 			url: `/${baseRoute}/tag/${tag}`,
 			name: tag,
 		})),
 		url: `/${baseRoute}/${slug}`,
-		image,
+		image: { ...OGImage, alt: "static alt" },
 	}));
 ---
 

@@ -29,6 +29,9 @@ const notes = await getCollection("note");
 	<section>
 		<PostsByTag collection={notes} baseRoute="note" desiredTag="indieWeb" />
 	</section>
+	<section>
+		<PostsByTag collection={notes} baseRoute="note" desiredTag="music" />
+	</section>
 </Layout>
 
 <style>

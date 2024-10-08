@@ -6,7 +6,7 @@ interface Props {
 	collection: CollectionEntry<"blog">[] | CollectionEntry<"note">[];
 	currentTags?: string[] | undefined;
 	baseRoute: string;
-	inline: boolean;
+	inline?: boolean;
 }
 
 const tags: string[] = collection

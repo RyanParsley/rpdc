@@ -19,12 +19,12 @@ refactor and talk about some of the benefits of this new iteration.
 
 ## How it started
 
-Let's start by looking at the first iteration that I shipped.  This component
+Let's start by looking at the first iteration that I shipped. This component
 was functional, and a completely respectable thing to ship to production, but
 there's always room for improvement. Does anything jump out to you as
 problematic before you read on?
 
-```astro
+```typescript
 ---
 type Image = {
  url: string;
@@ -63,7 +63,7 @@ const { images } = Astro.props;
 Now, let's take a look at my recently refactored version. It's got more going on
 to be sure.
 
-```astro
+```typescript
 ---
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
@@ -153,9 +153,9 @@ dynamically. Fortunately, a more advanced recipe introduced me to a vite method
 `import.meta.glob` to help. The following code will gather all images found in
 the `src` directory and make them available for the `Image` component.
 
-```astro
+```typescript
 const imageAssets = import.meta.glob<{ default: ImageMetadata }>(
-`/src/**/*.{jpeg,jpg,png,gif}`,
+  `/src/**/*.{jpeg,jpg,png,gif}`,
 );
 ```
 
@@ -167,12 +167,12 @@ images I want. The new `getFullPath` function allows for this. I may build this
 out more later, but for now, I images relative to the markdown, or absolute by
 way of a designated asset directory.
 
- ```astro
- const getFullPath = (url: string) =>
+```typescript
+const getFullPath = (url: string) =>
   url.startsWith("./")
-   ? `/src/content${path}/${url.replace("./", "")}`
-   : `/src/assets/${url.replace("./", "")}`;
- ```
+    ? `/src/content${path}/${url.replace("./", "")}`
+    : `/src/assets/${url.replace("./", "")}`;
+```
 
 ## Conclusion
 

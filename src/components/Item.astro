@@ -4,12 +4,14 @@ import { Image } from "astro:assets";
 type Props = {
 	name: string;
 	description: string;
-	tags: { url: string; name: string }[];
+	tags?: { url: string; name: string }[] | undefined;
 	url: string;
-	image?: {
-		src: string;
-		alt: string;
-	};
+	image?:
+		| {
+				src: string;
+				alt: string;
+		  }
+		| undefined;
 };
 
 const { description, name, image, tags, url } = Astro.props;
@@ -17,9 +19,9 @@ const { description, name, image, tags, url } = Astro.props;
 
 <div class="item">
 	{
-		image && (
+		image?.src && (
 			<div class="image">
-				<Image src={image.src} alt={image.alt} />
+				<Image src={image?.src} alt={image?.alt || name} />
 			</div>
 		)
 	}
@@ -28,12 +30,12 @@ const { description, name, image, tags, url } = Astro.props;
 			{name}
 		</a>
 		{
-			tags?.length > 0 && (
+			tags?.length && (
 				<div class="meta">
 					Tags:
-					{tags.map((tag) => (
+					{tags?.map((tag) => (
 						<span class="tag">
-							<a href={tag.url}>#{tag.name}</a>
+							<a href={tag?.url}>#{tag?.name}</a>
 						</span>
 					))}
 				</div>
