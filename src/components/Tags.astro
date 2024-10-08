@@ -1,11 +1,12 @@
 ---
 import type { CollectionEntry } from "astro:content";
-const { collection, baseRoute, currentTags } = Astro.props;
+const { collection, baseRoute, currentTags, inline } = Astro.props;
 
 interface Props {
 	collection: CollectionEntry<"blog">[] | CollectionEntry<"note">[];
 	currentTags?: string[] | undefined;
 	baseRoute: string;
+	inline: boolean;
 }
 
 const tags: string[] = collection
@@ -34,12 +35,12 @@ const uniqueTags = [
 ---
 
 <h2>Tags</h2>
-<ul>
+<ul class:list={[{ inline: inline }]}>
 	{
 		uniqueTags.map((tag) => (
 			<li>
 				<a href={`/${baseRoute}/${tag}`} title={tag}>
-					{tag} ({tagCount(tags, tag)})
+					{tag} <span class="count">{tagCount(tags, tag)}</span>
 				</a>
 			</li>
 		))
@@ -50,5 +51,43 @@ const uniqueTags = [
 	ul {
 		margin: 0.75rem 0 0 0;
 		padding: 0 0 0 1rem;
+		a {
+			.count {
+				&::before {
+					content: "(";
+				}
+				&::after {
+					content: ")";
+				}
+			}
+		}
+	}
+	ul.inline {
+		margin: 0.75rem 0 0 0;
+		padding: 0;
+		list-style: none;
+		li {
+			display: inline-block;
+			margin: 0 0.5rem 0 0;
+		}
+		a {
+			text-decoration: none;
+			background: var(--nord9);
+			color: var(--nord1);
+			border-radius: 3px;
+			line-height: 2.25;
+			padding: 0.25rem 0.5rem;
+			&:hover {
+				background: var(--nord10);
+			}
+			.count {
+				border-left: solid 1px var(--nord1);
+				padding-left: 0.5rem;
+				&::before,
+				&::after {
+					content: none;
+				}
+			}
+		}
 	}
 </style>
