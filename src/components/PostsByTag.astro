@@ -1,0 +1,52 @@
+---
+import Item from "./Item.astro";
+import type { CollectionEntry } from "astro:content";
+
+const { collection, baseRoute, desiredTag } = Astro.props;
+
+interface Props {
+	collection: CollectionEntry<"blog">[] | CollectionEntry<"note">[];
+	baseRoute: string;
+	desiredTag: string;
+}
+
+const items = collection
+	.filter((post) => post.data.tags?.includes(desiredTag))
+	.map(({ slug, data: { title, description, tags, image } }) => ({
+		name: title,
+		description,
+		tags: tags.map((tag) => ({
+			url: `/${baseRoute}/tag/${tag}`,
+			name: tag,
+		})),
+		url: `/${baseRoute}/${slug}`,
+		image,
+	}));
+---
+
+{
+	items.length > 0 && (
+		<section>
+			<h3>Tagged with {desiredTag}</h3>
+			<div class="items">
+				{items.map((item) => (
+					<Item {...item} />
+				))}
+			</div>
+		</section>
+	)
+}
+
+<style lang="scss">
+	h3 {
+		border-bottom: solid 1px var(--nord10);
+		margin-bottom: 1rem;
+	}
+	@media (min-width: 760px) {
+		.items {
+			display: grid;
+			grid-template-columns: 1fr 1fr 1fr;
+			gap: 1rem;
+		}
+	}
+</style>

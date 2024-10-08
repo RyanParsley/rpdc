@@ -1,0 +1,77 @@
+---
+import { Image } from "astro:assets";
+
+type Props = {
+	name: string;
+	description: string;
+	tags: { url: string; name: string }[];
+	url: string;
+	image?: {
+		src: string;
+		alt: string;
+	};
+};
+
+const { description, name, image, tags, url } = Astro.props;
+---
+
+<div class="item">
+	{
+		image && (
+			<div class="image">
+				<Image src={image.src} alt={image.alt} />
+			</div>
+		)
+	}
+	<div class="content">
+		<a class="header" href={url}>
+			{name}
+		</a>
+		{
+			tags?.length > 0 && (
+				<div class="meta">
+					Tags:
+					{tags.map((tag) => (
+						<span class="tag">
+							<a href={tag.url}>#{tag.name}</a>
+						</span>
+					))}
+				</div>
+			)
+		}
+		<div class="description">
+			{description}
+		</div>
+		<a class="more" href={url}> Read the full post </a>
+	</div>
+</div>
+
+<style lang="scss">
+	.item {
+		display: flex;
+	}
+	.tag::after {
+		content: ", ";
+	}
+	.tag:last-child::after {
+		content: none;
+	}
+	.header {
+		display: block;
+		text-decoration: none;
+		margin: 0 0 0.25rem 0;
+		position: relative;
+		align-content: end;
+	}
+	.meta,
+	.more {
+		font-size: 0.8rem;
+	}
+	.more::after {
+		content: " 	\2192";
+	}
+	.description {
+		margin-top: 0.5rem;
+		padding-top: 0.5rem;
+	}
+</style>

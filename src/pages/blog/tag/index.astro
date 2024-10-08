@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import Layout from "@layouts/Page.astro";
 import Tags from "@components/Tags.astro";
+import PostsByTag from "@components/PostsByTag.astro";
 
 const posts = await getCollection("blog");
 ---
@@ -13,6 +14,10 @@ const posts = await getCollection("blog");
 >
 	<p>Tags are one way to navigate through posts.</p>
 	<section>
-		<Tags collection={posts} baseRoute="blog/tag" />
+		<Tags collection={posts} baseRoute="blog/tag" inline />
+	</section>
+	<h2>Recommended tags</h2>
+	<section>
+		<PostsByTag collection={posts} baseRoute="blog" desiredTag="typeScript" />
 	</section>
 </Layout>
