@@ -19,7 +19,7 @@ const notes = await getCollection("note");
 	<section>
 		<Tags collection={notes} baseRoute="note/tag" inline />
 	</section>
-	<h2>Recommended tags</h2>
+	<h2>Recommendations by tag</h2>
 	<section>
 		<PostsByTag collection={notes} baseRoute="note" desiredTag="diy" />
 	</section>

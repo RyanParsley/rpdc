@@ -47,11 +47,13 @@ const items = collection
 		border-bottom: solid 1px var(--nord10);
 		margin-bottom: 1rem;
 	}
+	.items {
+		display: grid;
+		gap: 1.5rem;
+	}
 	@media (min-width: 760px) {
 		.items {
-			display: grid;
-			grid-template-columns: 1fr 1fr 1fr;
-			gap: 1rem;
+			grid-template-columns: 1fr 1fr;
 		}
 	}
 </style>
