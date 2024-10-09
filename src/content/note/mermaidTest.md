@@ -8,6 +8,7 @@ featured: false
 tags:
   - note
 ---
+
 ```mermaid
 journey
     title Hamlet's Tragic User Journey

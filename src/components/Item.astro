@@ -1,0 +1,93 @@
+---
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
+
+type Props = {
+	name: string;
+	description: string;
+	tags?: { url: string; name: string }[] | undefined;
+	url: string;
+	image?: { asset: ImageMetadata; alt: string } | undefined;
+};
+const { description, name, image, tags = [], url } = Astro.props;
+---
+
+<div class="item">
+	{
+		image?.asset?.src && (
+			<div class="image">
+				<Image
+					src={image.asset}
+					alt={image.alt || name}
+					width={image.asset.width}
+					height={image.asset.width}
+				/>
+			</div>
+		)
+	}
+	<div class="content">
+		<a class="header" href={url}>
+			{name}
+		</a>
+		{
+			tags?.length && (
+				<div class="meta">
+					Tags:
+					{tags?.map((tag) => (
+						<span class="tag">
+							<a href={tag?.url}>#{tag?.name}</a>
+						</span>
+					))}
+				</div>
+			)
+		}
+		<div class="description">
+			{description}
+		</div>
+		<a class="more" href={url}> Read the full post </a>
+	</div>
+</div>
+
+<style lang="scss">
+	.item {
+		display: flex;
+		gap: 1rem;
+	}
+	.tag::after {
+		content: ", ";
+	}
+	.tag:last-child::after {
+		content: none;
+	}
+	.header {
+		display: block;
+		text-decoration: none;
+		margin: 0 0 0.25rem 0;
+		position: relative;
+		align-content: end;
+	}
+	.image {
+		flex: 1;
+		border: solid 1px var(--nord1);
+		boarder-radius: 3px;
+		img {
+			object-fit: cover;
+			width: 100%;
+			height: 100%;
+		}
+	}
+	.content {
+		flex: 2;
+	}
+	.meta,
+	.more {
+		font-size: 0.8rem;
+	}
+	.more::after {
+		content: " 	\2192";
+	}
+	.description {
+		margin-top: 0.5rem;
+		padding-top: 0.5rem;
+	}
+</style>

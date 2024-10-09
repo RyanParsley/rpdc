@@ -2,7 +2,7 @@
 import { getCollection } from "astro:content";
 import Layout from "@layouts/Page.astro";
 import Tags from "@components/Tags.astro";
-
+import PostsByTag from "@components/PostsByTag.astro";
 const notes = await getCollection("note");
 ---
 
@@ -11,8 +11,35 @@ const notes = await getCollection("note");
 	description="A collection of raw materials that I'm still sorting out"
 	shouldShowSearch="true"
 >
-	<p>Tags are one way to navigate through notes.</p>
+	<p>
+		Tags are one way to navigate through notes. Here's a list of all the tags
+		found in my content followed by a currated list of tags.
+	</p>
+
 	<section>
-		<Tags collection={notes} baseRoute="note/tag" />
+		<Tags collection={notes} baseRoute="note/tag" inline />
+	</section>
+	<h2>Recommendations by tag</h2>
+	<section>
+		<PostsByTag collection={notes} baseRoute="note" desiredTag="diy" />
+	</section>
+	<section>
+		<PostsByTag collection={notes} baseRoute="note" desiredTag="electronics" />
+	</section>
+	<section>
+		<PostsByTag collection={notes} baseRoute="note" desiredTag="indieWeb" />
+	</section>
+	<section>
+		<PostsByTag collection={notes} baseRoute="note" desiredTag="music" />
 	</section>
 </Layout>
+
+<style>
+	section {
+		margin-bottom: 2rem;
+	}
+
+	h2 {
+		margin-bottom: 1rem;
+	}
+</style>
