@@ -9,18 +9,17 @@ interface Props {
 	baseRoute: string;
 	desiredTag: string;
 }
-
 const items = collection
 	.filter((post) => post.data.tags?.includes(desiredTag))
-	.map(({ slug, data: { title, description, tags, OGImage } }) => ({
+	.map(({ slug, data: { title, description, tags = [], OGImage } }) => ({
 		name: title,
 		description,
-		tags: tags?.map((tag) => ({
+		tags: tags.map((tag) => ({
 			url: `/${baseRoute}/tag/${tag}`,
 			name: tag,
 		})),
 		url: `/${baseRoute}/${slug}`,
-		image: { ...OGImage, alt: "static alt" },
+		image: OGImage,
 	}));
 ---
 
@@ -29,8 +28,14 @@ const items = collection
 		<section>
 			<h3>Tagged with {desiredTag}</h3>
 			<div class="items">
-				{items.map((item) => (
-					<Item {...item} />
+				{items.map(({ name, description, tags, url, image }) => (
+					<Item
+						name={name}
+						description={description}
+						tags={tags}
+						url={url}
+						image={image ? { asset: image, alt: "static alt" } : undefined}
+					/>
 				))}
 			</div>
 		</section>
