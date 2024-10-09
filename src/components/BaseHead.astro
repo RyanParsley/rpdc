@@ -79,6 +79,7 @@ const { title, description, image = "/bio-photo.jpg" } = Astro.props;
 <script is:inline type="text/partytown">
 	window.dataLayer = window.dataLayer || [];
 	function gtag() {
+		// eslint-disable-next-line
 		dataLayer.push(arguments);
 	}
 	gtag("js", new Date());
