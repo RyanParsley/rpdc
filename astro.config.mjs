@@ -8,12 +8,21 @@ import pagefind from "astro-pagefind";
 // https://astro.build/config
 export default defineConfig({
 	site: "https://ryanparsley.com",
+	vite: {
+		css: {
+			preprocessorOptions: {
+				scss: {
+					api: "modern-compiler",
+				},
+			},
+		},
+	},
 	markdown: {
-		remarkPlugins: [[remarkMermaid, {mermaidConfig: { theme: 'dark' }}]],
+		remarkPlugins: [[remarkMermaid, { mermaidConfig: { theme: "dark" } }]],
 	},
 	build: {
-    format: "file",
-  },
+		format: "file",
+	},
 	integrations: [
 		mdx(),
 		sitemap(),
@@ -23,6 +32,6 @@ export default defineConfig({
 				forward: ["dataLayer.push"],
 			},
 		}),
-		pagefind()
+		pagefind(),
 	],
 });
