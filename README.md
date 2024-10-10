@@ -1,12 +1,13 @@
 # RyanParsleyDotCom
 
-There are many blogs but this one is special because it is mine. I've migrated it from more platforms than it has posts. Today, It is built with Astro.
+There are many blogs but this one is special because it is mine. I've migrated
+it from more platforms than it has posts. Today, It is built with Astro.
 
 ## 🚀 Project Structure
 
 It started out looking something like this:
 
-```
+```bash
 ├── public/
 ├── src/
 │   ├── components/
@@ -19,11 +20,17 @@ It started out looking something like this:
 └── tsconfig.json
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page
+is exposed as a route based on its file name.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+There's nothing special about `src/components/`, but that's where we like to put
+any Astro/React/Vue/Svelte/Preact components.
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+The `src/content/` directory contains "collections" of related Markdown and MDX
+documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and
+type-check your frontmatter using an optional schema. See [Astro's Content
+Collections docs](https://docs.astro.build/en/guides/content-collections/) to
+learn more.
 
 Any static assets, like images, can be placed in the `public/` directory.
 
