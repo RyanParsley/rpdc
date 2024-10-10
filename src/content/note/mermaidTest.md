@@ -9,6 +9,9 @@ tags:
   - note
   - mermaid
 ---
+
+## Tragic Journey
+
 ```mermaid
 journey
     title Hamlet's Tragic User Journey
