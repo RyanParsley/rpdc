@@ -53,10 +53,13 @@ const { description, name, image, tags = [], url } = Astro.props;
 		display: flex;
 		gap: 1rem;
 	}
-	.tag::after {
+	.tag {
+		display: inline-block;
+	}
+	.tag::before {
 		content: ", ";
 	}
-	.tag:last-child::after {
+	.tag:first-child::before {
 		content: none;
 	}
 	.header {
