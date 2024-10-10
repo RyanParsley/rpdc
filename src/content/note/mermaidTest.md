@@ -7,8 +7,8 @@ updatedDate: 2024-08-27T00:00:00Z
 featured: false
 tags:
   - note
+  - mermaid
 ---
-
 ```mermaid
 journey
     title Hamlet's Tragic User Journey
