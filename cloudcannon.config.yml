@@ -1,114 +1,176 @@
-# Read the CloudCannon documentation for more information on how to use this file:
-# https://cloudcannon.com/documentation/articles/setting-global-configuration/?ssg=Astro
-
-# Collections are related sets of content files, typically grouped by folder.
-# Here you can define your collections, as well as any
-# CloudCannon configuration specific to those collections.
-collections_config:
-  {
-    notes:
-      {
-        path: "src/content/note",
-        output: true,
-        url: "/note/[slug]",
-        _enable_editors: ["content", "visual"],
-        add_options:
-          [{ name: "Add New Note", schema: "default", icon: "post_add" }],
-        schemas: { default: { name: "New Note", path: "schemas/note.md" } },
-        _inputs:
-          {
-            title: { empty_type: "string" },
-            image: { empty_type: "string" },
-            image_alt: { empty_type: "string" },
-            author: { empty_type: "string" },
-            tags:
-              { type: "multiselect", allow_create: true, empty_type: "array" },
-          },
-      },
-    posts:
-      {
-        path: "src/content/blog",
-        output: true,
-        url: "/blog/[slug]",
-        _enable_editors: ["content", "visual"],
-        add_options:
-          [{ name: "Add New Post", schema: "default", icon: "post_add" }],
-        schemas: { default: { name: "New Post", path: "schemas/post.md" } },
-        _inputs:
-          {
-            title: { empty_type: "string" },
-            image: { empty_type: "string" },
-            image_alt: { empty_type: "string" },
-            author: { empty_type: "string" },
-            tags:
-              { type: "multiselect", allow_create: true, empty_type: "array" },
-          },
-      },
-    drafts:
-      {
-        path: "src/content/draft",
-        output: false,
-        url: "/blog/[slug]",
-        _enable_editors: ["content", "visual"],
-        add_options:
-          [{ name: "Add New Post", schema: "default", icon: "post_add" }],
-        schemas: { default: { name: "New Post", path: "schemas/post.md" } },
-        _inputs:
-          {
-            title: { empty_type: "string" },
-            image: { empty_type: "string" },
-            image_alt: { empty_type: "string" },
-            author: { empty_type: "string" },
-            tags:
-              { type: "multiselect", allow_create: true, empty_type: "array" },
-          },
-      },
-    pages:
-      {
-        path: "src/content/page",
-        url: "/[slug]",
-        output: true,
-        icon: "wysiwyg",
-        _enabled_editors: ["visual"],
-        add_options:
-          [{ name: "Add New Page", schema: "default", icon: "note_add" }],
-        schemas:
-          {
-            default:
-              {
-                name: "New Page",
-                path: "schemas/page.md",
-                new_preview_url: "/",
-              },
-            paginated_collection: { path: "schemas/paginated-collection.md" },
-          },
-        _inputs: { content_blocks: { empty_type: "array" } },
-        filter: { base: "strict" },
-      },
-  }
-
-# Control which collections are displayed in the CloudCannon site navigation,
-# and how those collections are grouped.
-collection_groups:
-
-# Control which data sets are available to populate select and multiselect inputs.
-data_config:
-
-# Base path to your source files, relative to the root folder of your repository.
-source:
-
-# The locations of various types of files within your site.
-# Each path is relative to your site's source folder.
+_schema: _schema
 paths:
-  data: ""
-  collections: ""
-  layouts: null
-  static: ""
   uploads: uploads
-
-# Lets you control the look and behaviour of the Source Editor.
-source_editor:
-
-# Timezone of your site in IANA format. This is used by date and datetime inputs
-# within the CloudCannon Data Editor.
-timezone: Etc/UTC
+  static: ''
+  collections: ''
+  data: ''
+  layouts:
+collections_config:
+  notes:
+    path: src/content/note
+    icon: notes
+    output: true
+    url: /note/[slug]
+    _inputs:
+      title:
+        type: auto
+        cascade: true
+        empty_type: string
+      image:
+        type: auto
+        cascade: true
+        empty_type: string
+      image_alt:
+        type: auto
+        cascade: true
+        empty_type: string
+      author:
+        type: auto
+        cascade: true
+        empty_type: string
+      tags:
+        type: multiselect
+        cascade: true
+        allow_create: true
+        empty_type: array
+    add_options:
+      - name: Add New Note
+        icon: post_add
+        schema: default
+    disable_add: false
+    disable_add_folder: false
+    disable_file_actions: false
+    schemas:
+      default:
+        path: schemas/note.md
+        reorder_inputs: true
+        hide_extra_inputs: false
+        remove_empty_inputs: false
+        remove_extra_inputs: true
+        name: New Note
+        icon: notes
+  posts:
+    path: src/content/blog
+    icon: notes
+    output: true
+    url: /blog/[slug]
+    _inputs:
+      title:
+        type: auto
+        cascade: true
+        empty_type: string
+      image:
+        type: auto
+        cascade: true
+        empty_type: string
+      image_alt:
+        type: auto
+        cascade: true
+        empty_type: string
+      author:
+        type: auto
+        cascade: true
+        empty_type: string
+      tags:
+        type: multiselect
+        cascade: true
+        allow_create: true
+        empty_type: array
+    add_options:
+      - name: Add New Post
+        icon: post_add
+        schema: default
+    disable_add: false
+    disable_add_folder: false
+    disable_file_actions: false
+    schemas:
+      default:
+        path: schemas/post.md
+        reorder_inputs: true
+        hide_extra_inputs: false
+        remove_empty_inputs: false
+        remove_extra_inputs: true
+        name: New Post
+        icon: notes
+  drafts:
+    path: src/content/draft
+    icon: notes
+    output: false
+    url: /blog/[slug]
+    _inputs:
+      title:
+        type: auto
+        cascade: true
+        empty_type: string
+      image:
+        type: auto
+        cascade: true
+        empty_type: string
+      image_alt:
+        type: auto
+        cascade: true
+        empty_type: string
+      author:
+        type: auto
+        cascade: true
+        empty_type: string
+      tags:
+        type: multiselect
+        cascade: true
+        allow_create: true
+        empty_type: array
+    add_options:
+      - name: Add New Post
+        icon: post_add
+        schema: default
+    disable_add: false
+    disable_add_folder: false
+    disable_file_actions: false
+    schemas:
+      default:
+        path: schemas/post.md
+        reorder_inputs: true
+        hide_extra_inputs: false
+        remove_empty_inputs: false
+        remove_extra_inputs: true
+        name: New Post
+        icon: notes
+  pages:
+    path: src/content/page
+    icon: wysiwyg
+    output: true
+    url: /[slug]
+    filter:
+      base: strict
+    _enabled_editors:
+      - visual
+    _inputs:
+      content_blocks:
+        type: auto
+        cascade: true
+        empty_type: array
+    add_options:
+      - name: Add New Page
+        icon: note_add
+        schema: default
+    disable_add: false
+    disable_add_folder: false
+    disable_file_actions: false
+    schemas:
+      default:
+        path: schemas/page.md
+        reorder_inputs: true
+        hide_extra_inputs: false
+        remove_empty_inputs: false
+        remove_extra_inputs: true
+        name: New Page
+        icon: notes
+        new_preview_url: /
+      paginated_collection:
+        path: schemas/paginated-collection.md
+        reorder_inputs: true
+        hide_extra_inputs: false
+        remove_empty_inputs: false
+        remove_extra_inputs: true
+        icon: notes
+timezone: America/New_York
