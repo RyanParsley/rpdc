@@ -9,9 +9,12 @@ export async function GET(context) {
 		description: SITE_DESCRIPTION,
 		site: context.site,
 		trailingSlash: false,
-		items: posts.map((post) => ({
-			...post.data,
-			link: `/note/${post.slug}`,
-		})),
+		stylesheet: "/rss/styles.xsl",
+		items: posts
+			.sort((a, b) => b.data.pubDate - a.data.pubDate)
+			.map((post) => ({
+				...post.data,
+				link: `/note/${post.slug}`,
+			})),
 	});
 }
