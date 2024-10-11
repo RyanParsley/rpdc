@@ -6,6 +6,7 @@ import RelatedPosts from "@components/RelatedPosts.astro";
 import Backlinks from "@components/Backlinks.astro";
 const { slug } = Astro.props;
 import Tags from "@components/Tags.astro";
+import EmailSignUp from "@components/EmailSignUp.astro";
 
 const posts = await getCollection("blog");
 
@@ -32,6 +33,7 @@ const canonicalURL = new URL(`blog/${slug}`, Astro.site)
 	OGImage={post.data.OGImage?.src}
 >
 	<Content />
+	<EmailSignUp slot="aside" />
 	<Backlinks currentSlug=`/blog/${slug}` slot="aside" />
 	<Tags
 		collection={posts}
