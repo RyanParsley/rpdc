@@ -40,6 +40,13 @@ const { title, description, image = "/bio-photo.jpg" } = Astro.props;
 <meta name="theme-color" content="#ffffff" />
 
 <link
+	rel="alternate"
+	type="application/rss+xml"
+	title="RyanParsleyDotCom"
+	href={new URL("rss.xml", Astro.site)}
+/>
+
+<link
 	rel="webmention"
 	href="https://webmention.io/ryanparsley.com/webmention"
 />
