@@ -87,9 +87,27 @@ const draftCollection = defineCollection({
 		}),
 });
 
+const ephemeraCollection = defineCollection({
+	schema: ({ image }) =>
+		z.object({
+			date: z.string().or(z.date()).or(z.number()).transform(dateTransformer),
+			syndication: z
+				.array(z.object({ href: z.string(), title: z.string() }))
+				.optional(),
+			youtube: z.string().optional(),
+			image: z
+				.object({
+					src: image(),
+					alt: z.string(),
+				})
+				.optional(),
+		}),
+});
+
 export const collections = {
 	blog: blogCollection,
 	draft: draftCollection,
 	page: pageCollection,
 	note: noteCollection,
+	ephemera: ephemeraCollection,
 };

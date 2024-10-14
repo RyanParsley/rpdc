@@ -1,0 +1,43 @@
+---
+import { getCollection } from "astro:content";
+import Ephemera from "@layouts/Ephemera.astro";
+import Backlinks from "@components/Backlinks.astro";
+const { slug } = Astro.props;
+
+export async function getStaticPaths() {
+	const posts = await getCollection("ephemera");
+
+	return posts.map((post) => ({
+		params: { slug: post.slug },
+		props: post,
+	}));
+}
+
+const post = Astro.props;
+const {
+	data: { date, image, syndication, youtube },
+} = post;
+const { Content } = await post.render();
+
+const canonicalURL = new URL(`ephemera/${slug}`, Astro.site)
+	.toString()
+	.replace(".html", "");
+---
+
+<Ephemera
+	title={date.toLocaleDateString("en-us", {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	})}
+	youtube={youtube}
+	description=""
+	syndication={syndication || []}
+	canonicalURL={canonicalURL}
+	galleryPath={`/ephemera/${slug}`}
+	OGImage={image?.src}
+	heroImage={image?.src}
+>
+	<Content />
+	<Backlinks currentSlug=`/ephemera/${slug}` slot="aside" />
+</Ephemera>
