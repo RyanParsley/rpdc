@@ -1,13 +1,15 @@
 ---
+import type { ImageMetadata } from "astro";
 import Layout from "@layouts/Page.astro";
 import Gallery from "@components/ImageGallery.astro";
 import WebmentionShare from "@components/WebmentionShare.astro";
 import Webmentions from "@components/Webmentions.astro";
 import SubscribeBlock from "@components/SubscribeBlock.astro";
 import ElsewhereBlock from "@components/ElsewhereBlock.astro";
-import type { ImageMetadata } from "astro";
 import type { ImageData } from "@components/ImageGallery.astro";
 import YoutubeEmbed from "@components/YoutubeEmbed.astro";
+import SyndicationLinks from "@components/SyndicationLinks.astro";
+import type { Syndication } from "@components/SyndicationLinks.astro";
 
 interface Props {
 	title: string;
@@ -18,7 +20,7 @@ interface Props {
 	galleryPath?: string;
 	heroImage?: ImageMetadata | undefined;
 	OGImage?: ImageMetadata | undefined;
-	syndication: { title: string; href: string }[];
+	syndication: Syndication[];
 }
 
 const {
@@ -46,18 +48,7 @@ const {
 			{gallery && <Gallery images={gallery} path={galleryPath || ""} />}
 			{youtube && <YoutubeEmbed src={youtube} />}
 			<slot />
-			{
-				syndication.length > 0 && (
-					<div>
-						Also on:
-						{syndication.map((site) => (
-							<a href={site.href} class="u-syndication syndication">
-								{site.title}
-							</a>
-						))}
-					</div>
-				)
-			}
+			{syndication.length > 0 && <SyndicationLinks syndication={syndication} />}
 			<WebmentionShare postUrl={Astro.url.href} postTitle={title} />
 			<Webmentions target={canonicalURL} />
 			<p>
@@ -76,9 +67,3 @@ const {
 		<ElsewhereBlock />
 	</aside>
 </Layout>
-<style lang="scss">
-	a.syndication {
-		display: inline-block;
-		margin-right: 1rem;
-	}
-</style>

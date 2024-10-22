@@ -5,12 +5,14 @@ import { getCollection } from "astro:content";
 import YoutubeEmbed from "@components/YoutubeEmbed.astro";
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
+import type { Syndication } from "@components/SyndicationLinks.astro";
 
 // https://www.paulie.dev/posts/2023/09/how-to-create-excerpts-with-astro/
 // I suspect I don't need this, but it looks like I do. I'll revisit later
 // ... is a lie I'm telling myself in this comment.
 
 import MarkdownIt from "markdown-it";
+import SyndicationLinks from "@components/SyndicationLinks.astro";
 
 // Define interfaces for your data structure
 interface ImageData {
@@ -22,6 +24,7 @@ interface ContentItem {
 	slug: string;
 	data: {
 		date: Date;
+		syndication?: Syndication[] | undefined;
 		image?: ImageData | undefined;
 		youtube?: string | undefined;
 	};
@@ -86,18 +89,21 @@ const groupedData: GroupedData[] = datesOnPage.map((date: string) => ({
 					groupedData.map((item) => (
 						<Fragment key={item.date}>
 							<h2>{item.date}</h2>
-							{item.data.map(({ body, slug, data: { image, youtube } }) => (
-								<div class="h-entry">
-									{image && (
-										<Image class="u-photo" src={image.src} alt={image.alt} />
-									)}
-									{youtube && <YoutubeEmbed src={youtube} />}
-									<div class="p-content" set:html={parser.render(body)} />
-									<a class="more" href={`/ephemera/${slug}`}>
-										Link to Post
-									</a>
-								</div>
-							))}
+							{item.data.map(
+								({ body, slug, data: { image, youtube, syndication } }) => (
+									<div class="h-entry">
+										{image && (
+											<Image class="u-photo" src={image.src} alt={image.alt} />
+										)}
+										{youtube && <YoutubeEmbed src={youtube} />}
+										<div class="p-content" set:html={parser.render(body)} />
+										<SyndicationLinks syndication={syndication || []} />
+										<a class="more" href={`/ephemera/${slug}`}>
+											Link to Post
+										</a>
+									</div>
+								),
+							)}
 						</Fragment>
 					))
 			}

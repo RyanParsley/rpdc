@@ -1,0 +1,27 @@
+---
+export type Syndication = { href: string; title: string };
+type Props = {
+	syndication: Syndication[];
+};
+const { syndication } = Astro.props;
+---
+
+{
+	syndication.length > 0 && (
+		<p>
+			Also on:
+			{syndication.map((site) => (
+				<a href={site.href} class="u-syndication syndication">
+					{site.title}
+				</a>
+			))}
+		</p>
+	)
+}
+
+<style lang="scss">
+	a.syndication {
+		display: inline-block;
+		margin-right: 1rem;
+	}
+</style>
