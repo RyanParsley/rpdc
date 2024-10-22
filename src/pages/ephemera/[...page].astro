@@ -1,0 +1,147 @@
+---
+import Layout from "@layouts/Page.astro";
+import { Pagination } from "accessible-astro-components";
+import { getCollection } from "astro:content";
+import YoutubeEmbed from "@components/YoutubeEmbed.astro";
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import type { Syndication } from "@components/SyndicationLinks.astro";
+
+// https://www.paulie.dev/posts/2023/09/how-to-create-excerpts-with-astro/
+// I suspect I don't need this, but it looks like I do. I'll revisit later
+// ... is a lie I'm telling myself in this comment.
+
+import MarkdownIt from "markdown-it";
+import SyndicationLinks from "@components/SyndicationLinks.astro";
+
+// Define interfaces for your data structure
+interface ImageData {
+	src: ImageMetadata;
+	alt: string;
+}
+interface ContentItem {
+	body: string;
+	slug: string;
+	data: {
+		date: Date;
+		syndication?: Syndication[] | undefined;
+		image?: ImageData | undefined;
+		youtube?: string | undefined;
+	};
+}
+
+interface GroupedData {
+	date: string;
+	data: ContentItem[];
+}
+
+const parser = new MarkdownIt();
+
+export async function getStaticPaths({
+	paginate,
+}: {
+	paginate: (data: ContentItem[], config: object) => void;
+}) {
+	const response = await getCollection("ephemera");
+	const data = response.sort(
+		(a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+	);
+	return paginate(data, { pageSize: 6 });
+}
+
+const {
+	page,
+}: {
+	page: {
+		data: ContentItem[];
+		url: { prev: string; next: string };
+		currentPage: string;
+		size: number;
+		total: number;
+	};
+} = Astro.props;
+
+const formatDate = (date: Date) =>
+	date.toLocaleDateString("en-us", {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	});
+
+const datesOnPage = [
+	...new Set(
+		[...(page.data || [])].map((item) => item?.data?.date).map(formatDate),
+	),
+];
+
+const groupedData: GroupedData[] = datesOnPage.map((date: string) => ({
+	date,
+	data: page.data.filter((item) => formatDate(item.data.date) === date),
+}));
+---
+
+<Layout title="Ephemera" description="A collection of fleeting thoughts.">
+	<section>
+		<section>
+			<h2 id="all-ephemera">Stream of consciousness</h2>
+			{
+				groupedData.length > 0 &&
+					groupedData.map((item) => (
+						<Fragment key={item.date}>
+							<h2>{item.date}</h2>
+							{item.data.map(
+								({ body, slug, data: { image, youtube, syndication } }) => (
+									<div class="h-entry">
+										{image && (
+											<Image class="u-photo" src={image.src} alt={image.alt} />
+										)}
+										{youtube && <YoutubeEmbed src={youtube} />}
+										<div class="p-content" set:html={parser.render(body)} />
+										<SyndicationLinks syndication={syndication || []} />
+										<a class="more" href={`/ephemera/${slug}`}>
+											Link to Post
+										</a>
+									</div>
+								),
+							)}
+						</Fragment>
+					))
+			}
+		</section>
+		<Pagination
+			firstPage={page.url.prev ? "/ephemera" : null}
+			previousPage={page.url.prev ? page.url.prev : null}
+			nextPage={page.url.next ? page.url.next : null}
+			lastPage={page.url.next
+				? `/ephemera/${Math.round(page.total / page.size)}`
+				: null}
+			currentPage={page.currentPage}
+			totalPages={Math.round(page.total / page.size)}
+		/>
+	</section>
+</Layout>
+
+<style lang="scss">
+	ul {
+		list-style: none;
+		padding: unset;
+		margin: unset;
+	}
+	.more::after {
+		content: " 	\2192";
+	}
+	.h-entry {
+		margin-bottom: 3rem;
+	}
+	.featured-posts {
+		padding: 1px 1.5rem 1.5rem;
+		background-color: var(--nord1);
+		border-radius: 0.5rem;
+
+		@media (min-width: 600px) {
+			display: grid;
+			grid-template-columns: 1fr 1fr 1fr;
+			gap: 1rem;
+		}
+	}
+</style>
