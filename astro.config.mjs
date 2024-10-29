@@ -32,7 +32,4 @@ export default defineConfig({
 		}),
 		pagefind(),
 	],
-	experimental: {
-    contentCollectionCache: true,
-  },
 });
