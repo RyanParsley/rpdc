@@ -37,16 +37,16 @@ import Webmentions from "@components/Webmentions.astro";
 		<section class="e-content">
 			{gallery && <Gallery images={gallery} path={galleryPath} />}
 			<slot />
-			<WebmentionShare postUrl={Astro.url.href} postTitle={title} />
-			<Webmentions target={canonicalURL} />
-			<p>
-				Published by <a
-					rel="author"
-					class="p-author h-card"
-					href="http://ryanparsley.com">Ryan Parsley</a
-				>
-			</p>
 		</section>
+		<WebmentionShare postUrl={Astro.url.href} postTitle={title} />
+		<Webmentions target={canonicalURL} />
+		<p>
+			Published by <a
+				rel="author"
+				class="p-author h-card"
+				href="http://ryanparsley.com">Ryan Parsley</a
+			>
+		</p>
 	</article>
 	<aside>
 		<slot name="aside" />

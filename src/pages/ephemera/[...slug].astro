@@ -1,22 +1,34 @@
 ---
-import { getCollection } from "astro:content";
+import type {
+	InferGetStaticParamsType,
+	InferGetStaticPropsType,
+	GetStaticPaths,
+} from "astro";
+import { getCollection, type CollectionEntry } from "astro:content";
 import Ephemera from "@layouts/Ephemera.astro";
 import Backlinks from "@components/Backlinks.astro";
-const { slug } = Astro.props;
 
-export async function getStaticPaths() {
-	const posts = await getCollection("ephemera");
-
+export const getStaticPaths = (async () => {
+	const posts: CollectionEntry<"ephemera">[] = await getCollection("ephemera");
 	return posts.map((post) => ({
 		params: { slug: post.slug },
-		props: post,
+		props: {
+			post: post,
+			body: post.body,
+			date: post.data.date,
+			image: post.data.image,
+			syndication: post.data.syndication,
+			youtube: post.data.youtube,
+		},
 	}));
-}
+}) satisfies GetStaticPaths;
 
-const post = Astro.props;
-const {
-	data: { date, image, syndication, youtube },
-} = post;
+type Params = InferGetStaticParamsType<typeof getStaticPaths>;
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { slug } = Astro.params as Params;
+const { post, body, date, image, syndication, youtube } = Astro.props as Props;
+
 const { Content } = await post.render();
 
 const canonicalURL = new URL(`ephemera/${slug}`, Astro.site)
@@ -31,7 +43,7 @@ const canonicalURL = new URL(`ephemera/${slug}`, Astro.site)
 		day: "numeric",
 	})}
 	youtube={youtube}
-	description=""
+	description={body}
 	syndication={syndication || []}
 	canonicalURL={canonicalURL}
 	galleryPath={`/ephemera/${slug}`}
@@ -39,5 +51,5 @@ const canonicalURL = new URL(`ephemera/${slug}`, Astro.site)
 	heroImage={image?.src}
 >
 	<Content />
-	<Backlinks currentSlug=`/ephemera/${slug}` slot="aside" />
+	<Backlinks currentSlug={`/ephemera/${slug}`} slot="aside" />
 </Ephemera>
