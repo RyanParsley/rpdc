@@ -49,17 +49,17 @@ const {
 			{youtube && <YoutubeEmbed src={youtube} />}
 			<slot />
 			{syndication.length > 0 && <SyndicationLinks syndication={syndication} />}
-			<WebmentionShare postUrl={Astro.url.href} postTitle={title} />
-			<Webmentions target={canonicalURL} />
-			<p>
-				Published by <a
-					rel="author"
-					class="p-author h-card"
-					href="http://ryanparsley.com">Ryan Parsley</a
-				>
-				<a href={Astro.url.href} class="u-url">{title}</a>
-			</p>
 		</section>
+		<WebmentionShare postUrl={Astro.url.href} postTitle={description} />
+		<Webmentions target={canonicalURL} />
+		<p>
+			Published by <a
+				rel="author"
+				class="p-author h-card"
+				href="http://ryanparsley.com">Ryan Parsley</a
+			>
+			<a href={Astro.url.href} class="u-url">{title}</a>
+		</p>
 	</article>
 	<aside>
 		<slot name="aside" />

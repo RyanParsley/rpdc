@@ -4,10 +4,10 @@ import { getCollection } from "astro:content";
 import Post from "@layouts/Post.astro";
 import RelatedPosts from "@components/RelatedPosts.astro";
 import Backlinks from "@components/Backlinks.astro";
-const { slug } = Astro.props;
 import Tags from "@components/Tags.astro";
 
 const posts = await getCollection("blog");
+type Props = CollectionEntry<"blog">;
 
 export async function getStaticPaths() {
 	const posts = await getCollection("blog");
@@ -16,9 +16,9 @@ export async function getStaticPaths() {
 		props: post,
 	}));
 }
-type Props = CollectionEntry<"blog">;
 
 const post = Astro.props;
+const { slug } = Astro.props;
 const { Content } = await post.render();
 const canonicalURL = new URL(`blog/${slug}`, Astro.site)
 	.toString()
