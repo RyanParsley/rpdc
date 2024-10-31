@@ -1,6 +1,5 @@
 ---
 layout: "@layouts/Page.astro"
-title: "About from frontmatter"
 ---
 
 # About
