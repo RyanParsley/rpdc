@@ -9,6 +9,16 @@ export interface Props {
 	image?: string;
 }
 
+export type PlausibleProps = Record<string, unknown>;
+declare global {
+	interface Window {
+		plausible: {
+			(event: string, ...props: PlausibleProps[]): void; // Use the defined type here
+			q: Array<{ event: string; props: PlausibleProps[] }>; // Update the type for the queue
+		};
+	}
+}
+
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
 const { title, description, image = "/bio-photo.jpg" } = Astro.props;
@@ -86,8 +96,16 @@ const { title, description, image = "/bio-photo.jpg" } = Astro.props;
 	defer
 	is:inline
 	data-domain="ryanparsley.com"
-	src="https://plausible.io/js/script.file-downloads.outbound-links.js"
+	src="https://plausible.io/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js"
 ></script>
+
+<script>
+	window.plausible =
+		window.plausible ||
+		function (event: string, ...props) {
+			(window.plausible.q = window.plausible.q || []).push({ event, props });
+		};
+</script>
 
 <script
 	is:inline
