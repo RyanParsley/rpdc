@@ -1,4 +1,6 @@
 ---
+import PostHog from "../components/PostHog.astro";
+
 // Import the global.css file here so that it is included on
 // all pages through the use of the <BaseHead /> component.
 import "../styles/global.css";
@@ -107,21 +109,4 @@ const { title, description, image = "/bio-photo.jpg" } = Astro.props;
 		};
 </script>
 
-<script
-	is:inline
-	type="text/partytown"
-	src="https://www.googletagmanager.com/gtag/js?id=G-S5QFTVLWSX"></script>
-<script is:inline type="text/partytown">
-	window.dataLayer = window.dataLayer || [];
-	function gtag() {
-		// eslint-disable-next-line
-		dataLayer.push(arguments);
-	}
-	gtag("js", new Date());
-	gtag("config", "G-S5QFTVLWSX");
-</script>
-<script
-	async
-	is:inline
-	src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4571717950525113"
-	crossorigin="anonymous"></script>
+<PostHog />
