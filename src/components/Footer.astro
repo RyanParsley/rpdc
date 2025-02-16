@@ -7,25 +7,36 @@ import HeaderLink from "./HeaderLink.astro";
 	&copy; {today.getFullYear()} Ryan Parsley. All rights reserved.
 	<nav>
 		<HeaderLink
+			aria-label="Mastodon"
 			href="https://mastodon.social/@RyanParsley"
 			rel="me"
 			target="_blank"
 		>
 			Mastodon
 		</HeaderLink>
-		<HeaderLink href="https://github.com/ryanparsley" rel="me" target="_blank">
+		<HeaderLink
+			aria-label="Github"
+			href="https://github.com/ryanparsley"
+			rel="me"
+			target="_blank"
+		>
 			GitHub
 		</HeaderLink>
-		<HeaderLink href="https://codepen.io/RyanParsley" rel="me" target="_blank">
+		<HeaderLink
+			aria-label="CodePen"
+			href="https://codepen.io/RyanParsley"
+			rel="me"
+			target="_blank"
+		>
 			CodePen
 		</HeaderLink>
 		<HeaderLink href="/presentations"> Presentations </HeaderLink>
 		<HeaderLink href="/rss.xml">Feed</HeaderLink>
 	</nav>
-	<a href="https://brid.gy/publish/bluesky"></a>
-	<a href="https://brid.gy/publish/flickr"></a>
-	<a href="https://brid.gy/publish/github"></a>
-	<a href="https://brid.gy/publish/mastodon"></a>
+	<a aria-label="Bluesky" href="https://brid.gy/publish/bluesky"></a>
+	<a aria-label="Flickr" href="https://brid.gy/publish/flickr"></a>
+	<a aria-label="Github" href="https://brid.gy/publish/github"></a>
+	<a aria-label="Mastodon" href="https://brid.gy/publish/mastodon"></a>
 </footer>
 <style>
 	footer {
