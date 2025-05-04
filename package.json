@@ -30,7 +30,7 @@
     "@fontsource/roboto-mono": "^5.1.0",
     "@fontsource/victor-mono": "^5.1.0",
     "accessible-astro-components": "^2.3.6",
-    "astro": "^4.16.7",
+    "astro": "^4.16.18",
     "astro-embed": "^0.8.0",
     "autoprefixer": "^10.4.20",
     "cssnano": "^7.0.6",
