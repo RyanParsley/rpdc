@@ -37,15 +37,6 @@ const postSchema = {
 	featured: z.boolean().optional(),
 };
 
-// Define collections
-const pageCollection = defineCollection({
-	schema: ({ image }) =>
-		z.object({
-			...baseSchema,
-			heroImage: image().optional(),
-		}),
-});
-
 const blogCollection = defineCollection({
 	schema: ({ image }) =>
 		z.object({
@@ -107,7 +98,6 @@ const ephemeraCollection = defineCollection({
 export const collections = {
 	blog: blogCollection,
 	draft: draftCollection,
-	page: pageCollection,
 	note: noteCollection,
 	ephemera: ephemeraCollection,
 };
