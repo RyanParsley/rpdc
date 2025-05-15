@@ -90,7 +90,11 @@ const groupedData: GroupedData[] = datesOnPage.map((date: string) => ({
 						<Fragment key={item.date}>
 							<h2>{item.date}</h2>
 							{item.data.map(
-								({ body, slug, data: { image, youtube, syndication } }) => (
+								({
+									body = "",
+									slug,
+									data: { image, youtube, syndication },
+								}) => (
 									<div class="h-entry">
 										{image && (
 											<Image class="u-photo" src={image.src} alt={image.alt} />
