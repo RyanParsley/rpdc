@@ -6,6 +6,9 @@ import remarkMermaid from "remark-mermaidjs";
 import pagefind from "astro-pagefind";
 
 export default defineConfig({
+	experimental: {
+		assets: true,
+	},
 	site: "https://ryanparsley.com",
 	vite: {
 		css: {
