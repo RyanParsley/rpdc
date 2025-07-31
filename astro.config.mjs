@@ -8,6 +8,7 @@ import pagefind from "astro-pagefind";
 export default defineConfig({
 	site: "https://ryanparsley.com",
 	vite: {
+		envPrefix: "MAILCHIMP_",
 		css: {
 			preprocessorOptions: {
 				scss: {
