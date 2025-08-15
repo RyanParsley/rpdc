@@ -6,6 +6,7 @@ updatedDate: 2024-09-27
 OGImage: ./arduinoboy_soldered_up.jpg
 categories:
   - diy
+  - music
 tags:
   - diy
 ---
