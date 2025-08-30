@@ -204,6 +204,15 @@ class EphemeraSyndicator {
 			console.log(
 				"💡 To see syndication links, manually commit these changes or merge from a feature branch",
 			);
+		} else {
+			console.log("⚠️  No successful syndications - file not updated");
+			console.log("🔧 Check that credentials are properly configured:");
+			console.log(
+				`   - Mastodon: ${this.mastodonToken ? "✅" : "❌"} configured`,
+			);
+			console.log(
+				`   - Bluesky: ${this.blueskyUsername && this.blueskyPassword ? "✅" : "❌"} configured`,
+			);
 		}
 	}
 
