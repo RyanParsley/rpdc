@@ -4,13 +4,33 @@
 # This runs after successful build but before deployment to hosting
 
 echo "🔄 Starting POSSE syndication..."
+echo "Current working directory: $(pwd)"
+echo "Script location: $(dirname "$0")"
 
 # Ensure we're in the project root
-cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+echo "Project root: $PROJECT_ROOT"
+cd "$PROJECT_ROOT"
+
+# Verify we're in the right place
+if [ ! -f "package.json" ]; then
+    echo "❌ Cannot find package.json - not in project root"
+    exit 1
+fi
 
 # Install dependencies if needed (CloudCannon should have Node.js available)
 if ! command -v node &> /dev/null; then
     echo "❌ Node.js not available in build environment"
+    exit 1
+fi
+
+# Check if syndication script exists
+if [ ! -f "scripts/syndicate-ephemera.js" ]; then
+    echo "❌ Cannot find scripts/syndicate-ephemera.js"
+    echo "Files in scripts directory:"
+    ls -la scripts/ 2>/dev/null || echo "scripts directory not found"
     exit 1
 fi
 
