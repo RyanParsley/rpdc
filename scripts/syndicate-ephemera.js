@@ -83,26 +83,59 @@ class EphemeraSyndicator {
 	findNewEphemera() {
 		console.log("🔍 Checking for ephemera posts to syndicate...");
 
-		// In CloudCannon environment, we can't rely on git history
-		// So we'll check all ephemera files and look for ones without syndication
+		// For frequent posting, use time-based approach
+		// Syndicate posts from the last 24 hours that haven't been syndicated recently
 		const allEphemera = this.findAllEphemera();
+		const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-		// Filter to posts that haven't been syndicated yet
-		const unsyndicatedPosts = allEphemera.filter(({ data }) => {
-			const hasSyndication = data.syndication && data.syndication.length > 0;
-			if (hasSyndication) {
+		// Filter to recent posts that need syndication
+		const postsToSyndicate = allEphemera.filter(({ data, file }) => {
+			// Check if post is recent (last 24 hours)
+			const postDate = data.date
+				? new Date(data.date)
+				: this.extractDateFromFilename(file);
+			const isRecent = postDate > oneDayAgo;
+
+			if (!isRecent) {
+				return false; // Too old
+			}
+
+			// Check syndication status
+			const hasRecentSyndication = this.hasRecentSyndication(data.syndication);
+
+			if (hasRecentSyndication) {
 				console.log(
-					`⏭️  Skipping ${data.title || "untitled"} - already syndicated`,
+					`⏭️  Skipping ${data.title || "untitled"} - recently syndicated`,
 				);
 				return false;
 			}
+
 			return true;
 		});
 
 		console.log(
-			`📝 Found ${unsyndicatedPosts.length} unsyndicated ephemera posts`,
+			`📝 Found ${postsToSyndicate.length} recent ephemera posts to syndicate`,
 		);
-		return unsyndicatedPosts;
+		return postsToSyndicate;
+	}
+
+	extractDateFromFilename(filename) {
+		// Extract date from filename like "2025-08-30.md" or "2025/08/2025-08-30.md"
+		const dateMatch = filename.match(/(\d{4}-\d{2}-\d{2})/);
+		if (dateMatch) {
+			return new Date(dateMatch[1]);
+		}
+		return new Date(0); // Very old date if no date found
+	}
+
+	hasRecentSyndication(syndicationArray) {
+		if (!syndicationArray || syndicationArray.length === 0) {
+			return false;
+		}
+
+		// Consider it recently syndicated if there's any syndication data
+		// In the future, we could add timestamps to syndication entries
+		return true;
 	}
 
 	findAllEphemera() {
