@@ -45,7 +45,9 @@ node scripts/syndicate-ephemera.js
 if [ $? -eq 0 ]; then
     echo "✅ POSSE syndication complete!"
     echo "🔍 Checking if ephemera files were updated..."
-    find src/content/ephemera -name "*.md" -exec grep -l "syndication:" {} \; | head -5
+    # Count files with syndication data (avoid pipe issues)
+    SYNDICATION_COUNT=$(find src/content/ephemera -name "*.md" -exec grep -l "syndication:" {} \; | wc -l)
+    echo "📊 Found $SYNDICATION_COUNT ephemera files with syndication data"
 else
     echo "⚠️  Syndication encountered issues, but build will continue"
     # Don't exit with error to avoid breaking the build
