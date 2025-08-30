@@ -402,13 +402,22 @@ class EphemeraSyndicator {
 	}
 
 	updateEphemeraFile(filePath, syndicationUrls) {
+		console.log(`💾 Updating file: ${filePath}`);
+		console.log(`📋 Syndication URLs:`, syndicationUrls);
+
 		const fileContent = readFileSync(filePath, "utf-8");
 		const { data, content: body } = matter(fileContent);
 
+		console.log(`📄 Original syndication:`, data.syndication);
+
 		data.syndication = [...(data.syndication || []), ...syndicationUrls];
+
+		console.log(`📝 Updated syndication:`, data.syndication);
 
 		const updatedContent = matter.stringify(body, data);
 		writeFileSync(filePath, updatedContent);
+
+		console.log(`✅ File updated successfully: ${filePath}`);
 	}
 }
 
