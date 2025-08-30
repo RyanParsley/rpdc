@@ -81,110 +81,28 @@ class EphemeraSyndicator {
 	}
 
 	findNewEphemera() {
-		try {
-			// Get files changed in last commit that are ephemera posts
-			console.log("🔍 Checking for new ephemera posts...");
+		console.log("🔍 Checking for ephemera posts to syndicate...");
 
-			const changedFiles = execSync("git diff --name-only HEAD~1", {
-				encoding: "utf-8",
-				stdio: "pipe",
-			})
-				.split("\n")
-				.filter(
-					(file) =>
-						file &&
-						file.startsWith("src/content/ephemera/") &&
-						file.endsWith(".md") &&
-						!file.includes("node_modules"),
-				);
+		// In CloudCannon environment, we can't rely on git history
+		// So we'll check all ephemera files and look for ones without syndication
+		const allEphemera = this.findAllEphemera();
 
-			console.log(
-				`📝 Found ${changedFiles.length} changed ephemera files:`,
-				changedFiles,
-			);
-
-			// Filter to only truly new posts (no existing syndication)
-			const newPosts = changedFiles
-				.map((file) => {
-					const fileContent = readFileSync(file, "utf-8");
-					const { data, content: body } = matter(fileContent);
-					return { file, data, body };
-				})
-				.filter(({ data }) => {
-					// Only syndicate if there's no syndication data yet
-					const hasSyndication =
-						data.syndication && data.syndication.length > 0;
-					if (hasSyndication) {
-						console.log(
-							`⏭️  Skipping ${data.title || "untitled"} - already syndicated`,
-						);
-						return false;
-					}
-					return true;
-				});
-
-			console.log(`🚀 Will syndicate ${newPosts.length} new posts`);
-			return newPosts;
-		} catch (error) {
-			console.log(
-				"⚠️  Git diff failed, checking recent commits...",
-				error.message,
-			);
-
-			// Try a different approach - check recent commits for ephemera files
-			try {
-				const recentFiles = execSync(
-					"git log --name-only --oneline -5 | grep 'src/content/ephemera/.*\\.md$' | head -5",
-					{
-						encoding: "utf-8",
-						stdio: "pipe",
-					},
-				)
-					.split("\n")
-					.filter(
-						(file) =>
-							file &&
-							file.startsWith("src/content/ephemera/") &&
-							file.endsWith(".md"),
-					)
-					.filter((file, index, arr) => arr.indexOf(file) === index); // Remove duplicates
-
+		// Filter to posts that haven't been syndicated yet
+		const unsyndicatedPosts = allEphemera.filter(({ data }) => {
+			const hasSyndication = data.syndication && data.syndication.length > 0;
+			if (hasSyndication) {
 				console.log(
-					`📝 Found ${recentFiles.length} recent ephemera files:`,
-					recentFiles,
+					`⏭️  Skipping ${data.title || "untitled"} - already syndicated`,
 				);
-
-				return recentFiles
-					.map((file) => {
-						try {
-							const fileContent = readFileSync(file, "utf-8");
-							const { data, content: body } = matter(fileContent);
-							return { file, data, body };
-						} catch {
-							console.log(`⚠️  Could not read ${file}`);
-							return null;
-						}
-					})
-					.filter((item) => item !== null)
-					.filter(({ data }) => {
-						const hasSyndication =
-							data.syndication && data.syndication.length > 0;
-						if (hasSyndication) {
-							console.log(
-								`⏭️  Skipping ${data.title || "untitled"} - already syndicated`,
-							);
-							return false;
-						}
-						return true;
-					});
-			} catch (fallbackError) {
-				console.log(
-					"⚠️  Fallback also failed, checking all ephemera files...",
-					fallbackError.message,
-				);
-				return this.findAllEphemera();
+				return false;
 			}
-		}
+			return true;
+		});
+
+		console.log(
+			`📝 Found ${unsyndicatedPosts.length} unsyndicated ephemera posts`,
+		);
+		return unsyndicatedPosts;
 	}
 
 	findAllEphemera() {
