@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# CloudCannon Postbuild Hook for POSSE Syndication
+# This runs after successful build but before deployment to hosting
+
+echo "🔄 Starting POSSE syndication..."
+
+# Ensure we're in the project root
+cd "$(dirname "$0")/.."
+
+# Install dependencies if needed (CloudCannon should have Node.js available)
+if ! command -v node &> /dev/null; then
+    echo "❌ Node.js not available in build environment"
+    exit 1
+fi
+
+# Install required dependencies for syndication
+echo "📦 Installing syndication dependencies..."
+npm install --no-save gray-matter
+
+# Run syndication script
+echo "🚀 Running ephemera syndication..."
+node scripts/syndicate-ephemera.js
+
+if [ $? -eq 0 ]; then
+    echo "✅ POSSE syndication complete!"
+else
+    echo "⚠️  Syndication encountered issues, but build will continue"
+    # Don't exit with error to avoid breaking the build
+fi
