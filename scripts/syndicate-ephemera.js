@@ -247,6 +247,12 @@ class EphemeraSyndicator {
 		if (syndicationUrls.length > 0) {
 			this.updateEphemeraFile(ephemera.file, syndicationUrls);
 			console.log("💾 Updated ephemera file with syndication links");
+			console.log(
+				"⚠️  Note: Syndication links added but not committed to avoid branch protection issues",
+			);
+			console.log(
+				"💡 To see syndication links, manually commit these changes or merge from a feature branch",
+			);
 		}
 	}
 
