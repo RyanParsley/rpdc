@@ -81,110 +81,61 @@ class EphemeraSyndicator {
 	}
 
 	findNewEphemera() {
-		try {
-			// Get files changed in last commit that are ephemera posts
-			console.log("🔍 Checking for new ephemera posts...");
+		console.log("🔍 Checking for ephemera posts to syndicate...");
 
-			const changedFiles = execSync("git diff --name-only HEAD~1", {
-				encoding: "utf-8",
-				stdio: "pipe",
-			})
-				.split("\n")
-				.filter(
-					(file) =>
-						file &&
-						file.startsWith("src/content/ephemera/") &&
-						file.endsWith(".md") &&
-						!file.includes("node_modules"),
-				);
+		// For frequent posting, use time-based approach
+		// Syndicate posts from the last 24 hours that haven't been syndicated recently
+		const allEphemera = this.findAllEphemera();
+		const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-			console.log(
-				`📝 Found ${changedFiles.length} changed ephemera files:`,
-				changedFiles,
-			);
+		// Filter to recent posts that need syndication
+		const postsToSyndicate = allEphemera.filter(({ data, file }) => {
+			// Check if post is recent (last 24 hours)
+			const postDate = data.date
+				? new Date(data.date)
+				: this.extractDateFromFilename(file);
+			const isRecent = postDate > oneDayAgo;
 
-			// Filter to only truly new posts (no existing syndication)
-			const newPosts = changedFiles
-				.map((file) => {
-					const fileContent = readFileSync(file, "utf-8");
-					const { data, content: body } = matter(fileContent);
-					return { file, data, body };
-				})
-				.filter(({ data }) => {
-					// Only syndicate if there's no syndication data yet
-					const hasSyndication =
-						data.syndication && data.syndication.length > 0;
-					if (hasSyndication) {
-						console.log(
-							`⏭️  Skipping ${data.title || "untitled"} - already syndicated`,
-						);
-						return false;
-					}
-					return true;
-				});
-
-			console.log(`🚀 Will syndicate ${newPosts.length} new posts`);
-			return newPosts;
-		} catch (error) {
-			console.log(
-				"⚠️  Git diff failed, checking recent commits...",
-				error.message,
-			);
-
-			// Try a different approach - check recent commits for ephemera files
-			try {
-				const recentFiles = execSync(
-					"git log --name-only --oneline -5 | grep 'src/content/ephemera/.*\\.md$' | head -5",
-					{
-						encoding: "utf-8",
-						stdio: "pipe",
-					},
-				)
-					.split("\n")
-					.filter(
-						(file) =>
-							file &&
-							file.startsWith("src/content/ephemera/") &&
-							file.endsWith(".md"),
-					)
-					.filter((file, index, arr) => arr.indexOf(file) === index); // Remove duplicates
-
-				console.log(
-					`📝 Found ${recentFiles.length} recent ephemera files:`,
-					recentFiles,
-				);
-
-				return recentFiles
-					.map((file) => {
-						try {
-							const fileContent = readFileSync(file, "utf-8");
-							const { data, content: body } = matter(fileContent);
-							return { file, data, body };
-						} catch {
-							console.log(`⚠️  Could not read ${file}`);
-							return null;
-						}
-					})
-					.filter((item) => item !== null)
-					.filter(({ data }) => {
-						const hasSyndication =
-							data.syndication && data.syndication.length > 0;
-						if (hasSyndication) {
-							console.log(
-								`⏭️  Skipping ${data.title || "untitled"} - already syndicated`,
-							);
-							return false;
-						}
-						return true;
-					});
-			} catch (fallbackError) {
-				console.log(
-					"⚠️  Fallback also failed, checking all ephemera files...",
-					fallbackError.message,
-				);
-				return this.findAllEphemera();
+			if (!isRecent) {
+				return false; // Too old
 			}
+
+			// Check syndication status
+			const hasRecentSyndication = this.hasRecentSyndication(data.syndication);
+
+			if (hasRecentSyndication) {
+				console.log(
+					`⏭️  Skipping ${data.title || "untitled"} - recently syndicated`,
+				);
+				return false;
+			}
+
+			return true;
+		});
+
+		console.log(
+			`📝 Found ${postsToSyndicate.length} recent ephemera posts to syndicate`,
+		);
+		return postsToSyndicate;
+	}
+
+	extractDateFromFilename(filename) {
+		// Extract date from filename like "2025-08-30.md" or "2025/08/2025-08-30.md"
+		const dateMatch = filename.match(/(\d{4}-\d{2}-\d{2})/);
+		if (dateMatch) {
+			return new Date(dateMatch[1]);
 		}
+		return new Date(0); // Very old date if no date found
+	}
+
+	hasRecentSyndication(syndicationArray) {
+		if (!syndicationArray || syndicationArray.length === 0) {
+			return false;
+		}
+
+		// Consider it recently syndicated if there's any syndication data
+		// In the future, we could add timestamps to syndication entries
+		return true;
 	}
 
 	findAllEphemera() {
