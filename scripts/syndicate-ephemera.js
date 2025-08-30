@@ -12,10 +12,17 @@ class EphemeraSyndicator {
 		this.mastodonInstance = process.env.MASTODON_INSTANCE;
 		this.blueskyUsername = process.env.BLUESKY_USERNAME;
 		this.blueskyPassword = process.env.BLUESKY_PASSWORD;
+		this.dryRun = process.env.SYNDICATION_DRY_RUN === "true";
 	}
 
 	async syndicateNewEphemera() {
-		console.log("🔍 Detecting new ephemera posts...");
+		if (this.dryRun) {
+			console.log(
+				"🔍 DRY RUN MODE: Detecting new ephemera posts (no actual posting)...",
+			);
+		} else {
+			console.log("🔍 Detecting new ephemera posts...");
+		}
 
 		const newEphemera = this.findNewEphemera();
 
@@ -24,25 +31,60 @@ class EphemeraSyndicator {
 			return;
 		}
 
+		// SAFETY: Limit to maximum 3 posts per run to prevent spam
+		const maxPosts = 3;
+		const postsToSyndicate = newEphemera.slice(0, maxPosts);
+
+		if (newEphemera.length > maxPosts) {
+			console.log(
+				`⚠️  Found ${newEphemera.length} posts but limiting to ${maxPosts} to prevent spam`,
+			);
+			console.log(
+				"📋 Additional posts found:",
+				newEphemera.slice(maxPosts).map((e) => e.data.title || e.file),
+			);
+		}
+
 		console.log(
-			`📝 Found ${newEphemera.length} new ephemera post(s) to syndicate`,
+			`📝 Will syndicate ${postsToSyndicate.length} ephemera post(s) (max ${maxPosts} per run)`,
 		);
 
-		for (const ephemera of newEphemera) {
+		for (const ephemera of postsToSyndicate) {
 			if (!ephemera.syndication || ephemera.syndication.length === 0) {
-				console.log(`🚀 Syndicating: ${ephemera.title || ephemera.file}`);
-				await this.syndicateEphemera(ephemera);
+				if (this.dryRun) {
+					console.log(
+						`🔍 DRY RUN: Would syndicate: ${ephemera.data.title || ephemera.file}`,
+					);
+					console.log(
+						`📝 Content preview: ${this.generatePostContent(ephemera.data, this.getCanonicalUrl(ephemera.file), ephemera.body).substring(0, 100)}...`,
+					);
+				} else {
+					console.log(
+						`🚀 Syndicating: ${ephemera.data.title || ephemera.file}`,
+					);
+					await this.syndicateEphemera(ephemera);
+					// Add small delay between posts to be respectful
+					await new Promise((resolve) => setTimeout(resolve, 2000));
+				}
 			} else {
 				console.log(
-					`⏭️  Skipping ${ephemera.title || ephemera.file} - already syndicated`,
+					`⏭️  Skipping ${ephemera.data.title || ephemera.file} - already syndicated`,
 				);
 			}
+		}
+
+		if (newEphemera.length > postsToSyndicate.length) {
+			console.log(
+				`📅 ${newEphemera.length - postsToSyndicate.length} posts queued for next run`,
+			);
 		}
 	}
 
 	findNewEphemera() {
 		try {
-			// Get files changed in last commit
+			// Get files changed in last commit that are ephemera posts
+			console.log("🔍 Checking for new ephemera posts...");
+
 			const changedFiles = execSync("git diff --name-only HEAD~1", {
 				encoding: "utf-8",
 				stdio: "pipe",
@@ -50,20 +92,98 @@ class EphemeraSyndicator {
 				.split("\n")
 				.filter(
 					(file) =>
-						file.startsWith("src/content/ephemera/") && file.endsWith(".md"),
+						file &&
+						file.startsWith("src/content/ephemera/") &&
+						file.endsWith(".md") &&
+						!file.includes("node_modules"),
 				);
 
-			return changedFiles.map((file) => {
-				const content = readFileSync(file, "utf-8");
-				const { data } = matter(content);
-				return { file, data };
-			});
-		} catch {
-			// If git diff fails (e.g., no previous commit), check all ephemera files
 			console.log(
-				"⚠️  Could not determine changed files, checking all ephemera...",
+				`📝 Found ${changedFiles.length} changed ephemera files:`,
+				changedFiles,
 			);
-			return this.findAllEphemera();
+
+			// Filter to only truly new posts (no existing syndication)
+			const newPosts = changedFiles
+				.map((file) => {
+					const fileContent = readFileSync(file, "utf-8");
+					const { data, content: body } = matter(fileContent);
+					return { file, data, body };
+				})
+				.filter(({ data }) => {
+					// Only syndicate if there's no syndication data yet
+					const hasSyndication =
+						data.syndication && data.syndication.length > 0;
+					if (hasSyndication) {
+						console.log(
+							`⏭️  Skipping ${data.title || "untitled"} - already syndicated`,
+						);
+						return false;
+					}
+					return true;
+				});
+
+			console.log(`🚀 Will syndicate ${newPosts.length} new posts`);
+			return newPosts;
+		} catch (error) {
+			console.log(
+				"⚠️  Git diff failed, checking recent commits...",
+				error.message,
+			);
+
+			// Try a different approach - check recent commits for ephemera files
+			try {
+				const recentFiles = execSync(
+					"git log --name-only --oneline -5 | grep 'src/content/ephemera/.*\\.md$' | head -5",
+					{
+						encoding: "utf-8",
+						stdio: "pipe",
+					},
+				)
+					.split("\n")
+					.filter(
+						(file) =>
+							file &&
+							file.startsWith("src/content/ephemera/") &&
+							file.endsWith(".md"),
+					)
+					.filter((file, index, arr) => arr.indexOf(file) === index); // Remove duplicates
+
+				console.log(
+					`📝 Found ${recentFiles.length} recent ephemera files:`,
+					recentFiles,
+				);
+
+				return recentFiles
+					.map((file) => {
+						try {
+							const fileContent = readFileSync(file, "utf-8");
+							const { data, content: body } = matter(fileContent);
+							return { file, data, body };
+						} catch {
+							console.log(`⚠️  Could not read ${file}`);
+							return null;
+						}
+					})
+					.filter((item) => item !== null)
+					.filter(({ data }) => {
+						const hasSyndication =
+							data.syndication && data.syndication.length > 0;
+						if (hasSyndication) {
+							console.log(
+								`⏭️  Skipping ${data.title || "untitled"} - already syndicated`,
+							);
+							return false;
+						}
+						return true;
+					});
+			} catch (fallbackError) {
+				console.log(
+					"⚠️  Fallback also failed, checking all ephemera files...",
+					fallbackError.message,
+				);
+				return this.findAllEphemera();
+			}
 		}
 	}
 
@@ -78,9 +198,9 @@ class EphemeraSyndicator {
 				.filter(Boolean);
 
 			return files.map((file) => {
-				const content = readFileSync(file, "utf-8");
-				const { data } = matter(content);
-				return { file, data };
+				const fileContent = readFileSync(file, "utf-8");
+				const { data, content: body } = matter(fileContent);
+				return { file, data, body };
 			});
 		} catch {
 			console.log("❌ Could not find ephemera files");
@@ -90,7 +210,11 @@ class EphemeraSyndicator {
 
 	async syndicateEphemera(ephemera) {
 		const canonicalUrl = this.getCanonicalUrl(ephemera.file);
-		const postContent = this.generatePostContent(ephemera.data, canonicalUrl);
+		const postContent = this.generatePostContent(
+			ephemera.data,
+			canonicalUrl,
+			ephemera.body,
+		);
 
 		const syndicationUrls = [];
 
@@ -134,9 +258,47 @@ class EphemeraSyndicator {
 		return `https://ryanparsley.com${urlPath}`;
 	}
 
-	generatePostContent(data, canonicalUrl) {
-		const title = data.title || "New ephemera post";
-		return `${title}\n\n${canonicalUrl}`;
+	generatePostContent(data, canonicalUrl, body) {
+		// Use the actual post content if available, otherwise fall back to title
+		let content = "";
+
+		if (body && body.trim()) {
+			// Clean up the markdown content for social media
+			content = this.cleanContentForSocial(body.trim());
+		}
+
+		// If content is too short or empty, use title
+		if (!content || content.length < 10) {
+			content = data.title || "New ephemera post";
+		}
+
+		// Mastodon has a 500 character limit, so truncate if needed
+		const maxLength = 400; // Leave room for URL
+		if (content.length > maxLength) {
+			content = content.substring(0, maxLength - 3) + "...";
+		}
+
+		return `${content}\n\n${canonicalUrl}`;
+	}
+
+	cleanContentForSocial(markdown) {
+		// Remove markdown formatting for social media
+		return (
+			markdown
+				// Remove headers
+				.replace(/^#+\s*/gm, "")
+				// Remove links but keep text
+				.replace(/\[([^]]+)\]\([^)]+\)/g, "$1")
+				// Remove emphasis
+				.replace(/\*\*([^*]+)\*\*/g, "$1")
+				.replace(/\*([^*]+)\*/g, "$1")
+				// Remove code blocks
+				.replace(/```[\s\S]*?```/g, "")
+				.replace(/`([^`]+)`/g, "$1")
+				// Clean up extra whitespace
+				.replace(/\n\s*\n/g, "\n")
+				.trim()
+		);
 	}
 
 	async postToMastodon(content) {
@@ -168,16 +330,75 @@ class EphemeraSyndicator {
 		return data.url;
 	}
 
-	async postToBluesky() {
+	async postToBluesky(content) {
 		if (!this.blueskyUsername || !this.blueskyPassword) {
 			throw new Error("Bluesky credentials not configured");
 		}
 
-		// Simplified Bluesky posting - in production you'd want full AT Protocol implementation
-		console.log(
-			"🦋 Bluesky posting not yet implemented (would need AT Protocol client)",
-		);
-		return `https://bsky.app/profile/${this.blueskyUsername}/post/placeholder`;
+		try {
+			// Step 1: Authenticate and get session
+			console.log("🔐 Authenticating with Bluesky...");
+			const authResponse = await fetch(
+				"https://bsky.social/xrpc/com.atproto.server.createSession",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						identifier: this.blueskyUsername,
+						password: this.blueskyPassword,
+					}),
+				},
+			);
+
+			if (!authResponse.ok) {
+				const errorData = await authResponse.text();
+				throw new Error(
+					`Bluesky auth failed: ${authResponse.status} - ${errorData}`,
+				);
+			}
+
+			const session = await authResponse.json();
+			console.log("✅ Bluesky authentication successful");
+
+			// Step 2: Create the post
+			console.log("📝 Creating Bluesky post...");
+			const postResponse = await fetch(
+				"https://bsky.social/xrpc/com.atproto.repo.createRecord",
+				{
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${session.accessJwt}`,
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({
+						repo: session.did,
+						collection: "app.bsky.feed.post",
+						record: {
+							text: content,
+							createdAt: new Date().toISOString(),
+						},
+					}),
+				},
+			);
+
+			if (!postResponse.ok) {
+				const errorData = await postResponse.text();
+				throw new Error(
+					`Bluesky post failed: ${postResponse.status} - ${errorData}`,
+				);
+			}
+
+			const postData = await postResponse.json();
+			const postUrl = `https://bsky.app/profile/${this.blueskyUsername}/post/${postData.uri.split("/").pop()}`;
+
+			console.log("✅ Bluesky post created successfully");
+			return postUrl;
+		} catch (error) {
+			console.error("❌ Bluesky posting error:", error.message);
+			throw error;
+		}
 	}
 
 	updateEphemeraFile(filePath, syndicationUrls) {
