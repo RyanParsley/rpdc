@@ -50,22 +50,56 @@ interface EphemeraPost {
 }
 
 // Find Astro-processed images in dist/_astro/
-function findProcessedImage(originalPath: string): string | null {
+function findProcessedImage(
+	originalPath: string,
+	preferSmaller: boolean = false,
+): string | null {
 	try {
 		const filename = basename(originalPath, extname(originalPath));
 		const astroDir = join(process.cwd(), "dist", "_astro");
 
 		// Look for processed files that start with the original filename
 		const files = readdirSync(astroDir);
-		const processedFile = files.find(
+		const processedFiles = files.filter(
 			(file) =>
 				file.startsWith(filename + ".") &&
 				(file.endsWith(".jpg") ||
 					file.endsWith(".jpeg") ||
-					file.endsWith(".png")),
+					file.endsWith(".png") ||
+					file.endsWith(".webp")),
 		);
 
-		return processedFile ? join(astroDir, processedFile) : null;
+		if (processedFiles.length === 0) {
+			return null;
+		}
+
+		// If we want the smallest file (for size-limited platforms), find it
+		if (preferSmaller && processedFiles.length > 1) {
+			let smallestFile = processedFiles[0];
+			let smallestSize = statSync(join(astroDir, smallestFile!)).size;
+
+			for (const file of processedFiles.slice(1)) {
+				const fileSize = statSync(join(astroDir, file!)).size;
+				if (fileSize < smallestSize) {
+					smallestSize = fileSize;
+					smallestFile = file;
+				}
+			}
+
+			return join(astroDir, smallestFile!);
+		}
+
+		// Otherwise, prefer WebP, then JPG, then PNG
+		const preferredOrder = [".webp", ".jpg", ".jpeg", ".png"];
+		for (const ext of preferredOrder) {
+			const preferredFile = processedFiles.find((file) => file.endsWith(ext));
+			if (preferredFile) {
+				return join(astroDir, preferredFile);
+			}
+		}
+
+		// Fallback to first found
+		return join(astroDir, processedFiles[0]!);
 	} catch {
 		// Directory doesn't exist or can't be read
 		return null;
@@ -85,13 +119,14 @@ function checkImageSize(
 
 		const limits = {
 			mastodon: 8, // 8MB (Mastodon allows up to 8MB)
-			bluesky: 0.9, // 1MB (Bluesky allows exactly 1MB = 1,000,000 bytes)
+			bluesky: 0.8, // 800KB (Conservative limit well under Bluesky's 1MB = 1,000,000 bytes)
 		};
 
 		const withinLimit = sizeMB <= limits[platform];
 		if (logger) {
+			const limitBytes = Math.floor(limits[platform] * 1024 * 1024);
 			logger.debug(
-				`POSSE: Image size check - ${imagePath}: ${sizeMB.toFixed(2)}MB (${sizeKB.toFixed(0)}KB, ${stats.size} bytes), limit: ${limits[platform]}MB (${limits[platform] * 1024 * 1024} bytes), within limit: ${withinLimit}`,
+				`POSSE: Image size check - ${imagePath}: ${sizeMB.toFixed(2)}MB (${sizeKB.toFixed(1)}KB, ${stats.size} bytes), limit: ${limits[platform]}MB (${limitBytes} bytes), within limit: ${withinLimit}`,
 			);
 		}
 
@@ -426,8 +461,13 @@ async function postToMastodon(
 					post.image.src.replace("./", ""),
 				);
 
-				// Try to find Astro-processed image first
-				const processedImagePath = findProcessedImage(originalImagePath);
+				// Try to find Astro-processed image first (prefer WebP for quality)
+				const processedImagePath = findProcessedImage(originalImagePath, false);
+				if (processedImagePath) {
+					logger.info(
+						`POSSE: Found optimized image for Mastodon: ${basename(processedImagePath)} (${(statSync(processedImagePath).size / 1024).toFixed(1)}KB)`,
+					);
+				}
 
 				let imageBuffer: Buffer | null = null;
 				let imagePath: string | null = null;
@@ -598,8 +638,13 @@ async function postToBluesky(
 					post.image.src.replace("./", ""),
 				);
 
-				// Try to find Astro-processed image first
-				const processedImagePath = findProcessedImage(originalImagePath);
+				// Try to find Astro-processed image first (prefer smallest for Bluesky's 1MB limit)
+				const processedImagePath = findProcessedImage(originalImagePath, true);
+				if (processedImagePath) {
+					logger.info(
+						`POSSE: Found optimized image for Bluesky: ${basename(processedImagePath)} (${(statSync(processedImagePath).size / 1024).toFixed(1)}KB)`,
+					);
+				}
 
 				let imageBuffer: Buffer | null = null;
 
