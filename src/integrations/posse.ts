@@ -76,18 +76,32 @@ function findProcessedImage(originalPath: string): string | null {
 function checkImageSize(
 	imagePath: string,
 	platform: "mastodon" | "bluesky",
+	logger?: Logger,
 ): boolean {
 	try {
 		const stats = statSync(imagePath);
 		const sizeMB = stats.size / (1024 * 1024);
+		const sizeKB = stats.size / 1024;
 
 		const limits = {
 			mastodon: 8, // 8MB
-			bluesky: 0.95, // ~950KB
+			bluesky: 1, // 1MB (actual Bluesky limit)
 		};
 
-		return sizeMB <= limits[platform];
-	} catch {
+		const withinLimit = sizeMB <= limits[platform];
+		if (logger) {
+			logger.debug(
+				`POSSE: Image size check - ${imagePath}: ${sizeMB.toFixed(2)}MB (${sizeKB.toFixed(0)}KB), limit: ${limits[platform]}MB, within limit: ${withinLimit}`,
+			);
+		}
+
+		return withinLimit;
+	} catch (error) {
+		if (logger) {
+			logger.warn(
+				`POSSE: Could not check image size for ${imagePath}: ${error}`,
+			);
+		}
 		return false;
 	}
 }
@@ -356,6 +370,41 @@ async function postToMastodon(
 	logger: Logger,
 ): Promise<string | null> {
 	try {
+		// Validate configuration
+		if (!config.token || config.token.length < 10) {
+			throw new Error(
+				`Invalid Mastodon token: token is missing or too short (${config.token?.length || 0} chars)`,
+			);
+		}
+		if (!config.instance || !config.instance.includes(".")) {
+			throw new Error(`Invalid Mastodon instance: ${config.instance}`);
+		}
+
+		logger.info(
+			`POSSE: Mastodon config validation passed - instance: ${config.instance}, token length: ${config.token.length}`,
+		);
+
+		// Test instance connectivity
+		try {
+			const instanceTest = await fetch(
+				`https://${config.instance}/api/v1/instance`,
+				{
+					headers: { Authorization: `Bearer ${config.token}` },
+				},
+			);
+			if (!instanceTest.ok) {
+				logger.warn(
+					`POSSE: Mastodon instance test failed: ${instanceTest.status}`,
+				);
+			} else {
+				logger.info(`POSSE: Mastodon instance connectivity test passed`);
+			}
+		} catch (error) {
+			logger.warn(
+				`POSSE: Could not test Mastodon instance connectivity: ${error}`,
+			);
+		}
+
 		const content = generatePostContent(
 			post.data,
 			canonicalUrl,
@@ -385,7 +434,7 @@ async function postToMastodon(
 
 				if (
 					processedImagePath &&
-					checkImageSize(processedImagePath, "mastodon")
+					checkImageSize(processedImagePath, "mastodon", logger)
 				) {
 					// Use Astro's optimized image
 					imagePath = processedImagePath;
@@ -393,7 +442,7 @@ async function postToMastodon(
 					logger.info(
 						`POSSE: Using Astro-optimized image for Mastodon: ${processedImagePath}`,
 					);
-				} else if (checkImageSize(originalImagePath, "mastodon")) {
+				} else if (checkImageSize(originalImagePath, "mastodon", logger)) {
 					// Fallback to original image
 					imagePath = originalImagePath;
 					imageBuffer = readFileSync(originalImagePath);
@@ -409,13 +458,22 @@ async function postToMastodon(
 					const imageExt = extname(imagePath).toLowerCase();
 					const mimeType = imageExt === ".png" ? "image/png" : "image/jpeg";
 
+					logger.info(
+						`POSSE: Preparing image upload - size: ${imageBuffer.length} bytes, type: ${mimeType}, ext: ${imageExt}`,
+					);
+
 					const formData = new FormData();
 					const blob = new Blob([imageBuffer], { type: mimeType });
 					formData.append("file", blob, `image${imageExt}`);
 
 					if (post.image.alt) {
 						formData.append("description", post.image.alt);
+						logger.info(`POSSE: Added alt text: ${post.image.alt}`);
 					}
+
+					logger.info(
+						`POSSE: FormData prepared with ${formData.getAll("file").length} file(s)`,
+					);
 
 					const uploadResponse = await fetch(
 						`https://${config.instance}/api/v1/media`,
@@ -427,9 +485,29 @@ async function postToMastodon(
 					);
 
 					if (!uploadResponse.ok) {
-						throw new Error(
-							`Mastodon media upload failed: ${uploadResponse.status}`,
+						const errorText = await uploadResponse.text();
+						logger.error(
+							`POSSE: Mastodon media upload failed with status ${uploadResponse.status}`,
 						);
+						logger.error(`POSSE: Error response: ${errorText}`);
+						logger.error(
+							`POSSE: Request headers: ${JSON.stringify({ Authorization: `Bearer ${config.token.substring(0, 10)}...` })}`,
+						);
+						logger.error(`POSSE: Instance: ${config.instance}`);
+
+						// Provide helpful error messages for common issues
+						let errorMessage = `Mastodon media upload failed: ${uploadResponse.status}`;
+						if (uploadResponse.status === 403) {
+							errorMessage +=
+								' - This usually means the access token does not have media upload permissions. Please check your Mastodon app settings and ensure the token has "write:media" scope.';
+						} else if (uploadResponse.status === 401) {
+							errorMessage +=
+								" - Authentication failed. Please check your Mastodon access token.";
+						} else if (uploadResponse.status === 422) {
+							errorMessage += " - The media file may be invalid or too large.";
+						}
+
+						throw new Error(`${errorMessage} - ${errorText}`);
 					}
 
 					const mediaData = await uploadResponse.json();
@@ -527,14 +605,14 @@ async function postToBluesky(
 
 				if (
 					processedImagePath &&
-					checkImageSize(processedImagePath, "bluesky")
+					checkImageSize(processedImagePath, "bluesky", logger)
 				) {
 					// Use Astro's optimized image
 					imageBuffer = readFileSync(processedImagePath);
 					logger.info(
 						`POSSE: Using Astro-optimized image for Bluesky: ${processedImagePath}`,
 					);
-				} else if (checkImageSize(originalImagePath, "bluesky")) {
+				} else if (checkImageSize(originalImagePath, "bluesky", logger)) {
 					// Fallback to original image
 					imageBuffer = readFileSync(originalImagePath);
 					logger.info(
