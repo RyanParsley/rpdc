@@ -55,8 +55,24 @@ class EphemeraSyndicator {
 					console.log(
 						`🔍 DRY RUN: Would syndicate: ${ephemera.data.title || ephemera.file}`,
 					);
+					const canonicalUrl = this.getCanonicalUrl(ephemera.file);
+					const mastodonPreview = this.generatePostContent(
+						ephemera.data,
+						canonicalUrl,
+						ephemera.body,
+						"mastodon",
+					);
+					const blueskyPreview = this.generatePostContent(
+						ephemera.data,
+						canonicalUrl,
+						ephemera.body,
+						"bluesky",
+					);
 					console.log(
-						`📝 Content preview: ${this.generatePostContent(ephemera.data, this.getCanonicalUrl(ephemera.file), ephemera.body).substring(0, 100)}...`,
+						`🐘 Mastodon preview: ${mastodonPreview.substring(0, 80)}...`,
+					);
+					console.log(
+						`🦋 Bluesky preview: ${blueskyPreview.substring(0, 80)}...`,
 					);
 				} else {
 					console.log(
@@ -161,18 +177,18 @@ class EphemeraSyndicator {
 
 	async syndicateEphemera(ephemera) {
 		const canonicalUrl = this.getCanonicalUrl(ephemera.file);
-		const postContent = this.generatePostContent(
-			ephemera.data,
-			canonicalUrl,
-			ephemera.body,
-		);
-
 		const syndicationUrls = [];
 
 		// Syndicate to Mastodon
 		try {
 			console.log("🐘 Posting to Mastodon...");
-			const mastodonUrl = await this.postToMastodon(postContent);
+			const mastodonContent = this.generatePostContent(
+				ephemera.data,
+				canonicalUrl,
+				ephemera.body,
+				"mastodon",
+			);
+			const mastodonUrl = await this.postToMastodon(mastodonContent);
 			syndicationUrls.push({
 				href: mastodonUrl,
 				title: "Mastodon",
@@ -185,7 +201,13 @@ class EphemeraSyndicator {
 		// Syndicate to Bluesky
 		try {
 			console.log("🦋 Posting to Bluesky...");
-			const blueskyUrl = await this.postToBluesky(postContent);
+			const blueskyContent = this.generatePostContent(
+				ephemera.data,
+				canonicalUrl,
+				ephemera.body,
+				"bluesky",
+			);
+			const blueskyUrl = await this.postToBluesky(blueskyContent);
 			syndicationUrls.push({
 				href: blueskyUrl,
 				title: "Bluesky",
@@ -224,7 +246,7 @@ class EphemeraSyndicator {
 		return `https://ryanparsley.com${urlPath}`;
 	}
 
-	generatePostContent(data, canonicalUrl, body) {
+	generatePostContent(data, canonicalUrl, body, platform = "mastodon") {
 		// Use the actual post content if available, otherwise fall back to title
 		let content = "";
 
@@ -238,8 +260,17 @@ class EphemeraSyndicator {
 			content = data.title || "New ephemera post";
 		}
 
-		// Mastodon has a 500 character limit, so truncate if needed
-		const maxLength = 400; // Leave room for URL
+		// Platform-specific length limits
+		let maxLength;
+		if (platform === "bluesky") {
+			// Bluesky: 300 graphemes (approximately 280 characters to be safe)
+			maxLength = 280;
+		} else {
+			// Mastodon: 500 characters
+			maxLength = 400; // Leave room for URL
+		}
+
+		// Truncate if needed
 		if (content.length > maxLength) {
 			content = content.substring(0, maxLength - 3) + "...";
 		}
