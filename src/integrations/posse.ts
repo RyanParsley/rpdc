@@ -102,13 +102,20 @@ export default function posseIntegration(
 		hooks: {
 			"astro:build:done": async ({ logger }) => {
 				logger.info("POSSE: Starting syndication process");
-				logger.info(
-					"POSSE: Running in astro:build:done - SYNC_PATHS may not capture these changes",
-				);
+
+				// Add a delay to ensure SYNC_PATHS is monitoring
+				logger.info("POSSE: Waiting for SYNC_PATHS to be ready...");
+				await new Promise((resolve) => setTimeout(resolve, 1000));
 
 				try {
 					await runSyndication({ mastodon, bluesky, dryRun, maxPosts, logger });
 					logger.info("POSSE: Syndication process completed successfully");
+
+					// Add another delay before build finishes
+					logger.info(
+						"POSSE: Allowing time for SYNC_PATHS to detect changes...",
+					);
+					await new Promise((resolve) => setTimeout(resolve, 2000));
 				} catch (error) {
 					const errorMessage =
 						error instanceof Error ? error.message : String(error);
@@ -288,6 +295,12 @@ async function syndicateSinglePost(
 	const canonicalUrl = `https://ryanparsley.com/ephemera/${post.file.replace(".md", "")}`;
 	const syndicationUrls: Array<{ href: string; title: string }> = [];
 
+	logger.info(`POSSE: Syndicating post: ${post.file}`);
+	logger.info(`POSSE: Canonical URL: ${canonicalUrl}`);
+	logger.info(
+		`POSSE: Platforms enabled - Mastodon: ${!!platforms.mastodon}, Bluesky: ${!!platforms.bluesky}`,
+	);
+
 	// Syndicate to Mastodon
 	if (platforms.mastodon) {
 		try {
@@ -301,6 +314,8 @@ async function syndicateSinglePost(
 			if (mastodonUrl) {
 				syndicationUrls.push({ href: mastodonUrl, title: "Mastodon" });
 				logger.info(`POSSE: Successfully posted to Mastodon: ${mastodonUrl}`);
+			} else {
+				logger.warn(`POSSE: Mastodon syndication returned no URL`);
 			}
 		} catch (error) {
 			logger.error(`POSSE: Mastodon syndication failed: ${error}`);
@@ -320,6 +335,8 @@ async function syndicateSinglePost(
 			if (blueskyUrl) {
 				syndicationUrls.push({ href: blueskyUrl, title: "Bluesky" });
 				logger.info(`POSSE: Successfully posted to Bluesky: ${blueskyUrl}`);
+			} else {
+				logger.warn(`POSSE: Bluesky syndication returned no URL`);
 			}
 		} catch (error) {
 			logger.error(`POSSE: Bluesky syndication failed: ${error}`);
@@ -702,16 +719,28 @@ async function updatePostWithSyndication(
 
 		const fileContent = readFileSync(sourcePath, "utf-8");
 		const { data, content } = matter(fileContent);
-		logger.debug(`POSSE: Original frontmatter: ${JSON.stringify(data)}`);
+		logger.info(`POSSE: Original frontmatter: ${JSON.stringify(data)}`);
+		logger.info(`POSSE: Original file content length: ${fileContent.length}`);
 
 		data.syndication = [...(data.syndication ?? []), ...syndicationUrls];
 
 		const updatedContent = matter.stringify(content, data);
-		logger.debug(`POSSE: Updated frontmatter: ${JSON.stringify(data)}`);
-		logger.debug(
+		logger.info(`POSSE: Updated frontmatter: ${JSON.stringify(data)}`);
+		logger.info(
 			`POSSE: Writing ${updatedContent.length} characters to ${sourcePath}`,
 		);
 		writeFileSync(sourcePath, updatedContent);
+
+		// Force file sync to ensure changes are written
+		try {
+			// Read the file back to verify it was written
+			const verifyContent = readFileSync(sourcePath, "utf-8");
+			logger.info(
+				`POSSE: File write verification - ${verifyContent.length} characters read back`,
+			);
+		} catch (error) {
+			logger.error(`POSSE: Failed to verify file write: ${error}`);
+		}
 
 		// Verify the file was written
 		try {
