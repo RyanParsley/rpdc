@@ -7,8 +7,6 @@ paths:
   collections: ""
   data: ""
   layouts:
-# POSSE syndication - automatically commit changes to ephemera posts
-SYNC_PATHS: src/content/ephemera/
 collections_config:
   notes:
     path: src/content/note
@@ -164,6 +162,17 @@ collections_config:
         type: array
         cascade: true
         empty_type: array
+        items:
+          type: object
+          properties:
+            href:
+              type: url
+              label: URL
+              comment: The URL of the syndicated post
+            title:
+              type: string
+              label: Platform
+              comment: Name of the platform (e.g., Mastodon, Bluesky)
     add_options:
       - name: Add New Ephemera
         icon: post_add
