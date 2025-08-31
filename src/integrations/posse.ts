@@ -1,6 +1,7 @@
 import type { AstroIntegration } from "astro";
 import { readFileSync, writeFileSync, statSync, readdirSync } from "fs";
 import { join, extname, basename } from "path";
+import { execSync } from "child_process";
 import matter from "gray-matter";
 
 // Types
@@ -159,12 +160,6 @@ export default function posseIntegration(
 				try {
 					await runSyndication({ mastodon, bluesky, dryRun, maxPosts, logger });
 					logger.info("POSSE: Syndication process completed successfully");
-
-					// Add another delay before build finishes
-					logger.info(
-						"POSSE: Allowing time for SYNC_PATHS to detect changes...",
-					);
-					await new Promise((resolve) => setTimeout(resolve, 2000));
 				} catch (error) {
 					const errorMessage =
 						error instanceof Error ? error.message : String(error);
@@ -188,6 +183,7 @@ async function runSyndication({
 	maxPosts: number;
 	logger: Logger;
 }) {
+	logger.info("POSSE: ===== SYNDICATION PROCESS STARTED =====");
 	logger.info(
 		`POSSE: Configuration - Mastodon: ${mastodon ? "enabled" : "disabled"}, Bluesky: ${bluesky ? "enabled" : "disabled"}, Dry Run: ${dryRun}`,
 	);
@@ -226,11 +222,14 @@ async function runSyndication({
 		return;
 	}
 
+	logger.info(`POSSE: ===== STARTING POST PROCESSING =====`);
 	logger.info(`POSSE: Processing ${recentPosts.length} ephemera posts`);
 
 	// Process each post
 	for (const post of recentPosts) {
-		logger.info(`POSSE: Checking post: ${post.data.title || post.file}`);
+		logger.info(
+			`POSSE: ===== PROCESSING POST: ${post.data.title || post.file} =====`,
+		);
 		logger.info(
 			`POSSE: Post has syndication: ${!!post.data.syndication && post.data.syndication.length > 0}`,
 		);
@@ -255,6 +254,8 @@ async function runSyndication({
 			await new Promise((resolve) => setTimeout(resolve, 2000));
 		}
 	}
+
+	logger.info(`POSSE: ===== POST PROCESSING COMPLETE =====`);
 }
 
 async function getRecentEphemeraPosts(
@@ -294,21 +295,39 @@ async function getRecentEphemeraPosts(
 					const fileContent = readFileSync(filePath, "utf-8");
 					const { data, content } = matter(fileContent);
 
-					// Check if post is recent
-					const postDate = data.date ? new Date(data.date) : new Date(0);
-					const isRecent = postDate > oneDayAgo;
-
-					if (!isRecent) return null;
-
-					// Check if already syndicated
-					const hasSyndication = data.syndication?.length > 0;
-					if (hasSyndication) return null;
-
-					// Get relative path
+					// Get relative path for logging
 					const relativePath = filePath.replace(
 						join(process.cwd(), "src", "content", "ephemera") + "/",
 						"",
 					);
+
+					logger.info(`POSSE: Checking file: ${relativePath}`);
+					logger.info(`POSSE: File date: ${data.date}`);
+					logger.info(
+						`POSSE: File has syndication: ${!!data.syndication?.length}`,
+					);
+
+					// Check if post is recent
+					const postDate = data.date ? new Date(data.date) : new Date(0);
+					const isRecent = postDate > oneDayAgo;
+
+					logger.info(`POSSE: Post date: ${postDate.toISOString()}`);
+					logger.info(`POSSE: One day ago: ${oneDayAgo.toISOString()}`);
+					logger.info(`POSSE: Is recent: ${isRecent}`);
+
+					if (!isRecent) {
+						logger.info(`POSSE: Skipping ${relativePath} - not recent`);
+						return null;
+					}
+
+					// Check if already syndicated
+					const hasSyndication = data.syndication?.length > 0;
+					if (hasSyndication) {
+						logger.info(`POSSE: Skipping ${relativePath} - already syndicated`);
+						return null;
+					}
+
+					logger.info(`POSSE: Will process ${relativePath}`);
 
 					return {
 						file: relativePath,
@@ -324,7 +343,10 @@ async function getRecentEphemeraPosts(
 			.filter((post) => post !== null)
 			.slice(0, maxPosts);
 
-		logger.info(`POSSE: Found ${recentPosts.length} recent ephemera posts`);
+		logger.info(
+			`POSSE: Found ${recentPosts.length} recent ephemera posts to process`,
+		);
+		logger.info(`POSSE: ===== FILE SCANNING COMPLETE =====`);
 		return recentPosts;
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -889,6 +911,55 @@ async function updatePostWithSyndication(
 		);
 		logger.info(`POSSE: File path: ${sourcePath}`);
 		logger.info(`POSSE: Syndication URLs: ${JSON.stringify(syndicationUrls)}`);
+
+		// Immediately commit and push the changes
+		try {
+			logger.info(`POSSE: Committing changes for ${post.file}...`);
+
+			// Configure git if needed
+			try {
+				execSync('git config user.name "CloudCannon POSSE"', { stdio: "pipe" });
+				execSync('git config user.email "posse@cloudcannon.com"', {
+					stdio: "pipe",
+				});
+			} catch (configError) {
+				logger.warn(`POSSE: Git config may already be set: ${configError}`);
+			}
+
+			// Add the specific file
+			execSync(`git add "${sourcePath}"`, { stdio: "pipe" });
+			logger.info(`POSSE: Added ${sourcePath} to git staging`);
+
+			// Check if there are changes to commit
+			const statusOutput = execSync("git status --porcelain", {
+				encoding: "utf8",
+				stdio: "pipe",
+			});
+			if (statusOutput.trim()) {
+				// Commit the changes
+				const commitMessage = `POSSE: Update syndication links for ${post.file}`;
+				execSync(`git commit -m "${commitMessage}"`, { stdio: "pipe" });
+				logger.info(`POSSE: Committed changes: ${commitMessage}`);
+
+				// Try to push to remote
+				try {
+					execSync("git push origin main", { stdio: "pipe" });
+					logger.info(`POSSE: Successfully pushed to origin/main`);
+				} catch {
+					try {
+						execSync("git push origin master", { stdio: "pipe" });
+						logger.info(`POSSE: Successfully pushed to origin/master`);
+					} catch (pushError) {
+						logger.warn(`POSSE: Failed to push to remote: ${pushError}`);
+					}
+				}
+			} else {
+				logger.info(`POSSE: No changes to commit for ${post.file}`);
+			}
+		} catch (gitError) {
+			logger.error(`POSSE: Git operation failed for ${post.file}: ${gitError}`);
+			// Don't fail the build if git operations fail
+		}
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`POSSE: Failed to update post ${post.file}: ${errorMessage}`);
