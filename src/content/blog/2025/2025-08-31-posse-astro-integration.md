@@ -8,7 +8,7 @@ tags: [posse, indieweb, typescript, astro]
 
 Almost a year ago, I wrote about my [game plan for POSSE](/blog/posse). Like
 many automation projects, it sat on my back burner making me feel guilty every
-time I manually posted to social media. Today I finally built the automated
+time I manually posted to social media. Today I finally built an automated
 workflow I'm proud to share.
 
 ## Static sites are the bees knees, but...
@@ -58,10 +58,10 @@ I accidentally spammed my mastodon account via a bug. This had me thinking about
 alternative implementation details.
 
 Getting this working required diving deeper into Astro's API. Not gonna lie, the
-idea of using an Astro Integration came from me using OpenCode as a rubber duck
+idea of using an Astro Integration came from me using OpenCode as a rubber duck.
 I've wired up a few 3rd party integrations but making a custom one hadn't
 occurred to me. I'm glad I went through the effort though because testing is way
-easier and using Astro hooks feels more right than previous approach.
+easier and using Astro hooks feels more right than the previous approach did.
 
 ### What that looks like
 
