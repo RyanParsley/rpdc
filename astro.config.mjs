@@ -34,9 +34,9 @@ export default defineConfig({
 		pagefind(),
 		posseIntegration({
 			mastodon:
-				process.env.MASTODON_TOKEN && process.env.MASTODON_INSTANCE
+				process.env.MASTODON_ACCESS_TOKEN && process.env.MASTODON_INSTANCE
 					? {
-							token: process.env.MASTODON_TOKEN,
+							token: process.env.MASTODON_ACCESS_TOKEN,
 							instance: process.env.MASTODON_INSTANCE,
 						}
 					: undefined,
