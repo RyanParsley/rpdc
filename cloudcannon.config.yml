@@ -1,10 +1,12 @@
 _schema: _schema
 paths:
   uploads: uploads
-  static: ''
-  collections: ''
-  data: ''
+  static: ""
+  collections: ""
+  data: ""
   layouts:
+# POSSE syndication - automatically commit changes to ephemera posts
+SYNC_PATHS: src/content/ephemera/
 collections_config:
   notes:
     path: src/content/note

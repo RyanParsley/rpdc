@@ -1,38 +1,20 @@
 #!/bin/bash
 
-# CloudCannon Postbuild Hook - ACTIVE
+# CloudCannon Postbuild Hook - VALIDATION
 # POSSE syndication runs automatically during Astro build via integration
-# This hook commits any POSSE changes back to GitHub
+# This hook validates the syndication process and provides logging
 
-# Ensure we're in the repository root
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-cd "$REPO_ROOT" || exit 1
+echo "🔄 CloudCannon Postbuild: Validating POSSE syndication..."
 
-echo "🔄 CloudCannon Postbuild: Checking for POSSE changes..."
+# Check if any ephemera files have syndication links (indicating successful syndication)
+EPHEMERA_DIR="src/content/ephemera"
+SYNDICATION_COUNT=$(grep -r "syndication:" "$EPHEMERA_DIR" 2>/dev/null | wc -l)
 
-# Check if there are any changes in the ephemera directory
-if git diff --quiet src/content/ephemera/; then
-    echo "ℹ️  No POSSE changes to commit"
+if [ "$SYNDICATION_COUNT" -gt 0 ]; then
+	echo "✅ Found $SYNDICATION_COUNT ephemera posts with syndication links"
+	echo "📝 Changes will be committed via SYNC_PATHS configuration"
 else
-    echo "📝 Committing POSSE syndication updates..."
-
-    # Configure git (CloudCannon provides these automatically)
-    git config user.name "CloudCannon Build"
-    git config user.email "build@cloudcannon.com"
-
-    # Add and commit the changes
-    git add src/content/ephemera/
-    git commit -m "POSSE: Update syndication links [skip ci]" --no-verify
-
-    # Push the changes (with error handling)
-    if git push origin HEAD; then
-        echo "✅ Successfully pushed POSSE changes to GitHub"
-    else
-        echo "⚠️  Failed to push POSSE changes to GitHub"
-        echo "   This may be due to branch protection or permissions"
-        echo "   Changes are still committed locally"
-    fi
+	echo "ℹ️  No syndicated posts found (this may be normal if no recent posts were processed)"
 fi
 
-echo "✨ CloudCannon Postbuild: Complete"
+echo "✨ CloudCannon Postbuild: Validation complete"
