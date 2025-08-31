@@ -70,11 +70,13 @@ class EphemeraSyndicator {
 						ephemera.body,
 						"bluesky",
 					);
+					console.log(`🐘 Mastodon preview (${mastodonPreview.length} chars):`);
 					console.log(
-						`🐘 Mastodon preview: ${mastodonPreview.substring(0, 80)}...`,
+						`   ${mastodonPreview.split("\n").slice(0, 3).join("\n   ")}${mastodonPreview.split("\n").length > 3 ? "\n   ..." : ""}`,
 					);
+					console.log(`🦋 Bluesky preview (${blueskyPreview.length} chars):`);
 					console.log(
-						`🦋 Bluesky preview: ${blueskyPreview.substring(0, 80)}...`,
+						`   ${blueskyPreview.split("\n").slice(0, 3).join("\n   ")}${blueskyPreview.split("\n").length > 3 ? "\n   ..." : ""}`,
 					);
 				} else {
 					console.log(
@@ -293,21 +295,25 @@ class EphemeraSyndicator {
 	}
 
 	cleanContentForSocial(markdown) {
-		// Remove markdown formatting for social media
+		// Convert markdown to social media friendly format while preserving structure
 		return (
 			markdown
-				// Remove headers
-				.replace(/^#+\s*/gm, "")
-				// Remove links but keep text
-				.replace(/\[([^]]+)\]\([^)]+\)/g, "$1")
-				// Remove emphasis
-				.replace(/\*\*([^*]+)\*\*/g, "$1")
-				.replace(/\*([^*]+)\*/g, "$1")
-				// Remove code blocks
-				.replace(/```[\s\S]*?```/g, "")
-				.replace(/`([^`]+)`/g, "$1")
-				// Clean up extra whitespace
-				.replace(/\n\s*\n/g, "\n")
+				// Convert headers to readable format
+				.replace(/^###\s+(.+)$/gm, "• $1") // ### Header → • Header
+				.replace(/^##\s+(.+)$/gm, "$1") // ## Header → Header
+				.replace(/^#\s+(.+)$/gm, "$1") // # Header → Header
+				// Keep links readable
+				.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
+				// Keep emphasis for readability (social platforms support basic formatting)
+				// Remove code blocks but indicate they were there
+				.replace(/```[\s\S]*?```/g, "[code block]")
+				// Keep inline code as-is (social platforms handle this well)
+				// Preserve paragraph breaks (double line breaks)
+				.replace(/\n\s*\n\s*\n/g, "\n\n")
+				// Clean up excessive whitespace but preserve single line breaks
+				.replace(/[ \t]+/g, " ")
+				// Remove excessive line breaks but keep paragraph structure
+				.replace(/\n{3,}/g, "\n\n")
 				.trim()
 		);
 	}
