@@ -129,6 +129,10 @@ async function runSyndication({
 	maxPosts: number;
 	logger: Logger;
 }) {
+	logger.info(
+		`POSSE: Configuration - Mastodon: ${mastodon ? "enabled" : "disabled"}, Bluesky: ${bluesky ? "enabled" : "disabled"}, Dry Run: ${dryRun}`,
+	);
+
 	if (dryRun) {
 		logger.info("POSSE: Running in DRY RUN mode - no actual posting");
 	}

@@ -1,11 +1,33 @@
-# CloudCannon Postbuild Hook - DISABLED
-# POSSE syndication now runs automatically during Astro build via integration
-# This hook is kept for reference but should be removed or disabled
+#!/bin/bash
 
-echo "ℹ️  POSSE syndication now runs automatically during Astro build"
-echo "ℹ️  This CloudCannon postbuild hook is no longer needed"
-echo "ℹ️  To disable: rename this file or remove it from .cloudcannon/postbuild"
+# CloudCannon Postbuild Hook - ACTIVE
+# POSSE syndication runs automatically during Astro build via integration
+# This hook commits any POSSE changes back to GitHub
 
-# Uncomment the lines below if you want to re-enable the old standalone script
-# echo "🔄 Starting POSSE syndication (legacy mode)..."
-# ... rest of the original script ...
+echo "🔄 CloudCannon Postbuild: Checking for POSSE changes..."
+
+# Check if there are any changes in the ephemera directory
+if git diff --quiet src/content/ephemera/; then
+    echo "ℹ️  No POSSE changes to commit"
+else
+    echo "📝 Committing POSSE syndication updates..."
+
+    # Configure git (CloudCannon provides these automatically)
+    git config user.name "CloudCannon Build"
+    git config user.email "build@cloudcannon.com"
+
+    # Add and commit the changes
+    git add src/content/ephemera/
+    git commit -m "POSSE: Update syndication links [skip ci]" --no-verify
+
+    # Push the changes (with error handling)
+    if git push origin HEAD; then
+        echo "✅ Successfully pushed POSSE changes to GitHub"
+    else
+        echo "⚠️  Failed to push POSSE changes to GitHub"
+        echo "   This may be due to branch protection or permissions"
+        echo "   Changes are still committed locally"
+    fi
+fi
+
+echo "✨ CloudCannon Postbuild: Complete"
