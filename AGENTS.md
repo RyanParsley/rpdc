@@ -65,6 +65,14 @@
 - Comprehensive test coverage for POSSE integration
 - 100% type safety with no `any` types in application code
 
+### TypeScript Configuration
+
+- **Config file**: `tsconfig.json` extends `"astro/tsconfigs/strictest"`
+- **Strict mode**: Enabled by default (includes `noImplicitAny: true`)
+- **No `any` types**: Strictly enforced - replace with proper types
+- **Null checks**: `strictNullChecks: true` enabled
+- **Build verification**: `npm run build` includes type checking
+
 ## JavaScript/TypeScript Best Practices
 
 ### Variable Declarations & Immutability
@@ -257,17 +265,31 @@ The POSSE syndication feature should be implemented as an Astro integration that
 
 ## Migration from CloudCannon Postbuild Hook
 
-**✅ RECOMMENDED: Use Astro Integration (Current Setup)**
+**✅ RECOMMENDED: Use Astro Integration + Postbuild Hook (Current Setup)**
 
-The Astro integration approach is now the preferred method for POSSE syndication. It provides:
+The current setup combines the best of both worlds:
+
+1. **Astro Integration**: Handles the actual POSSE syndication during build
+2. **Postbuild Hook**: Commits syndication changes back to GitHub
+
+### Benefits of Current Setup
 
 - **Better Integration**: Runs during the build process with full access to Astro's ecosystem
 - **Type Safety**: Full TypeScript support with proper error handling
 - **Consistency**: Uses the same logging and configuration system as your Astro site
-- **Performance**: No additional build steps or dependency management
-- **Reliability**: Integrated error handling that won't break your build
+- **Persistence**: Changes are committed back to GitHub for long-term storage
+- **Reliability**: Integrated error handling that won't break the build
 
-**❌ DEPRECATED: CloudCannon Postbuild Hook**
+### Postbuild Hook Details
+
+The `.cloudcannon/postbuild` script:
+
+- Checks for changes in `src/content/ephemera/`
+- Commits POSSE updates with message: `"POSSE: Update syndication links [skip ci]"`
+- Pushes changes back to GitHub
+- Handles errors gracefully without breaking the build
+
+**❌ DEPRECATED: Old Standalone Script**
 
 The old CloudCannon postbuild hook (`scripts/syndicate-ephemera.js`) has been disabled. While it provided similar functionality, it had several drawbacks:
 
@@ -276,14 +298,14 @@ The old CloudCannon postbuild hook (`scripts/syndicate-ephemera.js`) has been di
 - **Limited Integration**: No access to Astro's build context or logging
 - **Maintenance Overhead**: Duplicate code and configuration
 
-**Migration Steps:**
+**Migration Status:**
 
-1. ✅ **Already Done**: Astro integration is configured and working
-2. ✅ **Already Done**: CloudCannon postbuild hook has been disabled
-3. 🔄 **Optional**: Remove the old files when you're confident the integration works:
+1. ✅ **Done**: Astro integration is configured and working
+2. ✅ **Done**: New postbuild hook commits changes back to GitHub
+3. 🔄 **Optional**: Remove the old files when you're confident the new setup works:
    ```bash
    rm scripts/syndicate-ephemera.js
-   rm .cloudcannon/postbuild
+   # Keep .cloudcannon/postbuild - it's now active and needed
    ```
 
 ## POSSE Syndication Integration
