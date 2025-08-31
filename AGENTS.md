@@ -65,6 +65,14 @@
 - Comprehensive test coverage for POSSE integration
 - 100% type safety with no `any` types in application code
 
+### TypeScript Configuration
+
+- **Config file**: `tsconfig.json` extends `"astro/tsconfigs/strictest"`
+- **Strict mode**: Enabled by default (includes `noImplicitAny: true`)
+- **No `any` types**: Strictly enforced - replace with proper types
+- **Null checks**: `strictNullChecks: true` enabled
+- **Build verification**: `npm run build` includes type checking
+
 ## JavaScript/TypeScript Best Practices
 
 ### Variable Declarations & Immutability
