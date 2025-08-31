@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#!/bin/bash
+
 # CloudCannon Postbuild Hook - POSSE Syndication Validation
 # Git operations are handled directly by the POSSE integration during build
 
@@ -21,12 +23,19 @@ echo "📊 Syndication links found: $SYNDICATION_COUNT"
 EPHEMERA_FILE_COUNT=$(find "$EPHEMERA_DIR" -name "*.md" 2>/dev/null | wc -l)
 echo "📊 Total ephemera files: $EPHEMERA_FILE_COUNT"
 
+# Check for recent ephemera files (last 24 hours)
+RECENT_FILES=$(find "$EPHEMERA_DIR" -name "*.md" -mtime -1 2>/dev/null | wc -l)
+echo "📊 Recent ephemera files (24h): $RECENT_FILES"
+
 if [ "$SYNDICATION_COUNT" -gt 0 ]; then
     echo "✅ POSSE syndication completed successfully"
     echo "📝 Changes have been committed and pushed to GitHub during the build process"
     echo "🔄 No additional sync needed - git operations handled by POSSE integration"
+elif [ "$RECENT_FILES" -gt 0 ]; then
+    echo "⚠️  Recent ephemera files found but no syndication links detected"
+    echo "🔍 This may indicate POSSE processing didn't complete or failed"
 else
-    echo "ℹ️  No syndicated posts found (this may be normal if no recent posts were processed)"
+    echo "ℹ️  No recent ephemera posts to syndicate (this is normal)"
 fi
 
 echo "✨ CloudCannon Postbuild: Validation Complete"
