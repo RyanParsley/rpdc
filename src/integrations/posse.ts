@@ -84,14 +84,14 @@ function checkImageSize(
 		const sizeKB = stats.size / 1024;
 
 		const limits = {
-			mastodon: 8, // 8MB
-			bluesky: 1, // 1MB (actual Bluesky limit)
+			mastodon: 8, // 8MB (Mastodon allows up to 8MB)
+			bluesky: 0.9, // 1MB (Bluesky allows exactly 1MB = 1,000,000 bytes)
 		};
 
 		const withinLimit = sizeMB <= limits[platform];
 		if (logger) {
 			logger.debug(
-				`POSSE: Image size check - ${imagePath}: ${sizeMB.toFixed(2)}MB (${sizeKB.toFixed(0)}KB), limit: ${limits[platform]}MB, within limit: ${withinLimit}`,
+				`POSSE: Image size check - ${imagePath}: ${sizeMB.toFixed(2)}MB (${sizeKB.toFixed(0)}KB, ${stats.size} bytes), limit: ${limits[platform]}MB (${limits[platform] * 1024 * 1024} bytes), within limit: ${withinLimit}`,
 			);
 		}
 
