@@ -102,6 +102,9 @@ export default function posseIntegration(
 		hooks: {
 			"astro:build:done": async ({ logger }) => {
 				logger.info("POSSE: Starting syndication process");
+				logger.info(
+					"POSSE: Running in astro:build:done - SYNC_PATHS may not capture these changes",
+				);
 
 				try {
 					await runSyndication({ mastodon, bluesky, dryRun, maxPosts, logger });
@@ -133,6 +136,28 @@ async function runSyndication({
 		`POSSE: Configuration - Mastodon: ${mastodon ? "enabled" : "disabled"}, Bluesky: ${bluesky ? "enabled" : "disabled"}, Dry Run: ${dryRun}`,
 	);
 
+	// Debug environment variables
+	logger.info(
+		`POSSE: Environment check - MASTODON_ACCESS_TOKEN: ${!!process.env.MASTODON_ACCESS_TOKEN}, MASTODON_INSTANCE: ${!!process.env.MASTODON_INSTANCE}`,
+	);
+	logger.info(
+		`POSSE: Environment check - BLUESKY_USERNAME: ${!!process.env.BLUESKY_USERNAME}, BLUESKY_PASSWORD: ${!!process.env.BLUESKY_PASSWORD}`,
+	);
+
+	// Log actual values (without exposing secrets)
+	logger.info(
+		`POSSE: Mastodon token length: ${process.env.MASTODON_ACCESS_TOKEN?.length || 0}`,
+	);
+	logger.info(
+		`POSSE: Mastodon instance: ${process.env.MASTODON_INSTANCE || "undefined"}`,
+	);
+	logger.info(
+		`POSSE: Bluesky username: ${process.env.BLUESKY_USERNAME || "undefined"}`,
+	);
+	logger.info(
+		`POSSE: Bluesky password length: ${process.env.BLUESKY_PASSWORD?.length || 0}`,
+	);
+
 	if (dryRun) {
 		logger.info("POSSE: Running in DRY RUN mode - no actual posting");
 	}
@@ -149,6 +174,11 @@ async function runSyndication({
 
 	// Process each post
 	for (const post of recentPosts) {
+		logger.info(`POSSE: Checking post: ${post.data.title || post.file}`);
+		logger.info(
+			`POSSE: Post has syndication: ${!!post.data.syndication && post.data.syndication.length > 0}`,
+		);
+
 		if (!post.data.syndication || post.data.syndication.length === 0) {
 			if (dryRun) {
 				logger.info(
@@ -159,7 +189,7 @@ async function runSyndication({
 				await syndicateSinglePost(post, { mastodon, bluesky }, logger);
 			}
 		} else {
-			logger.debug(
+			logger.info(
 				`POSSE: Skipping already syndicated: ${post.data.title || post.file}`,
 			);
 		}
@@ -652,22 +682,61 @@ async function updatePostWithSyndication(
 			post.file,
 		);
 
+		logger.info(`POSSE: Attempting to update file: ${sourcePath}`);
+		logger.info(`POSSE: Current working directory: ${process.cwd()}`);
+		logger.info(`POSSE: Post file path: ${post.file}`);
+
 		if (!sourcePath.endsWith(".md")) {
 			logger.warn(`POSSE: Skipping non-markdown file: ${sourcePath}`);
 			return;
 		}
 
+		// Check if file exists
+		try {
+			const stats = statSync(sourcePath);
+			logger.debug(`POSSE: File exists, size: ${stats.size} bytes`);
+		} catch (error) {
+			logger.error(`POSSE: File does not exist: ${sourcePath}`);
+			throw error;
+		}
+
 		const fileContent = readFileSync(sourcePath, "utf-8");
 		const { data, content } = matter(fileContent);
+		logger.debug(`POSSE: Original frontmatter: ${JSON.stringify(data)}`);
 
 		data.syndication = [...(data.syndication ?? []), ...syndicationUrls];
 
 		const updatedContent = matter.stringify(content, data);
+		logger.debug(`POSSE: Updated frontmatter: ${JSON.stringify(data)}`);
+		logger.debug(
+			`POSSE: Writing ${updatedContent.length} characters to ${sourcePath}`,
+		);
 		writeFileSync(sourcePath, updatedContent);
+
+		// Verify the file was written
+		try {
+			const verifyContent = readFileSync(sourcePath, "utf-8");
+			const verifyMatter = matter(verifyContent);
+			logger.info(
+				`POSSE: Verification - file contains syndication: ${!!verifyMatter.data.syndication}`,
+			);
+			logger.info(
+				`POSSE: Verification - syndication count: ${verifyMatter.data.syndication?.length || 0}`,
+			);
+			if (verifyMatter.data.syndication) {
+				logger.info(
+					`POSSE: Verification - syndication URLs: ${JSON.stringify(verifyMatter.data.syndication)}`,
+				);
+			}
+		} catch (error) {
+			logger.error(`POSSE: Failed to verify file update: ${error}`);
+		}
 
 		logger.info(
 			`POSSE: Updated ${post.file} with syndication links: ${syndicationUrls.map((s) => s.title).join(", ")}`,
 		);
+		logger.info(`POSSE: File path: ${sourcePath}`);
+		logger.info(`POSSE: Syndication URLs: ${JSON.stringify(syndicationUrls)}`);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`POSSE: Failed to update post ${post.file}: ${errorMessage}`);
