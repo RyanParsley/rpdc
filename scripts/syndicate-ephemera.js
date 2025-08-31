@@ -2,20 +2,57 @@
 
 /* eslint-disable no-undef */
 
+/**
+ * @typedef {Object} EphemeraData
+ * @property {string} [title] - Post title
+ * @property {string} [description] - Post description
+ * @property {Date|string|number} date - Publication date
+ * @property {Array<{href: string, title: string}>} [syndication] - Syndication links
+ * @property {string} [youtube] - YouTube video ID
+ * @property {{src: string, alt: string}} [image] - Image data
+ */
+
+/**
+ * @typedef {Object} EphemeraPost
+ * @property {string} file - File path
+ * @property {EphemeraData} data - Frontmatter data
+ * @property {string} body - Markdown content
+ * @property {{src: string, alt: string}} [image] - Image data
+ */
+
 import { execSync } from "child_process";
 import { readFileSync, writeFileSync } from "fs";
 import { join, extname } from "path";
 import matter from "gray-matter";
 
+/**
+ * Handles syndication of ephemera posts to social media platforms
+ */
 class EphemeraSyndicator {
+	/**
+	 * @param {string} [mastodonToken] - Mastodon access token
+	 * @param {string} [mastodonInstance] - Mastodon instance URL
+	 * @param {string} [blueskyUsername] - Bluesky username/handle
+	 * @param {string} [blueskyPassword] - Bluesky app password
+	 * @param {boolean} [dryRun] - Whether to run in dry-run mode
+	 */
 	constructor() {
+		/** @type {string|undefined} */
 		this.mastodonToken = process.env.MASTODON_ACCESS_TOKEN;
+		/** @type {string|undefined} */
 		this.mastodonInstance = process.env.MASTODON_INSTANCE;
+		/** @type {string|undefined} */
 		this.blueskyUsername = process.env.BLUESKY_USERNAME;
+		/** @type {string|undefined} */
 		this.blueskyPassword = process.env.BLUESKY_PASSWORD;
+		/** @type {boolean} */
 		this.dryRun = process.env.SYNDICATION_DRY_RUN === "true";
 	}
 
+	/**
+	 * Main syndication workflow - finds and syndicates new ephemera posts
+	 * @returns {Promise<void>}
+	 */
 	async syndicateNewEphemera() {
 		console.log(
 			this.dryRun
@@ -100,6 +137,10 @@ class EphemeraSyndicator {
 		}
 	}
 
+	/**
+	 * Finds ephemera posts that need syndication
+	 * @returns {EphemeraPost[]} Array of posts to syndicate
+	 */
 	findNewEphemera() {
 		console.log("🔍 Checking for ephemera posts to syndicate...");
 
@@ -179,6 +220,11 @@ class EphemeraSyndicator {
 		}
 	}
 
+	/**
+	 * Syndicates a single ephemera post to all configured platforms
+	 * @param {EphemeraPost} ephemera - The ephemera post to syndicate
+	 * @returns {Promise<void>}
+	 */
 	async syndicateEphemera(ephemera) {
 		const canonicalUrl = this.getCanonicalUrl(ephemera.file);
 		const syndicationUrls = [];
@@ -262,6 +308,14 @@ class EphemeraSyndicator {
 		return `https://ryanparsley.com${urlPath}`;
 	}
 
+	/**
+	 * Generates platform-specific content for syndication
+	 * @param {EphemeraData} data - Post frontmatter data
+	 * @param {string} canonicalUrl - Canonical URL of the post
+	 * @param {string} body - Markdown body content
+	 * @param {string} [platform='mastodon'] - Target platform ('mastodon' or 'bluesky')
+	 * @returns {string} Formatted content for the platform
+	 */
 	generatePostContent(data, canonicalUrl, body, platform = "mastodon") {
 		// Use the actual post content if available, otherwise fall back to title
 		let content = "";
@@ -371,6 +425,11 @@ class EphemeraSyndicator {
 		return data.url;
 	}
 
+	/**
+	 * Uploads an image to Mastodon and returns the media ID
+	 * @param {{src: string, alt: string}} image - Image data with src path and alt text
+	 * @returns {Promise<string|null>} Media ID for attachment or null if failed
+	 */
 	async uploadImageToMastodon(image) {
 		try {
 			// Resolve the local image path
@@ -552,6 +611,12 @@ class EphemeraSyndicator {
 		}
 	}
 
+	/**
+	 * Uploads an image to Bluesky and returns the blob reference
+	 * @param {Object} session - Bluesky authentication session
+	 * @param {{src: string, alt: string}} image - Image data with src path and alt text
+	 * @returns {Promise<Object|null>} Blob reference for embedding or null if failed
+	 */
 	async uploadImageToBluesky(session, image) {
 		try {
 			// Resolve the local image path
