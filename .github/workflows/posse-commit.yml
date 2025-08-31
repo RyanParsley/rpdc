@@ -1,0 +1,60 @@
+name: Manual Ephemera Changes Handler
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "src/content/ephemera/**"
+
+jobs:
+  handle-manual-changes:
+    runs-on: ubuntu-latest
+
+    # Only run for manual CloudCannon editor commits, NOT POSSE commits
+    if: |
+      !contains(github.event.head_commit.message, '🤖 POSSE:') &&
+      !contains(github.event.head_commit.message, 'POSSE: Update syndication') &&
+      !startsWith(github.event.head_commit.message, '🤖 POSSE:') &&
+      (contains(github.event.head_commit.message, 'CloudCannon') ||
+       contains(github.event.head_commit.author.name, 'CloudCannon') ||
+       github.event.head_commit.author.email == 'noreply@cloudcannon.com')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Analyze manual ephemera changes
+        id: analyze-changes
+        run: |
+          echo "🔍 Analyzing manual ephemera changes from CloudCannon..."
+
+          # Check if there are changes in ephemera directory
+          if git diff --quiet HEAD~1 HEAD -- "src/content/ephemera/"; then
+            echo "ℹ️  No changes detected in ephemera directory"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "📝 Found manual changes in ephemera directory:"
+            git diff --name-only HEAD~1 HEAD -- "src/content/ephemera/"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+
+            # Check if changes include syndication links (shouldn't for manual edits)
+            if git diff HEAD~1 HEAD -- "src/content/ephemera/" | grep -q "syndication:"; then
+              echo "⚠️  Warning: Manual changes include syndication links"
+              echo "has_syndication=true" >> $GITHUB_OUTPUT
+            else
+              echo "✅ Manual changes don't include syndication links (expected)"
+              echo "has_syndication=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Trigger POSSE processing
+        if: steps.analyze-changes.outputs.has_changes == 'true'
+        run: |
+          echo "🚀 Manual ephemera changes detected"
+          echo "📡 POSSE integration will process these on next build"
+          echo "⏳ Changes will be syndicated automatically during the build process"
+
+          # Optional: Send notification or trigger external service
+          # This could be extended to notify team members or trigger other workflows

@@ -1,5 +1,5 @@
 _schema: _schema
-# Include .git folder for SYNC_PATHS to work
+# Include .git folder for POSSE integration git operations
 include_git_folder: true
 paths:
   uploads: uploads
