@@ -4,6 +4,9 @@
 # POSSE syndication runs automatically during Astro build via integration
 # This hook commits any POSSE changes back to GitHub
 
+# Ensure we're in the repository root
+cd "$(dirname "$0")/.." || exit 1
+
 echo "🔄 CloudCannon Postbuild: Checking for POSSE changes..."
 
 # Check if there are any changes in the ephemera directory
