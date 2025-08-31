@@ -135,9 +135,50 @@ collections_config:
         path: schemas/post.md
         reorder_inputs: true
         hide_extra_inputs: false
-        remove_empty_inputs: false
         remove_extra_inputs: true
         name: New Post
+        icon: notes
+  ephemera:
+    path: src/content/ephemera
+    icon: notes
+    output: true
+    url: /ephemera/[slug]
+    _inputs:
+      title:
+        type: auto
+        cascade: true
+        empty_type: string
+      date:
+        type: auto
+        cascade: true
+        empty_type: string
+      image:
+        type: auto
+        cascade: true
+        empty_type: string
+      image_alt:
+        type: auto
+        cascade: true
+        empty_type: string
+      syndication:
+        type: array
+        cascade: true
+        empty_type: array
+    add_options:
+      - name: Add New Ephemera
+        icon: post_add
+        schema: default
+    disable_add: false
+    disable_add_folder: false
+    disable_file_actions: false
+    schemas:
+      default:
+        path: schemas/ephemera.md
+        reorder_inputs: true
+        hide_extra_inputs: false
+        remove_empty_inputs: false
+        remove_extra_inputs: true
+        name: New Ephemera
         icon: notes
   pages:
     path: src/content/page
