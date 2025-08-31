@@ -101,7 +101,7 @@ const groupedData: GroupedData[] = datesOnPage.map((date: string) => ({
 										)}
 										{youtube && <YoutubeEmbed src={youtube} />}
 										<div class="p-content" set:html={parser.render(body)} />
-										<SyndicationLinks syndication={syndication || []} />
+										<SyndicationLinks syndication={syndication ?? []} />
 										<a class="more" href={`/ephemera/${slug}`}>
 											Link to Post
 										</a>

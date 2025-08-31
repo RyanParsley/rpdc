@@ -93,7 +93,9 @@ interface WebmentionEntry {
 										? "reposted"
 										: "mentioned"}
 						</div>
-						{mention.content && <blockquote>{mention.content.text}</blockquote>}
+						{mention.content?.text && (
+							<blockquote>{mention.content.text}</blockquote>
+						)}
 					</li>
 				))}
 			</ul>

@@ -18,7 +18,7 @@ const { description, name, image, tags = [], url } = Astro.props;
 			<div class="image">
 				<Image
 					src={image.asset}
-					alt={image.alt || name}
+					alt={image.alt ?? name}
 					width={image.asset.width}
 					height={image.asset.width}
 				/>
