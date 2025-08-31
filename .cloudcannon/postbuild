@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# CloudCannon Postbuild Hook - VALIDATION & COMMIT
+# CloudCannon Postbuild Hook - VALIDATION ONLY
 # POSSE syndication runs automatically during Astro build via integration
-# This hook validates syndication and commits changes if SYNC_PATHS fails
+# SYNC_PATHS should handle committing changes back to the repository
 
 echo "🔄 CloudCannon Postbuild: Validating POSSE syndication..."
 
@@ -12,32 +12,7 @@ SYNDICATION_COUNT=$(grep -r "syndication:" "$EPHEMERA_DIR" 2>/dev/null | wc -l)
 
 if [ "$SYNDICATION_COUNT" -gt 0 ]; then
 	echo "✅ Found $SYNDICATION_COUNT ephemera posts with syndication links"
-
-	# Check if there are uncommitted changes
-	if git diff --quiet "$EPHEMERA_DIR"; then
-		echo "ℹ️  No changes to commit - SYNC_PATHS may have already committed them"
-	else
-		echo "📝 Found uncommitted changes, attempting to commit..."
-
-		# Configure git
-		git config user.name "CloudCannon Build"
-		git config user.email "build@cloudcannon.com"
-
-		# Add and commit changes
-		git add "$EPHEMERA_DIR"
-		if git commit -m "POSSE: Update syndication links [skip ci]" --no-verify; then
-			echo "✅ Successfully committed POSSE changes"
-
-			# Try to push (this might fail due to permissions)
-			if git push origin HEAD 2>/dev/null; then
-				echo "✅ Successfully pushed POSSE changes to GitHub"
-			else
-				echo "⚠️  Failed to push to GitHub (this may be due to branch protection)"
-			fi
-		else
-			echo "⚠️  No changes to commit"
-		fi
-	fi
+	echo "📝 SYNC_PATHS should commit these changes back to the repository"
 else
 	echo "ℹ️  No syndicated posts found (this may be normal if no recent posts were processed)"
 fi
