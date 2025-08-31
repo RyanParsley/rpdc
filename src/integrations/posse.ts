@@ -104,6 +104,7 @@ async function runSyndication({
 				}
 			} else {
 				logger.info(`POSSE: Syndicating: ${post.data.title || post.file}`);
+				logger.debug(`POSSE: Post file path: ${post.file}`);
 				await syndicateSinglePost(post, { mastodon, bluesky }, logger);
 			}
 		} else {
@@ -225,6 +226,7 @@ async function syndicateSinglePost(
 				post.image,
 				platforms.mastodon,
 				logger,
+				post.file,
 			);
 			if (mastodonUrl) {
 				syndicationUrls.push({ href: mastodonUrl, title: "Mastodon" });
@@ -250,6 +252,7 @@ async function syndicateSinglePost(
 				post.image,
 				platforms.bluesky,
 				logger,
+				post.file,
 			);
 			if (blueskyUrl) {
 				syndicationUrls.push({ href: blueskyUrl, title: "Bluesky" });
@@ -261,8 +264,12 @@ async function syndicateSinglePost(
 	}
 
 	// Update the post with syndication links
+	logger.debug(`POSSE: Syndication URLs count: ${syndicationUrls.length}`);
 	if (syndicationUrls.length > 0) {
+		logger.debug(`POSSE: Syndication URLs: ${JSON.stringify(syndicationUrls)}`);
 		await updatePostWithSyndication(post, syndicationUrls, logger);
+	} else {
+		logger.debug(`POSSE: No syndication URLs to update`);
 	}
 }
 
@@ -306,6 +313,7 @@ async function postToMastodon(
 	image: EphemeraData["image"],
 	config: MastodonConfig,
 	logger: AstroIntegrationLogger,
+	postFile: string,
 ): Promise<string | null> {
 	try {
 		let mediaId = null;
@@ -314,8 +322,14 @@ async function postToMastodon(
 			try {
 				const imagePath = image.src.startsWith("/")
 					? join(process.cwd(), "public", image.src)
-					: join(process.cwd(), "public", image.src);
-
+					: join(
+							process.cwd(),
+							"src",
+							"content",
+							"ephemera",
+							postFile.replace(/\/[^/]+$/, ""),
+							image.src.replace("./", ""),
+						);
 				const imageBuffer = readFileSync(imagePath);
 				const imageExt = extname(image.src).toLowerCase();
 
@@ -389,6 +403,7 @@ async function postToMastodon(
 		}
 
 		const data = await response.json();
+		logger.debug(`POSSE: Mastodon response data: ${JSON.stringify(data)}`);
 		return data.url;
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -402,6 +417,7 @@ async function postToBluesky(
 	image: ImageData | undefined,
 	config: BlueskyConfig,
 	logger: AstroIntegrationLogger,
+	postFile: string,
 ): Promise<string | null> {
 	try {
 		const authResponse = await fetch(
@@ -431,8 +447,14 @@ async function postToBluesky(
 			try {
 				const imagePath = image.src.startsWith("/")
 					? join(process.cwd(), "public", image.src)
-					: join(process.cwd(), "public", image.src);
-
+					: join(
+							process.cwd(),
+							"src",
+							"content",
+							"ephemera",
+							postFile.replace(/\/[^/]+$/, ""),
+							image.src.replace("./", ""),
+						);
 				const imageBuffer = readFileSync(imagePath);
 
 				const blobResponse = await fetch(
@@ -536,7 +558,13 @@ async function updatePostWithSyndication(
 	logger: AstroIntegrationLogger,
 ): Promise<void> {
 	try {
-		const sourcePath = join("src", "content", "ephemera", post.file);
+		const sourcePath = join(
+			process.cwd(),
+			"src",
+			"content",
+			"ephemera",
+			post.file,
+		);
 
 		if (!sourcePath.endsWith(".md")) {
 			logger.warn(`POSSE: Skipping non-markdown file: ${sourcePath}`);
@@ -549,9 +577,16 @@ async function updatePostWithSyndication(
 		data.syndication = [...(data.syndication ?? []), ...syndicationUrls];
 
 		const updatedContent = matter.stringify(body, data);
+		logger.debug(`POSSE: Writing updated content to ${sourcePath}`);
+		logger.debug(
+			`POSSE: Syndication data: ${JSON.stringify(data.syndication)}`,
+		);
 		writeFileSync(sourcePath, updatedContent);
+		logger.debug(`POSSE: Successfully wrote file`);
 
-		logger.info(`POSSE: Updated ${post.file} with syndication links`);
+		logger.info(
+			`POSSE: Updated ${post.file} with syndication links: ${syndicationUrls.map((s) => s.title).join(", ")}`,
+		);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`POSSE: Failed to update post ${post.file}: ${errorMessage}`);
