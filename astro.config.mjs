@@ -33,6 +33,20 @@ export default defineConfig({
 		}),
 		pagefind(),
 		posseIntegration({
+			mastodon:
+				process.env.MASTODON_TOKEN && process.env.MASTODON_INSTANCE
+					? {
+							token: process.env.MASTODON_TOKEN,
+							instance: process.env.MASTODON_INSTANCE,
+						}
+					: undefined,
+			bluesky:
+				process.env.BLUESKY_USERNAME && process.env.BLUESKY_PASSWORD
+					? {
+							username: process.env.BLUESKY_USERNAME,
+							password: process.env.BLUESKY_PASSWORD,
+						}
+					: undefined,
 			dryRun: process.env.SYNDICATION_DRY_RUN === "true",
 			maxPosts: 2,
 		}),
