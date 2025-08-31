@@ -16,7 +16,7 @@ const tags: string[] = collection
 	.filter((tag) => tag !== undefined);
 
 const tagCount = (tags: string[] | undefined, tag: string) =>
-	[...(tags || [])].filter((t) => t === tag).length;
+	[...(tags ?? [])].filter((t) => t === tag).length;
 
 const uniqueTags = [
 	...new Set(

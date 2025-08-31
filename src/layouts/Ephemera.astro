@@ -43,9 +43,13 @@ const {
 	image={OGImage}
 >
 	<article class="h-entry">
-		{heroImage && <img width={720} height={360} src={heroImage.src} alt="" />}
+		{
+			heroImage?.src && (
+				<img width={720} height={360} src={heroImage.src} alt="" />
+			)
+		}
 		<section class="e-content">
-			{gallery && <Gallery images={gallery} path={galleryPath || ""} />}
+			{gallery && <Gallery images={gallery} path={galleryPath ?? ""} />}
 			{youtube && <YoutubeEmbed src={youtube} />}
 			<slot />
 			{syndication.length > 0 && <SyndicationLinks syndication={syndication} />}

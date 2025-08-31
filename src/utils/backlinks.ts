@@ -20,7 +20,7 @@ type BacklinkMap = Record<PostSlug, Backlink[]>;
 const extractLinksFromContent = (content: string): PostSlug[] => {
 	const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
 	return Array.from(content.matchAll(linkRegex)).map(
-		([, , link]) => link || "",
+		([, , link]) => link ?? "",
 	);
 };
 
@@ -32,7 +32,7 @@ const addBacklink = (
 ): BacklinkMap => ({
 	...backlinks,
 	[linkedSlug]: [
-		...(backlinks[linkedSlug] || []),
+		...(backlinks[linkedSlug] ?? []),
 		{ slug: currentSlug, title },
 	],
 });
@@ -45,7 +45,7 @@ export function collectBacklinks(posts: Post[] = []): BacklinkMap {
 		) =>
 			extractLinksFromContent(body).reduce(
 				(acc, linkedSlug) =>
-					addBacklink(acc, linkedSlug, currentSlug, title || currentSlug),
+					addBacklink(acc, linkedSlug, currentSlug, title ?? currentSlug),
 				backlinks,
 			),
 		{},

@@ -4,6 +4,7 @@ import partytown from "@astrojs/partytown";
 import sitemap from "@astrojs/sitemap";
 import remarkMermaid from "remark-mermaidjs";
 import pagefind from "astro-pagefind";
+import posseIntegration from "./src/integrations/posse";
 
 export default defineConfig({
 	site: "https://ryanparsley.com",
@@ -31,5 +32,9 @@ export default defineConfig({
 			},
 		}),
 		pagefind(),
+		posseIntegration({
+			dryRun: true, // Enable dry-run for testing
+			maxPosts: 2,
+		}),
 	],
 });

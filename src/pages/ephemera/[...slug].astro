@@ -44,7 +44,7 @@ const canonicalURL = new URL(`ephemera/${slug}`, Astro.site)
 	})}
 	youtube={youtube}
 	description={body}
-	syndication={syndication || []}
+	syndication={syndication ?? []}
 	canonicalURL={canonicalURL}
 	galleryPath={`/ephemera/${slug}`}
 	OGImage={image?.src}
