@@ -1,17 +1,12 @@
 #!/bin/bash
 
-# CloudCannon Postbuild Hook - POSSE Syndication Sync
-# This hook commits POSSE syndication changes back to the repository
+# CloudCannon Postbuild Hook - POSSE Syndication Validation
+# This hook validates that POSSE syndication worked correctly
+# SYNC_PATHS in cloudcannon.config.yml handles committing changes
 
-echo "🔄 CloudCannon Postbuild: Processing POSSE syndication sync..."
+echo "🔄 CloudCannon Postbuild: Validating POSSE syndication..."
 
-# Check if we're in a git repository
-if ! git rev-parse --git-dir > /dev/null 2>&1; then
-    echo "❌ Error: Not in a git repository"
-    exit 1
-fi
-
-# Check for changes in ephemera directory
+# Check if ephemera directory exists
 EPHEMERA_DIR="src/content/ephemera"
 if [ ! -d "$EPHEMERA_DIR" ]; then
     echo "ℹ️  Ephemera directory not found: $EPHEMERA_DIR"
@@ -19,61 +14,20 @@ if [ ! -d "$EPHEMERA_DIR" ]; then
     exit 0
 fi
 
-# Check if there are any changes to commit
-if git diff --quiet "$EPHEMERA_DIR"; then
-    echo "ℹ️  No changes detected in ephemera directory"
-    echo "✨ CloudCannon Postbuild: Complete"
-    exit 0
-fi
+# Count ephemera files with syndication links
+SYNDICATION_COUNT=$(grep -r "syndication:" "$EPHEMERA_DIR" 2>/dev/null | wc -l)
 
-echo "📝 Found changes in ephemera directory"
-
-# Configure git (if needed)
-if [ -z "$(git config user.name)" ]; then
-    git config user.name "CloudCannon Build"
-fi
-if [ -z "$(git config user.email)" ]; then
-    git config user.email "build@cloudcannon.com"
-fi
-
-# Add changes
-echo "📤 Adding changes..."
-git add "$EPHEMERA_DIR"
-
-# Check if there are staged changes
-if git diff --cached --quiet; then
-    echo "ℹ️  No staged changes to commit"
-    echo "✨ CloudCannon Postbuild: Complete"
-    exit 0
-fi
-
-# Count syndication links added
-SYNDICATION_COUNT=$(git diff --cached -U0 "$EPHEMERA_DIR" | grep "^+syndication:" | wc -l)
 if [ "$SYNDICATION_COUNT" -gt 0 ]; then
-    COMMIT_MESSAGE="POSSE: Update syndication links for $SYNDICATION_COUNT post(s) [skip ci]"
+    echo "✅ Found $SYNDICATION_COUNT ephemera posts with syndication links"
+    echo "📝 SYNC_PATHS will automatically commit these changes to the repository"
+    echo "🔄 Changes will be synced back to your GitHub repository"
 else
-    COMMIT_MESSAGE="POSSE: Update ephemera posts [skip ci]"
+    echo "ℹ️  No syndicated posts found (this may be normal if no recent posts were processed)"
 fi
 
-# Commit changes
-echo "💾 Committing changes..."
-if git commit -m "$COMMIT_MESSAGE"; then
-    echo "✅ Successfully committed changes: $COMMIT_MESSAGE"
+# Check for any ephemera files (to ensure the directory structure is correct)
+EPHEMERA_FILE_COUNT=$(find "$EPHEMERA_DIR" -name "*.md" 2>/dev/null | wc -l)
+echo "📊 Total ephemera files: $EPHEMERA_FILE_COUNT"
 
-    # Push to remote (if remote exists)
-    if git remote get-url origin > /dev/null 2>&1; then
-        echo "🚀 Pushing changes to remote..."
-        if git push origin main 2>/dev/null || git push origin master 2>/dev/null; then
-            echo "✅ Successfully pushed changes to remote"
-        else
-            echo "⚠️  Failed to push changes to remote (this may be normal for some setups)"
-        fi
-    else
-        echo "ℹ️  No remote repository configured"
-    fi
-else
-    echo "❌ Failed to commit changes"
-    exit 1
-fi
-
-echo "✨ CloudCannon Postbuild: Complete"
+echo "✨ CloudCannon Postbuild: Validation Complete"
+echo "💡 SYNC_PATHS will handle committing any changes back to your repository"
