@@ -5,6 +5,10 @@
 # This hook commits any POSSE changes back to GitHub
 
 # Ensure we're in the repository root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$REPO_ROOT" || exit 1
+
 cd "$(dirname "$0")/.." || exit 1
 
 echo "🔄 CloudCannon Postbuild: Checking for POSSE changes..."
