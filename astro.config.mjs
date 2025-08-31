@@ -33,7 +33,7 @@ export default defineConfig({
 		}),
 		pagefind(),
 		posseIntegration({
-			dryRun: true, // Enable dry-run for testing
+			dryRun: process.env.SYNDICATION_DRY_RUN === "true",
 			maxPosts: 2,
 		}),
 	],
