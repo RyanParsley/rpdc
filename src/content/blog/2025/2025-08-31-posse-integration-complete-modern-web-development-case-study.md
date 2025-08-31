@@ -2,7 +2,8 @@
 title: "I Finally Got POSSE Automated"
 description: "My journey from manual syndication to fully automated POSSE bliss."
 pubDate: "2025-08-31"
-tags: ["posse", "indieweb", "typescript", "astro", "testing"]
+categories: [code]
+tags: [posse, indieweb, typescript, astro]
 ---
 
 I love the idea of POSSE. I wrote about a game plan almost a year ago. Like so
@@ -60,7 +61,7 @@ hooks feels more right than previous approach.
 
 ```typescript
 // src/integrations/posse.ts
-export default function posseIntegration(options = {}) {
+export default function posseIntegration(options: PosseOptions = {}) {
   return {
     name: "posse-syndication",
     hooks: {
@@ -86,7 +87,7 @@ function generatePostContent(
   const initialContent = body?.trim() ? cleanContentForSocial(body.trim()) : "";
   const content =
     !initialContent || initialContent.length < 10
-      ? (data.title ?? "New ephemera post")
+      ? data.title || "New ephemera post"
       : initialContent;
 
   const maxLength = platform === "bluesky" ? 280 : 400;
