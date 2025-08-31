@@ -4,6 +4,7 @@
 
 import { execSync } from "child_process";
 import { readFileSync, writeFileSync } from "fs";
+import { join, extname } from "path";
 import matter from "gray-matter";
 
 class EphemeraSyndicator {
@@ -16,13 +17,11 @@ class EphemeraSyndicator {
 	}
 
 	async syndicateNewEphemera() {
-		if (this.dryRun) {
-			console.log(
-				"🔍 DRY RUN MODE: Detecting new ephemera posts (no actual posting)...",
-			);
-		} else {
-			console.log("🔍 Detecting new ephemera posts...");
-		}
+		console.log(
+			this.dryRun
+				? "🔍 DRY RUN MODE: Detecting new ephemera posts (no actual posting)..."
+				: "🔍 Detecting new ephemera posts...",
+		);
 
 		const newEphemera = this.findNewEphemera();
 
@@ -55,6 +54,9 @@ class EphemeraSyndicator {
 					console.log(
 						`🔍 DRY RUN: Would syndicate: ${ephemera.data.title || ephemera.file}`,
 					);
+					if (ephemera.image) {
+						console.log(`🖼️  Would include image: ${ephemera.image.src}`);
+					}
 					const canonicalUrl = this.getCanonicalUrl(ephemera.file);
 					const mastodonPreview = this.generatePostContent(
 						ephemera.data,
@@ -167,7 +169,7 @@ class EphemeraSyndicator {
 			return files.map((file) => {
 				const fileContent = readFileSync(file, "utf-8");
 				const { data, content: body } = matter(fileContent);
-				return { file, data, body };
+				return { file, data, body, image: data.image };
 			});
 		} catch {
 			console.log("❌ Could not find ephemera files");
@@ -179,6 +181,12 @@ class EphemeraSyndicator {
 		const canonicalUrl = this.getCanonicalUrl(ephemera.file);
 		const syndicationUrls = [];
 
+		// Check if post has an image
+		const hasImage = ephemera.image && ephemera.image.src;
+		if (hasImage) {
+			console.log("🖼️  Post includes image:", ephemera.image.src);
+		}
+
 		// Syndicate to Mastodon
 		try {
 			console.log("🐘 Posting to Mastodon...");
@@ -188,7 +196,10 @@ class EphemeraSyndicator {
 				ephemera.body,
 				"mastodon",
 			);
-			const mastodonUrl = await this.postToMastodon(mastodonContent);
+			const mastodonUrl = await this.postToMastodon(
+				mastodonContent,
+				ephemera.image,
+			);
 			syndicationUrls.push({
 				href: mastodonUrl,
 				title: "Mastodon",
@@ -207,7 +218,10 @@ class EphemeraSyndicator {
 				ephemera.body,
 				"bluesky",
 			);
-			const blueskyUrl = await this.postToBluesky(blueskyContent);
+			const blueskyUrl = await this.postToBluesky(
+				blueskyContent,
+				ephemera.image,
+			);
 			syndicationUrls.push({
 				href: blueskyUrl,
 				title: "Bluesky",
@@ -298,9 +312,36 @@ class EphemeraSyndicator {
 		);
 	}
 
-	async postToMastodon(content) {
+	async postToMastodon(content, image) {
 		if (!this.mastodonToken || !this.mastodonInstance) {
 			throw new Error("Mastodon credentials not configured");
+		}
+
+		let mediaId = null;
+
+		// Upload image if present
+		if (image && image.src) {
+			try {
+				console.log("📤 Uploading image to Mastodon...");
+				mediaId = await this.uploadImageToMastodon(image);
+				console.log("✅ Image uploaded to Mastodon");
+			} catch (error) {
+				console.warn(
+					"⚠️  Image upload failed, posting text only:",
+					error.message,
+				);
+			}
+		}
+
+		const requestBody = {
+			status: content,
+			visibility: "public",
+		};
+
+		// Add media attachment if we have one
+		if (mediaId) {
+			requestBody.media_ids = [mediaId];
+			console.log(`🖼️  Attaching media ID: ${mediaId}`);
 		}
 
 		const response = await fetch(
@@ -311,10 +352,7 @@ class EphemeraSyndicator {
 					Authorization: `Bearer ${this.mastodonToken}`,
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({
-					status: content,
-					visibility: "public",
-				}),
+				body: JSON.stringify(requestBody),
 			},
 		);
 
@@ -327,7 +365,84 @@ class EphemeraSyndicator {
 		return data.url;
 	}
 
-	async postToBluesky(content) {
+	async uploadImageToMastodon(image) {
+		try {
+			// Resolve the local image path
+			let imagePath;
+			if (image.src.startsWith("/")) {
+				// Absolute path from site root
+				imagePath = join(process.cwd(), "public", image.src);
+			} else {
+				// Relative path
+				imagePath = join(process.cwd(), "public", image.src);
+			}
+
+			console.log(`📂 Reading image from: ${imagePath}`);
+
+			// Read the image file
+			const imageBuffer = readFileSync(imagePath);
+			const imageExt = extname(image.src).toLowerCase();
+
+			// Determine MIME type
+			let mimeType;
+			switch (imageExt) {
+				case ".jpg":
+				case ".jpeg":
+					mimeType = "image/jpeg";
+					break;
+				case ".png":
+					mimeType = "image/png";
+					break;
+				case ".gif":
+					mimeType = "image/gif";
+					break;
+				case ".webp":
+					mimeType = "image/webp";
+					break;
+				default:
+					mimeType = "image/jpeg"; // fallback
+			}
+
+			// Create FormData for multipart upload
+			const formData = new FormData();
+			const blob = new Blob([imageBuffer], { type: mimeType });
+			formData.append("file", blob, `image${imageExt}`);
+
+			// Optional: Add description if available
+			if (image.alt) {
+				formData.append("description", image.alt);
+			}
+
+			// Upload to Mastodon
+			const uploadResponse = await fetch(
+				`https://${this.mastodonInstance}/api/v1/media`,
+				{
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${this.mastodonToken}`,
+					},
+					body: formData,
+				},
+			);
+
+			if (!uploadResponse.ok) {
+				const errorData = await uploadResponse.text();
+				throw new Error(
+					`Mastodon media upload failed: ${uploadResponse.status} - ${errorData}`,
+				);
+			}
+
+			const mediaData = await uploadResponse.json();
+			console.log(`✅ Image uploaded to Mastodon: ${mediaData.id}`);
+
+			return mediaData.id;
+		} catch (error) {
+			console.error(`❌ Mastodon image upload failed:`, error.message);
+			return null;
+		}
+	}
+
+	async postToBluesky(content, image) {
 		if (!this.blueskyUsername || !this.blueskyPassword) {
 			throw new Error("Bluesky credentials not configured");
 		}
@@ -359,8 +474,44 @@ class EphemeraSyndicator {
 			const session = await authResponse.json();
 			console.log("✅ Bluesky authentication successful");
 
+			let embed = undefined;
+
+			// Handle image if present
+			if (image && image.src) {
+				try {
+					console.log("📤 Uploading image to Bluesky...");
+					const imageBlob = await this.uploadImageToBluesky(session, image);
+					if (imageBlob) {
+						embed = {
+							$type: "app.bsky.embed.images",
+							images: [
+								{
+									image: imageBlob,
+									alt: image.alt || "Image from ephemera post",
+								},
+							],
+						};
+						console.log("✅ Image prepared for Bluesky post");
+					}
+				} catch (error) {
+					console.warn(
+						"⚠️  Image upload failed, posting text only:",
+						error.message,
+					);
+				}
+			}
+
 			// Step 2: Create the post
 			console.log("📝 Creating Bluesky post...");
+			const postRecord = {
+				text: content,
+				createdAt: new Date().toISOString(),
+			};
+
+			if (embed) {
+				postRecord.embed = embed;
+			}
+
 			const postResponse = await fetch(
 				"https://bsky.social/xrpc/com.atproto.repo.createRecord",
 				{
@@ -372,10 +523,7 @@ class EphemeraSyndicator {
 					body: JSON.stringify({
 						repo: session.did,
 						collection: "app.bsky.feed.post",
-						record: {
-							text: content,
-							createdAt: new Date().toISOString(),
-						},
+						record: postRecord,
 					}),
 				},
 			);
@@ -395,6 +543,74 @@ class EphemeraSyndicator {
 		} catch (error) {
 			console.error("❌ Bluesky posting error:", error.message);
 			throw error;
+		}
+	}
+
+	async uploadImageToBluesky(session, image) {
+		try {
+			// Resolve the local image path
+			let imagePath;
+			if (image.src.startsWith("/")) {
+				// Absolute path from site root
+				imagePath = join(process.cwd(), "public", image.src);
+			} else {
+				// Relative path
+				imagePath = join(process.cwd(), "public", image.src);
+			}
+
+			console.log(`📂 Reading image from: ${imagePath}`);
+
+			// Read the image file
+			const imageBuffer = readFileSync(imagePath);
+			const imageExt = extname(image.src).toLowerCase();
+
+			// Determine MIME type
+			let mimeType;
+			switch (imageExt) {
+				case ".jpg":
+				case ".jpeg":
+					mimeType = "image/jpeg";
+					break;
+				case ".png":
+					mimeType = "image/png";
+					break;
+				case ".gif":
+					mimeType = "image/gif";
+					break;
+				case ".webp":
+					mimeType = "image/webp";
+					break;
+				default:
+					mimeType = "image/jpeg"; // fallback
+			}
+
+			// Upload as blob to Bluesky
+			const blobResponse = await fetch(
+				"https://bsky.social/xrpc/com.atproto.repo.uploadBlob",
+				{
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${session.accessJwt}`,
+						"Content-Type": mimeType,
+					},
+					body: imageBuffer,
+				},
+			);
+
+			if (!blobResponse.ok) {
+				const errorData = await blobResponse.text();
+				throw new Error(
+					`Bluesky blob upload failed: ${blobResponse.status} - ${errorData}`,
+				);
+			}
+
+			const blobData = await blobResponse.json();
+			console.log(`✅ Image uploaded to Bluesky as blob`);
+
+			return blobData.blob;
+		} catch (error) {
+			console.error(`❌ Bluesky image upload failed:`, error.message);
+			return null;
 		}
 	}
 
