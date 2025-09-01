@@ -263,7 +263,10 @@ async function getRecentEphemeraPosts(
 ): Promise<EphemeraPost[]> {
 	try {
 		const ephemeraDir = join(process.cwd(), "src", "content", "ephemera");
-		const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+		// Legacy cutoff: only process posts from 2025-08-30 or newer
+		const legacyCutoff = new Date("2025-08-30T00:00:00.000Z");
+
+		logger.info(`POSSE: Legacy cutoff date: ${legacyCutoff.toISOString()}`);
 
 		// Find all markdown files
 		const markdownFiles: string[] = [];
@@ -306,16 +309,18 @@ async function getRecentEphemeraPosts(
 						`POSSE: File has syndication: ${!!data.syndication?.length}`,
 					);
 
-					// Check if post is recent
+					// Check if post is from 2025-08-30 or newer (legacy cutoff)
 					const postDate = data.date ? new Date(data.date) : new Date(0);
-					const isRecent = postDate > oneDayAgo;
+					const isFromCutoffOrNewer = postDate >= legacyCutoff;
 
 					logger.info(`POSSE: Post date: ${postDate.toISOString()}`);
-					logger.info(`POSSE: One day ago: ${oneDayAgo.toISOString()}`);
-					logger.info(`POSSE: Is recent: ${isRecent}`);
+					logger.info(`POSSE: Legacy cutoff: ${legacyCutoff.toISOString()}`);
+					logger.info(`POSSE: From cutoff or newer: ${isFromCutoffOrNewer}`);
 
-					if (!isRecent) {
-						logger.info(`POSSE: Skipping ${relativePath} - not recent`);
+					if (!isFromCutoffOrNewer) {
+						logger.info(
+							`POSSE: Skipping ${relativePath} - before legacy cutoff`,
+						);
 						return null;
 					}
 
