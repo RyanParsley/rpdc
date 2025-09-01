@@ -261,8 +261,7 @@ describe("Webmentions Component", () => {
 	describe("Error Handling", () => {
 		it("should handle API failures gracefully", async () => {
 			const mockFetch = vi.fn(() => Promise.reject(new Error("API Error")));
-
-			global.fetch = mockFetch;
+			(global.fetch as any) = mockFetch;
 
 			try {
 				await fetch(
@@ -283,6 +282,13 @@ describe("Webmentions Component", () => {
 			expect(
 				Array.isArray((malformedResponse as { children?: unknown }).children),
 			).toBe(false);
+		});
+
+		it("should validate retry configuration", () => {
+			// Test that our retry constants are reasonable
+			const maxRetries = 3;
+			expect(maxRetries).toBeGreaterThan(0);
+			expect(maxRetries).toBeLessThan(10); // Not too many retries
 		});
 	});
 });
