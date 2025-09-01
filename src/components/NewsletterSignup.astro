@@ -220,6 +220,53 @@ const ids = generateIds("newsletter");
 		}
 	}
 
+	/* Stack vertically in narrow containers (like sidebars) */
+	@media (max-width: 400px) {
+		.newsletter-form {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		.subscribe-button {
+			width: 100%;
+		}
+	}
+
+	/* Additional narrow container support */
+	:global(.has-aside) .newsletter-signup .newsletter-form {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.5rem;
+	}
+
+	:global(.has-aside) .newsletter-signup .subscribe-button {
+		width: 100%;
+		background-color: var(--nord10) !important;
+		border-color: var(--nord10) !important;
+		color: var(--nord6) !important;
+	}
+
+	/* Remove padding and border for aside layout */
+	:global(.has-aside) .newsletter-signup {
+		padding: 0;
+		border: none;
+		margin: 0;
+		background: transparent;
+	}
+
+	:global(.has-aside) .newsletter-signup .newsletter-form {
+		margin: 0;
+		padding: 0;
+		gap: 0.75rem;
+	}
+
+	:global(.has-aside) .newsletter-signup input[type="email"] {
+		margin-bottom: 0;
+		padding: 0.75rem;
+		box-sizing: border-box;
+		width: 100%;
+	}
+
 	.form-group {
 		flex: 1;
 		min-width: 0;
@@ -260,19 +307,24 @@ const ids = generateIds("newsletter");
 	}
 
 	.subscribe-button {
-		padding: 0.75rem 1.5rem;
-		background-color: var(--nord8);
-		color: var(--nord0);
+		background-color: var(--nord10);
+		color: var(--nord6);
+		padding: 0.5rem 1rem;
 		border: none;
-		border-radius: 4px;
+		border-radius: 3px;
+		cursor: pointer;
+		text-decoration: none;
 		font-size: 1rem;
 		font-weight: 500;
-		cursor: pointer;
-		transition: background-color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			color 0.2s ease;
 		white-space: nowrap;
 
 		&:hover:not(:disabled) {
+			cursor: pointer;
 			background-color: var(--nord9);
+			color: var(--nord1);
 		}
 
 		&:active:not(:disabled) {
