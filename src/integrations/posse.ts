@@ -835,13 +835,28 @@ export function generatePostContent(
 			? data.title || "New ephemera post"
 			: initialContent;
 
-	const maxLength = platform === "bluesky" ? 280 : 400;
+	const maxLength = platform === "bluesky" ? 300 : 400;
+	// Reserve space for "\n\n" + canonicalUrl
+	const urlSuffix = `\n\n${canonicalUrl}`;
+	// Add safety buffer for grapheme counting differences and JSON overhead
+	const safetyBuffer = platform === "bluesky" ? 20 : 10;
+	const availableContentLength = maxLength - urlSuffix.length - safetyBuffer;
+
 	const finalContent =
-		content.length > maxLength
-			? content.substring(0, maxLength - 3) + "..."
+		content.length > availableContentLength
+			? content.substring(0, availableContentLength - 3) + "..."
 			: content;
 
-	return `${finalContent}\n\n${canonicalUrl}`;
+	const result = `${finalContent}${urlSuffix}`;
+
+	// Log content lengths for debugging
+	if (platform === "bluesky") {
+		console.log(
+			`POSSE: Bluesky content lengths - content: ${content.length}, available: ${availableContentLength}, final: ${finalContent.length}, total: ${result.length}, max: ${maxLength}`,
+		);
+	}
+
+	return result;
 }
 
 export function cleanContentForSocial(markdown: string): string {
