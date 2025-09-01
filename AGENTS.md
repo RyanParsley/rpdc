@@ -11,8 +11,6 @@ This project uses specialized sub-agents to maintain consistent quality across d
 - Focus on technical accuracy over emotional engagement
 - Use straightforward language without excessive emojis or exclamations
 
-## Code Style Guidelines
-
 ## Sub-Agent Directory
 
 | Agent                                  | Purpose                                       | File                                                                                     |
@@ -62,11 +60,6 @@ All changes require review from relevant sub-agents:
 - TypeScript changes → TypeScript Pedant Agent
 - Astro changes → Astro Expert Agent
 - Tests → Testing Stickler Agent
-
-- Use TypeScript interfaces for component props
-- Declare global types in component frontmatter
-- Import CSS in component frontmatter
-- Use `Astro.props` for prop destructuring
 
 ### Git
 
@@ -214,6 +207,13 @@ for (const item of items) {
 ```
 
 ## Astro Integration Patterns
+
+### Component Best Practices
+
+- Use TypeScript interfaces for component props
+- Declare global types in component frontmatter
+- Import CSS in component frontmatter
+- Use `Astro.props` for prop destructuring
 
 ### Preferred Approach for Build-Time Processing
 
