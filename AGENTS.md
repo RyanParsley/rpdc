@@ -1,14 +1,8 @@
 # Agent Guidelines for RyanParsleyDotCom
 
-## Build/Lint/Test Commands
+## Overview
 
-- **Build**: `npm run build` (includes type checking)
-- **Dev server**: `npm run dev`
-- **Lint**: `npm run lint` (ESLint on src/)
-- **Style lint**: `npm run lint:style` (Stylelint on CSS/Astro)
-- **Format**: `npm run format` (Prettier on multiple file types)
-- **Preview**: `npm run preview`
-- **Type check**: `npx astro check`
+This project uses specialized sub-agents to maintain consistent quality across different aspects of development. Each agent has focused responsibilities and detailed guidelines.
 
 ## Agent Communication Guidelines
 
@@ -17,47 +11,55 @@
 - Focus on technical accuracy over emotional engagement
 - Use straightforward language without excessive emojis or exclamations
 
-## Code Style Guidelines
+## Sub-Agent Directory
 
-### TypeScript
+| Agent                                  | Purpose                                       | File                                                                                     |
+| -------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 🎨 **Writing Style Agent**             | Maintain consistent blog post voice and tone  | [`agents/writing-style-agent.md`](agents/writing-style-agent.md)                         |
+| 🔧 **TypeScript Pedant Agent**         | Enforce strict TypeScript practices           | [`agents/typescript-pedant-agent.md`](agents/typescript-pedant-agent.md)                 |
+| 🚀 **Astro Expert Agent**              | Astro framework patterns and best practices   | [`agents/astro-expert-agent.md`](agents/astro-expert-agent.md)                           |
+| 🧪 **Testing Stickler Agent**          | Comprehensive testing standards               | [`agents/testing-stickler-agent.md`](agents/testing-stickler-agent.md)                   |
+| 💅 **Code Quality Agent**              | Code style, formatting, naming conventions    | [`agents/code-quality-agent.md`](agents/code-quality-agent.md)                           |
+| ⚙️ **Build & DevOps Agent**            | Build processes, deployment, git standards    | [`agents/build-devops-agent.md`](agents/build-devops-agent.md)                           |
+| ⚡ **JavaScript Best Practices Agent** | Modern JS patterns and functional programming | [`agents/javascript-best-practices-agent.md`](agents/javascript-best-practices-agent.md) |
+| 📡 **POSSE Integration Agent**         | POSSE syndication implementation              | [`agents/posse-integration-agent.md`](agents/posse-integration-agent.md)                 |
 
-- Use strictest Astro TSConfig with strict null checks
-- Define interfaces/types at file top
-- Use explicit return types for exported functions
-- Prefer `const` assertions for readonly data
+## Quick Agent Selection Guide
 
-### Imports & Paths
+- **Writing blog posts** → Writing Style Agent
+- **TypeScript code** → TypeScript Pedant Agent
+- **Astro components/integrations** → Astro Expert Agent
+- **Test files** → Testing Stickler Agent
+- **Code formatting/style** → Code Quality Agent
+- **Build/deployment** → Build & DevOps Agent
+- **Utility functions** → JavaScript Best Practices Agent
+- **POSSE features** → POSSE Integration Agent
 
-- Use path aliases: `@components/*`, `@layouts/*`, `@data/*`
-- Group imports: external libs, then internal components
-- No relative imports beyond `../`
+## Quality Gates
 
-### Formatting
+All code changes must pass:
 
-- 2-space indentation (EditorConfig)
-- Single quotes for strings
-- No semicolons (Prettier default)
-- Trailing commas in multiline structures
+- **TypeScript compilation** with zero errors
+- **ESLint** with zero violations
+- **Prettier** formatting
+- **Unit tests** with 100% coverage
+- **Integration tests** for critical paths
 
-### Naming Conventions
+## Commit Standards
 
-- PascalCase for components and types
-- camelCase for variables/functions
-- kebab-case for file names
-- UPPER_SNAKE_CASE for constants
+- Use conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`
+- Include scope when relevant: `feat(posse): add bluesky support`
+- Keep commit messages descriptive but concise
+- Reference issues when applicable
 
-### Error Handling
+## Review Process
 
-- Use try/catch for async operations
-- Throw descriptive Error objects
-- Handle null/undefined with optional chaining
+All changes require review from relevant sub-agents:
 
-### Astro Specific
-
-- Use TypeScript interfaces for component props
-- Declare global types in component frontmatter
-- Import CSS in component frontmatter
-- Use `Astro.props` for prop destructuring
+- Writing changes → Writing Style Agent
+- TypeScript changes → TypeScript Pedant Agent
+- Astro changes → Astro Expert Agent
+- Tests → Testing Stickler Agent
 
 ### Git
 
@@ -206,6 +208,13 @@ for (const item of items) {
 
 ## Astro Integration Patterns
 
+### Component Best Practices
+
+- Use TypeScript interfaces for component props
+- Declare global types in component frontmatter
+- Import CSS in component frontmatter
+- Use `Astro.props` for prop destructuring
+
 ### Preferred Approach for Build-Time Processing
 
 **For features that need to run during the build process (POSSE, RSS generation, search indexing, etc.), always use Astro integrations instead of standalone scripts.**
@@ -260,160 +269,47 @@ node scripts/feature-script.js
 - Legacy systems requiring specific Node.js versions
 - Third-party tools not compatible with Astro's build process
 
-### POSSE Implementation Example
+## Build/Lint/Test Commands
 
-The POSSE syndication feature should be implemented as an Astro integration that:
+- **Build**: `npm run build` (includes type checking)
+- **Dev server**: `npm run dev`
+- **Lint**: `npm run lint` (ESLint on src/)
+- **Style lint**: `npm run lint:style` (Stylelint on CSS/Astro)
+- **Format**: `npm run format` (Prettier on multiple file types)
+- **Preview**: `npm run preview`
+- **Type check**: `npx astro check`
 
-- Uses `astro:build:done` hook for automatic execution
-- Leverages Astro's content collection APIs
-- Uses Astro's image optimization service
-- Integrates with Astro's logging system
-- Configured through astro.config.mjs
+## Code Style Guidelines
 
-## Migration from CloudCannon Postbuild Hook
+### TypeScript
 
-**✅ RECOMMENDED: Use Astro Integration + Postbuild Hook (Current Setup)**
+- Use strictest Astro TSConfig with strict null checks
+- Define interfaces/types at file top
+- Use explicit return types for exported functions
+- Prefer `const` assertions for readonly data
 
-The current setup combines the best of both worlds:
+### Imports & Paths
 
-1. **Astro Integration**: Handles the actual POSSE syndication during build
-2. **Postbuild Hook**: Commits syndication changes back to GitHub
+- Use path aliases: `@components/*`, `@layouts/*`, `@data/*`
+- Group imports: external libs, then internal components
+- No relative imports beyond `../`
 
-### Benefits of Current Setup
+### Formatting
 
-- **Better Integration**: Runs during the build process with full access to Astro's ecosystem
-- **Type Safety**: Full TypeScript support with proper error handling
-- **Consistency**: Uses the same logging and configuration system as your Astro site
-- **Persistence**: Changes are committed back to GitHub for long-term storage
-- **Reliability**: Integrated error handling that won't break the build
+- 2-space indentation (EditorConfig)
+- Single quotes for strings
+- No semicolons (Prettier default)
+- Trailing commas in multiline structures
 
-### Postbuild Hook Details
+### Naming Conventions
 
-The `.cloudcannon/postbuild` script:
-
-- Checks for changes in `src/content/ephemera/`
-- Commits POSSE updates with message: `"POSSE: Update syndication links [skip ci]"`
-- Pushes changes back to GitHub
-- Handles errors gracefully without breaking the build
-
-**❌ DEPRECATED: Old Standalone Script**
-
-The old CloudCannon postbuild hook (`scripts/syndicate-ephemera.js`) has been disabled. While it provided similar functionality, it had several drawbacks:
-
-- **Separate Dependencies**: Required managing additional Node.js dependencies
-- **Build Complexity**: Added extra steps to the deployment process
-- **Limited Integration**: No access to Astro's build context or logging
-- **Maintenance Overhead**: Duplicate code and configuration
-
-**Migration Status:**
-
-1. ✅ **Done**: Astro integration is configured and working
-2. ✅ **Done**: New postbuild hook commits changes back to GitHub
-3. 🔄 **Optional**: Remove the old files when you're confident the new setup works:
-   ```bash
-   rm scripts/syndicate-ephemera.js
-   # Keep .cloudcannon/postbuild - it's now active and needed
-   ```
-
-## POSSE Syndication Integration
-
-The POSSE (Publish on your Own Site, Syndicate Elsewhere) integration automatically syndicates ephemera posts to social media platforms during the Astro build process.
-
-### Features
-
-- **Automatic Discovery**: Scans `src/content/ephemera/` for recent posts (last 24 hours)
-- **Smart Filtering**: Only processes posts that haven't been syndicated yet
-- **Multi-Platform Support**: Currently supports Mastodon and Bluesky
-- **Image Handling**: Uploads images from ephemera posts to social platforms
-- **Content Processing**: Cleans markdown content for social media consumption
-- **Rate Limiting**: Prevents spam with configurable delays between posts
-- **Dry-Run Mode**: Test syndication without actually posting
-- **Error Resilience**: Continues processing even if individual posts fail
-
-### Configuration
-
-Add to `astro.config.mjs`:
-
-```typescript
-import posseIntegration from "./src/integrations/posse";
-
-export default defineConfig({
-  integrations: [
-    posseIntegration({
-      mastodon: {
-        token: process.env.MASTODON_TOKEN,
-        instance: "mastodon.social",
-      },
-      bluesky: {
-        username: process.env.BLUESKY_USERNAME,
-        password: process.env.BLUESKY_PASSWORD,
-      },
-      dryRun: false, // Set to true for testing
-      maxPosts: 3, // Limit posts per build
-    }),
-  ],
-});
-```
-
-### Environment Variables
-
-Set these environment variables for production:
-
-```bash
-MASTODON_TOKEN=your_mastodon_access_token
-MASTODON_INSTANCE=your.mastodon.instance
-BLUESKY_USERNAME=your.bluesky.handle
-BLUESKY_PASSWORD=your_bluesky_app_password
-```
-
-### Ephemera Post Format
-
-Posts in `src/content/ephemera/` should follow this frontmatter format:
-
-```yaml
----
-title: "My Ephemera Post"
-date: 2024-08-31
-image:
-  src: "/path/to/image.jpg"
-  alt: "Alt text for accessibility"
----
-Post content in markdown format...
-```
-
-### Platform-Specific Limits
-
-- **Mastodon**: 400 characters, supports images
-- **Bluesky**: 280 characters, supports images
-
-### Build Integration
-
-The integration runs automatically during `npm run build` and:
-
-1. Scans for recent ephemera posts
-2. Filters out already syndicated content
-3. Processes content for each platform
-4. Uploads images if present
-5. Posts to configured platforms
-6. Updates original posts with syndication URLs
-7. Logs all activity for monitoring
+- PascalCase for components and types
+- camelCase for variables/functions
+- kebab-case for file names
+- UPPER_SNAKE_CASE for constants
 
 ### Error Handling
 
-- Individual post failures don't stop the entire process
-- Network timeouts are handled gracefully
-- Invalid image formats are logged and skipped
-- Authentication failures are clearly reported
-
-### Testing
-
-Use dry-run mode for testing:
-
-```typescript
-posseIntegration({
-  dryRun: true,
-  maxPosts: 1,
-});
-```
-
-This will log what would be posted without actually sending to platforms.
+- Use try/catch for async operations
+- Throw descriptive Error objects
+- Handle null/undefined with optional chaining
