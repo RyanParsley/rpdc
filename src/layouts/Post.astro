@@ -3,6 +3,7 @@ import Layout from "@layouts/Page.astro";
 import Gallery from "@components/ImageGallery.astro";
 import FormattedDate from "@components/FormattedDate.astro";
 import WebmentionShare from "@components/WebmentionShare.astro";
+import NewsletterSignup from "@components/NewsletterSignup.astro";
 
 const {
 	title,
@@ -38,6 +39,13 @@ import Webmentions from "@components/Webmentions.astro";
 			{gallery && <Gallery images={gallery} path={galleryPath} />}
 			<slot />
 		</section>
+
+		<NewsletterSignup
+			title="Enjoyed this post?"
+			description="Subscribe to get notified when I publish new content like this."
+			className="post-newsletter-signup"
+		/>
+
 		<WebmentionShare postUrl={Astro.url.href} postTitle={title} />
 		<Webmentions target={canonicalURL} />
 		<p>
@@ -52,3 +60,11 @@ import Webmentions from "@components/Webmentions.astro";
 		<slot name="aside" />
 	</aside>
 </Layout>
+
+<style lang="scss">
+	.post-newsletter-signup {
+		margin: 3rem 0;
+		border-left: 4px solid var(--nord8);
+		background-color: var(--nord1);
+	}
+</style>

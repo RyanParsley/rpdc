@@ -1,0 +1,150 @@
+---
+import Layout from "@layouts/Page.astro";
+
+const { url } = Astro;
+const searchParams = url.searchParams;
+const status = searchParams.get("status");
+const message = searchParams.get("message");
+---
+
+<Layout
+	title="Newsletter Confirmation"
+	description="Newsletter subscription confirmation status."
+>
+	<section class="confirmation-page">
+		<div class="confirmation-content">
+			{
+				status === "success" ? (
+					<>
+						<div class="success-icon">✅</div>
+						<h1>Successfully Subscribed!</h1>
+						<p>
+							Thank you for subscribing to my newsletter. You'll start receiving
+							updates when I publish new content.
+						</p>
+						<p>
+							Check your email for a confirmation message. You may need to click
+							the confirmation link to complete your subscription.
+						</p>
+					</>
+				) : status === "error" ? (
+					<>
+						<div class="error-icon">❌</div>
+						<h1>Subscription Error</h1>
+						<p>
+							{message || "There was an error processing your subscription."}
+						</p>
+						<p>
+							Please try subscribing again or contact me if the problem
+							persists.
+						</p>
+					</>
+				) : (
+					<>
+						<div class="info-icon">ℹ️</div>
+						<h1>Confirmation Pending</h1>
+						<p>
+							Your newsletter subscription is being processed. Please check your
+							email for a confirmation message.
+						</p>
+					</>
+				)
+			}
+
+			<div class="confirmation-actions">
+				<a href="/" class="button primary">Return Home</a>
+				<a href="/newsletter" class="button secondary">Newsletter Info</a>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<style lang="scss">
+	.confirmation-page {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		min-height: 60vh;
+		padding: 2rem 1rem;
+	}
+
+	.confirmation-content {
+		max-width: 600px;
+		text-align: center;
+		background-color: var(--nord0);
+		padding: 3rem 2rem;
+		border-radius: 12px;
+		border: 1px solid var(--nord3);
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+		.success-icon,
+		.error-icon,
+		.info-icon {
+			font-size: 3rem;
+			margin-bottom: 1rem;
+		}
+
+		h1 {
+			font-size: 2rem;
+			margin-bottom: 1rem;
+			color: var(--nord6);
+		}
+
+		p {
+			color: var(--nord4);
+			line-height: 1.6;
+			margin-bottom: 1rem;
+			font-size: 1.1rem;
+		}
+	}
+
+	.confirmation-actions {
+		margin-top: 2rem;
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+
+		@media (max-width: 480px) {
+			flex-direction: column;
+			align-items: center;
+		}
+	}
+
+	.button {
+		display: inline-block;
+		padding: 0.75rem 1.5rem;
+		border-radius: 6px;
+		text-decoration: none;
+		font-weight: 500;
+		transition: all 0.2s ease;
+
+		&.primary {
+			background-color: var(--nord8);
+			color: var(--nord0);
+
+			&:hover {
+				background-color: var(--nord9);
+			}
+		}
+
+		&.secondary {
+			background-color: var(--nord2);
+			color: var(--nord6);
+			border: 1px solid var(--nord3);
+
+			&:hover {
+				background-color: var(--nord3);
+			}
+		}
+	}
+
+	@media (max-width: 768px) {
+		.confirmation-content {
+			padding: 2rem 1.5rem;
+		}
+
+		.confirmation-content h1 {
+			font-size: 1.75rem;
+		}
+	}
+</style>
