@@ -3,7 +3,7 @@ title: "I Finally Got POSSE Automated"
 description: "My journey from manual syndication to fully automated POSSE bliss."
 pubDate: "2025-08-31"
 categories: [code]
-tags: [posse, indieweb, typescript, astro]
+tags: [posse, indieWeb, typeScript, astro]
 ---
 
 Almost a year ago, I wrote about my [game plan for POSSE](/blog/posse). Like
