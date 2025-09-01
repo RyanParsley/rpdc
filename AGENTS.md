@@ -10,6 +10,13 @@
 - **Preview**: `npm run preview`
 - **Type check**: `npx astro check`
 
+## Agent Communication Guidelines
+
+- Be direct and concise
+- Avoid unnecessary flattery or overly enthusiastic language
+- Focus on technical accuracy over emotional engagement
+- Use straightforward language without excessive emojis or exclamations
+
 ## Code Style Guidelines
 
 ### TypeScript
