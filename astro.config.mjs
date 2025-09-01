@@ -21,7 +21,7 @@ export default defineConfig({
 		remarkPlugins: [[remarkMermaid, { mermaidConfig: { theme: "dark" } }]],
 	},
 	build: {
-		format: "file",
+		format: "directory",
 	},
 	integrations: [
 		mdx(),
