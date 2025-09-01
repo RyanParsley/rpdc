@@ -81,7 +81,7 @@ export interface TestUtils {
 /**
  * Validates and normalizes POSSE configuration
  */
-function validateConfig(
+export function validateConfig(
 	options: PosseOptions = {},
 ): Omit<SyndicationContext, "logger"> {
 	const { mastodon, bluesky, dryRun = false, maxPosts = 3 } = options;
@@ -103,7 +103,9 @@ function validateConfig(
 /**
  * Validates Mastodon configuration
  */
-function validateMastodonConfig(config?: PosseOptions["mastodon"]): boolean {
+export function validateMastodonConfig(
+	config?: Partial<PosseOptions["mastodon"]>,
+): boolean {
 	if (!config) return false;
 
 	const { token, instance } = config;
@@ -124,7 +126,9 @@ function validateMastodonConfig(config?: PosseOptions["mastodon"]): boolean {
 /**
  * Validates Bluesky configuration
  */
-function validateBlueskyConfig(config?: PosseOptions["bluesky"]): boolean {
+export function validateBlueskyConfig(
+	config?: Partial<PosseOptions["bluesky"]>,
+): boolean {
 	if (!config) return false;
 
 	const { username, password } = config;
@@ -145,7 +149,7 @@ function validateBlueskyConfig(config?: PosseOptions["bluesky"]): boolean {
 /**
  * Gets platform configuration from environment variables
  */
-function getPlatformConfig(): {
+export function getPlatformConfig(): {
 	mastodon?: MastodonConfig | undefined;
 	bluesky?: BlueskyConfig | undefined;
 } {
@@ -174,7 +178,10 @@ function getPlatformConfig(): {
 /**
  * Scans ephemera directory and returns recent posts that need syndication
  */
-function scanEphemeraPosts(maxPosts: number, logger: Logger): EphemeraPost[] {
+export function scanEphemeraPosts(
+	maxPosts: number,
+	logger: Logger,
+): EphemeraPost[] {
 	try {
 		const ephemeraDir = join(process.cwd(), "src", "content", "ephemera");
 		// Legacy cutoff: only process posts from 2025-08-30 or newer
@@ -205,7 +212,7 @@ function scanEphemeraPosts(maxPosts: number, logger: Logger): EphemeraPost[] {
 /**
  * Recursively finds all markdown files in the ephemera directory
  */
-function findMarkdownFiles(
+export function findMarkdownFiles(
 	dir: string,
 	legacyCutoff: Date,
 	logger: Logger,
@@ -254,7 +261,7 @@ function findMarkdownFiles(
 /**
  * Parses a single ephemera file and determines if it needs syndication
  */
-function parseEphemeraFile(
+export function parseEphemeraFile(
 	filePath: string,
 	legacyCutoff: Date,
 	logger: Logger,
