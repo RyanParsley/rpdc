@@ -70,11 +70,20 @@ Here's the core integration structure:
 ```typescript
 // src/integrations/posse.ts
 export default function posseIntegration(options: PosseOptions = {}) {
+  const { mastodon, bluesky, dryRun = false, maxPosts = 3 } = options;
+
   return {
     name: "posse-syndication",
     hooks: {
       "astro:build:done": async ({ logger }) => {
-        await runSyndication(options, logger);
+        try {
+          await runSyndication({ mastodon, bluesky, dryRun, maxPosts, logger });
+          logger.info("POSSE: Syndication process completed successfully");
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          logger.error(`POSSE: Syndication process failed: ${errorMessage}`);
+        }
       },
     },
   };
@@ -100,13 +109,19 @@ function generatePostContent(
       ? data.title || "New ephemera post"
       : initialContent;
 
-  const maxLength = platform === "bluesky" ? 280 : 400;
+  const maxLength = platform === "bluesky" ? 300 : 400;
+  // Reserve space for "\n\n" + canonicalUrl
+  const urlSuffix = `\n\n${canonicalUrl}`;
+  // Add safety buffer for grapheme counting differences and JSON overhead
+  const safetyBuffer = platform === "bluesky" ? 20 : 10;
+  const availableContentLength = maxLength - urlSuffix.length - safetyBuffer;
+
   const finalContent =
-    content.length > maxLength
-      ? content.substring(0, maxLength - 3) + "..."
+    content.length > availableContentLength
+      ? content.substring(0, availableContentLength - 3) + "..."
       : content;
 
-  return `${finalContent}\n\n${canonicalUrl}`;
+  return `${finalContent}${urlSuffix}`;
 }
 ```
 
