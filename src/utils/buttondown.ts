@@ -203,20 +203,48 @@ export async function checkSubscription(
 	}
 }
 
-/**
- * Check if an email is already subscribed (Legacy approach for backward compatibility)
- */
-export async function checkSubscriptionLegacy(email: string): Promise<boolean> {
-	const result = await checkSubscription(email);
-	return result.success ? result.data : false;
+// Email creation types
+export interface EmailInput {
+	readonly subject: string;
+	readonly body: string;
+	readonly email_type?:
+		| "public"
+		| "private"
+		| "premium"
+		| "free"
+		| "churned"
+		| "archival";
+	readonly status?:
+		| "draft"
+		| "managed_by_rss"
+		| "about_to_send"
+		| "scheduled"
+		| "in_flight"
+		| "paused"
+		| "deleted"
+		| "errored"
+		| "sent"
+		| "imported"
+		| "throttled"
+		| "resending"
+		| "transactional";
+}
+
+export interface EmailResponse {
+	readonly id: string;
+	readonly subject: string;
+	readonly body: string;
+	readonly status: string;
+	readonly email_type: string;
+	readonly creation_date: string;
 }
 
 /**
- * Unsubscribe an email address from the newsletter (Functional approach)
+ * Create and send an email (Functional approach)
  */
-export async function unsubscribeFromNewsletter(
-	email: string,
-): Promise<ButtondownResult<void>> {
+export async function createEmail(
+	emailData: EmailInput,
+): Promise<ButtondownResult<EmailResponse>> {
 	if (!validateApiKey(BUTTONDOWN_CONFIG.apiKey)) {
 		return {
 			success: false,
@@ -225,19 +253,16 @@ export async function unsubscribeFromNewsletter(
 	}
 
 	try {
-		const response = await fetch(
-			`${BUTTONDOWN_CONFIG.baseUrl}/subscribers/${encodeURIComponent(email)}`,
-			{
-				method: "DELETE",
-				headers: createApiHeaders(BUTTONDOWN_CONFIG.apiKey),
-			},
+		const response = await fetch(`${BUTTONDOWN_CONFIG.baseUrl}/emails`, {
+			method: "POST",
+			headers: createApiHeaders(BUTTONDOWN_CONFIG.apiKey),
+			body: JSON.stringify(emailData),
+		});
+
+		return handleApiResponse(
+			response,
+			(data: unknown) => data as EmailResponse,
 		);
-
-		if (!response.ok && response.status !== 404) {
-			return handleApiResponse(response, () => undefined);
-		}
-
-		return { success: true, data: undefined };
 	} catch (error) {
 		return {
 			success: false,
@@ -251,15 +276,31 @@ export async function unsubscribeFromNewsletter(
 }
 
 /**
- * Unsubscribe an email address from the newsletter (Legacy approach for backward compatibility)
+ * Create and send an email (Legacy approach for backward compatibility)
  */
-export async function unsubscribeFromNewsletterLegacy(
-	email: string,
-): Promise<void> {
-	const result = await unsubscribeFromNewsletter(email);
+export async function createEmailLegacy(
+	emailData: EmailInput,
+): Promise<EmailResponse> {
+	const result = await createEmail(emailData);
+
 	if (!result.success) {
-		throw new Error(
-			result.error.detail || "Failed to unsubscribe from newsletter",
-		);
+		// Handle specific error cases for better user experience
+		if (
+			result.error.code === "email_duplicate" ||
+			result.error.detail.includes("duplicate")
+		) {
+			throw new Error("This email has already been sent.");
+		}
+
+		if (
+			result.error.code === "email_invalid" ||
+			result.error.detail.includes("invalid")
+		) {
+			throw new Error("Invalid email content.");
+		}
+
+		throw new Error(result.error.detail || "Failed to create email");
 	}
+
+	return result.data;
 }

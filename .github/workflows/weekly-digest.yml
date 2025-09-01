@@ -1,0 +1,42 @@
+name: Weekly Digest
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC (adjust timezone as needed)
+    - cron: "0 9 * * 1"
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  send-weekly-digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Send weekly digest
+        run: |
+          # Make the API call to send the digest
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: GitHub-Actions-Weekly-Digest" \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            "${{ secrets.SITE_URL || 'https://ryanparsley.com' }}/api/digest/send" \
+            || echo "Weekly digest API call failed"
+
+      - name: Log completion
+        run: echo "Weekly digest workflow completed"
