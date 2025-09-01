@@ -4,36 +4,26 @@ This directory contains helper scripts for generating new content following Astr
 
 ## Available Scripts
 
-### `new-blog-post.js`
-
-A simple script for generating blog posts.
-
-```bash
-npm run new-post
-# or
-node scripts/new-blog-post.js
-```
-
-**Features:**
-
-- Interactive prompts for title, description, and tags
-- Automatic slug generation
-- Proper frontmatter formatting
-- Follows blog content collection schema
-
 ### `new-content.js`
 
 A comprehensive script for generating different types of content (blog, note, ephemera).
 
 ```bash
-npm run new-content
-# or
+# Ergonomic shortcuts (recommended)
+npm run new:blog
+npm run new:note
+npm run new:ephemera
+
+# Full command
 npm run new-content -- --type blog
 npm run new-content -- --type note
 npm run new-content -- --type ephemera
-# or
-node scripts/new-content.js
-node scripts/new-content.js --type=blog
+
+# Interactive mode
+npm run new-content
+
+# Direct execution
+node scripts/new-content.js --type blog
 ```
 
 **Features:**
@@ -62,33 +52,60 @@ node scripts/new-content.js --type=blog
 
 ### Ephemera
 
-- **Path:** `src/content/ephemera/YYYY/MM/`
+- **Path:** `src/content/ephemera/YYYY/MM/DD/`
 - **Schema:** Requires `date`
 - **Optional:** `syndication`, `youtube`, `image`
-- **Filename:** `DD.md`
+- **Filename:** `YYYY-MM-DD-HH-MM-SS.md`
 
 ## Usage Examples
 
 ### Creating a Blog Post
 
 ```bash
+# Quick shortcut (recommended)
+npm run new:blog
+
+# Or specify directly
+npm run new-content -- --type blog
+
+# Interactive mode
 npm run new-content
 # Select "blog" when prompted
-# Enter title, description, and tags
 ```
 
 ### Creating Ephemera
 
 ```bash
+# Quick shortcut (recommended)
+npm run new:ephemera
+
+# Or specify directly
 npm run new-content -- --type ephemera
-# Enter content and optional image/YouTube info
 ```
+
+**Complete Workflow:**
+
+- Content: "My daily photo"
+- Include image? (y/n): y
+- Image name: sunset.jpg
+- Alt text: Beautiful sunset at the beach
+- Open containing folder? (y/n): y
+
+**Image Handling:**
+
+- Include image? (y/n) - defaults to no
+- If yes: Image name, then Alt text
+- Values go directly to frontmatter
+- Folder opening offered at the end
 
 ### Creating a Note
 
 ```bash
+# Quick shortcut (recommended)
+npm run new:note
+
+# Or specify directly
 npm run new-content -- --type note
-# Enter title, description, and tags
 ```
 
 ## Generated Frontmatter
@@ -137,7 +154,8 @@ src/content/
 └── ephemera/
     ├── 2025/
     │   └── 08/
-    │       └── 31.md
+    │       └── 31/
+    │           └── 2025-08-31-14-30-45.md
     └── ...
 ```
 
@@ -157,7 +175,11 @@ After generating content:
 - **Slugs are automatically generated** from titles
 - **Dates are automatically set** to today's date
 - **Tags should be comma-separated** when prompted
-- **Ephemera creates subdirectories** automatically (YYYY/MM/)
+- **Ephemera creates subdirectories** automatically (YYYY/MM/DD/)
+- **Simple image handling** - just enter filename, image goes in same directory as markdown
+- **Interactive by design** - works best when run directly, not with piped input
+- **Use ergonomic shortcuts** like `npm run new:blog` for quick content creation
+- **Use `npm run new-content`** for interactive mode or all content types
 - **All scripts validate** that files don't already exist
 
 ## Troubleshooting
@@ -168,4 +190,4 @@ After generating content:
 
 ---
 
-_These scripts follow Astro's content collection conventions and ensure consistency across your blog._
+_This script follows Astro's content collection conventions and ensures consistency across all content types (blog, note, ephemera)._

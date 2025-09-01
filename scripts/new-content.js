@@ -186,10 +186,17 @@ function formatTags(tags) {
  */
 function getContentType() {
 	const args = process.argv.slice(2);
-	const typeArg = args.find((arg) => arg.startsWith("--type="));
 
-	if (typeArg) {
-		return typeArg.split("=")[1];
+	// Check for --type=value format
+	const typeEqualsArg = args.find((arg) => arg.startsWith("--type="));
+	if (typeEqualsArg) {
+		return typeEqualsArg.split("=")[1];
+	}
+
+	// Check for --type value format
+	const typeIndex = args.indexOf("--type");
+	if (typeIndex !== -1 && typeIndex + 1 < args.length) {
+		return args[typeIndex + 1];
 	}
 
 	return null;
@@ -254,13 +261,20 @@ async function main() {
 				"Content",
 				"Add your ephemera content here...",
 			);
+
+			// Ask about image
 			const hasImage = await prompt("Include image? (y/n)", "n");
-			if (hasImage.toLowerCase() === "y") {
+
+			if (hasImage === "y" || hasImage === "Y") {
+				const imageName = await prompt("Image name");
+				const altText = await prompt("Alt text");
+
 				data.image = {
-					src: await prompt("Image source path", "/images/"),
-					alt: await prompt("Image alt text", "Image description"),
+					src: imageName,
+					alt: altText,
 				};
 			}
+
 			const youtube = await prompt("YouTube video ID (optional)");
 			if (youtube) {
 				data.youtube = youtube;
@@ -292,7 +306,7 @@ async function main() {
 		let filename, filepath;
 
 		if (contentType === "ephemera") {
-			// Create year/month directory structure for ephemera
+			// Create year/month/day directory structure for ephemera (enforces consistent organization)
 			const year = now.getFullYear();
 			const month = String(now.getMonth() + 1).padStart(2, "0");
 			const day = String(now.getDate()).padStart(2, "0");
@@ -300,7 +314,7 @@ async function main() {
 			const minutes = String(now.getMinutes()).padStart(2, "0");
 			const seconds = String(now.getSeconds()).padStart(2, "0");
 
-			const dirPath = join(projectRoot, config.path, String(year), month);
+			const dirPath = join(projectRoot, config.path, String(year), month, day);
 			mkdirSync(dirPath, { recursive: true });
 
 			filename = `${year}-${month}-${day}-${hours}-${minutes}-${seconds}.md`;
@@ -351,15 +365,33 @@ async function main() {
 			);
 		} else {
 			console.log(`${colors.blue}📅 Date: ${data.date}${colors.reset}`);
+
+			// Ask to open containing folder
+			const openFolder = await prompt("Open containing folder? (y/n)", "n");
+			if (openFolder.toLowerCase() === "y") {
+				const dirPath = dirname(filepath);
+				try {
+					const { execSync } = await import("child_process");
+					const command = process.platform === "darwin" ? "open" : "xdg-open";
+					execSync(`${command} "${dirPath}"`, { stdio: "ignore" });
+					console.log(`${colors.green}📂 Folder opened!${colors.reset}`);
+				} catch {
+					console.log(`${colors.yellow}💡 Folder: ${dirPath}${colors.reset}`);
+				}
+			}
 		}
 
 		console.log(`\n${colors.yellow}💡 Next steps:${colors.reset}`);
 		console.log(`1. Edit the file to add your content`);
 		if (contentType === "ephemera" && data.image) {
-			console.log(`2. Add the image file to the public directory`);
+			console.log(`2. Image will be loaded from: ${data.image.src}`);
 		}
-		console.log(`3. Run 'npm run build' to test the build`);
-		console.log(`4. Commit and push your changes`);
+		console.log(
+			`${contentType === "ephemera" && data.image ? "3" : "2"}. Run 'npm run build' to test the build`,
+		);
+		console.log(
+			`${contentType === "ephemera" && data.image ? "4" : "3"}. Commit and push your changes`,
+		);
 	} catch (error) {
 		console.error(
 			`${colors.red}❌ Error creating content:${colors.reset}`,
