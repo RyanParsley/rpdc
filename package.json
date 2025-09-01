@@ -14,7 +14,6 @@
     "postinstall": "npx playwright install chromium",
     "prepare": "husky",
     "postbuild": "pagefind --site dist",
-    "syndicate": "node scripts/syndicate-ephemera.js",
     "new-post": "node scripts/new-blog-post.js",
     "new-content": "node scripts/new-content.js",
     "test": "vitest",

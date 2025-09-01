@@ -22,10 +22,8 @@ import {
 	generatePostContent,
 	cleanContentForSocial,
 	getMimeType,
-	type EphemeraPost,
-	type EphemeraData,
-	type ImageData,
 } from "./posse";
+import type { EphemeraPost, EphemeraData } from "./posse";
 
 describe("POSSE Integration", () => {
 	beforeEach(() => {
@@ -210,16 +208,6 @@ describe("POSSE Integration", () => {
 
 			expect(postWithoutImage.image).toBeUndefined();
 			expect(postWithoutImage.data.syndication).toBeUndefined();
-		});
-
-		it("should properly type ImageData interface", () => {
-			const image: ImageData = {
-				src: "/images/test.jpg",
-				alt: "Test image description",
-			};
-
-			expect(image.src).toBe("/images/test.jpg");
-			expect(image.alt).toBe("Test image description");
 		});
 	});
 });
