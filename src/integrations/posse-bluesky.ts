@@ -1,0 +1,432 @@
+// POSSE Bluesky Module
+// Handles Bluesky-specific posting logic
+
+import { readFileSync } from "fs";
+import { join, extname, basename } from "path";
+import { statSync, readdirSync } from "fs";
+import {
+	generatePostContent,
+	type EphemeraPost,
+	type Logger,
+	type SyndicationResult,
+} from "./posse";
+
+export interface BlueskyConfig {
+	username: string;
+	password: string;
+}
+
+/**
+ * Posts content to Bluesky
+ */
+export async function postToBluesky(
+	post: EphemeraPost,
+	canonicalUrl: string,
+	config: BlueskyConfig,
+	logger: Logger,
+): Promise<SyndicationResult> {
+	try {
+		const content = generatePostContent(
+			post.data,
+			canonicalUrl,
+			post.body,
+			"bluesky",
+		);
+
+		// Authenticate with Bluesky
+		const session = await authenticateWithBluesky(config, logger);
+
+		// Handle image if present
+		let embed: BlueskyEmbed | undefined;
+		if (post.image?.src) {
+			const imageBlob = await uploadImageToBluesky(session, post, logger);
+			if (imageBlob) {
+				embed = {
+					$type: "app.bsky.embed.images",
+					images: [
+						{
+							image: imageBlob,
+							alt: post.image.alt || "Image from ephemera post",
+						},
+					],
+				};
+			}
+		}
+
+		// Create the post
+		const postUrl = await createBlueskyPost(
+			session,
+			content,
+			embed,
+			config,
+			logger,
+		);
+
+		return {
+			url: postUrl,
+			success: true,
+			platform: "bluesky",
+		};
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error(`POSSE: Bluesky posting error: ${errorMessage}`);
+		return {
+			success: false,
+			platform: "bluesky",
+			error: errorMessage,
+		};
+	}
+}
+
+/**
+ * Authenticates with Bluesky and returns session
+ */
+async function authenticateWithBluesky(
+	config: BlueskyConfig,
+	logger: Logger,
+): Promise<BlueskySession> {
+	logger.debug("POSSE: Authenticating with Bluesky...");
+
+	const authResponse = await fetch(
+		"https://bsky.social/xrpc/com.atproto.server.createSession",
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				identifier: config.username,
+				password: config.password,
+			}),
+		},
+	);
+
+	if (!authResponse.ok) {
+		throw new Error(`Bluesky auth failed: ${authResponse.status}`);
+	}
+
+	const session = await authResponse.json();
+	logger.debug("POSSE: Bluesky authentication successful");
+
+	return session;
+}
+
+/**
+ * Uploads an image to Bluesky
+ */
+async function uploadImageToBluesky(
+	session: BlueskySession,
+	post: EphemeraPost,
+	logger: Logger,
+): Promise<BlueskyBlob | null> {
+	if (!post.image) return null;
+
+	try {
+		const imageResult = processImageForPlatform(post.image, "bluesky", logger);
+		if (!imageResult) return null;
+
+		const imageBuffer = readFileSync(imageResult.path!);
+
+		const blobResponse = await fetch(
+			"https://bsky.social/xrpc/com.atproto.repo.uploadBlob",
+			{
+				method: "POST",
+				headers: {
+					Authorization: `Bearer ${session.accessJwt}`,
+					"Content-Type": imageResult.mimeType,
+				},
+				body: imageBuffer,
+			},
+		);
+
+		if (!blobResponse.ok) {
+			throw new Error(`Bluesky blob upload failed: ${blobResponse.status}`);
+		}
+
+		const blobData = await blobResponse.json();
+		logger.debug(`POSSE: Image uploaded to Bluesky as blob`);
+
+		return blobData.blob;
+	} catch (error) {
+		logger.warn(
+			`POSSE: Bluesky image upload failed, posting text only: ${error}`,
+		);
+		return null;
+	}
+}
+
+/**
+ * Creates a post on Bluesky
+ */
+async function createBlueskyPost(
+	session: BlueskySession,
+	content: string,
+	embed: BlueskyEmbed | undefined,
+	config: BlueskyConfig,
+	logger: Logger,
+): Promise<string> {
+	logger.debug("POSSE: Creating Bluesky post...");
+
+	const postRecord: {
+		text: string;
+		createdAt: string;
+		embed?: BlueskyEmbed;
+	} = {
+		text: content,
+		createdAt: new Date().toISOString(),
+		...(embed && { embed }),
+	};
+
+	const postResponse = await fetch(
+		"https://bsky.social/xrpc/com.atproto.repo.createRecord",
+		{
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${session.accessJwt}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				repo: session.did,
+				collection: "app.bsky.feed.post",
+				record: postRecord,
+			}),
+		},
+	);
+
+	if (!postResponse.ok) {
+		const errorData = await postResponse.text();
+		throw new Error(
+			`Bluesky post failed: ${postResponse.status} - ${errorData}`,
+		);
+	}
+
+	const postData = await postResponse.json();
+	const postUrl = `https://bsky.app/profile/${config.username}/post/${postData.uri.split("/").pop()}`;
+
+	logger.debug("POSSE: Bluesky post created successfully");
+	return postUrl;
+}
+
+// ============================================================================
+// BLUESKY TYPES
+// ============================================================================
+
+interface BlueskyBlob {
+	$type: string;
+	ref: {
+		$link: string;
+	};
+	mimeType: string;
+	size: number;
+}
+
+interface BlueskyEmbed {
+	$type: string;
+	images: Array<{
+		image: BlueskyBlob;
+		alt: string;
+	}>;
+}
+
+interface BlueskySession {
+	accessJwt: string;
+	did: string;
+	handle: string;
+}
+
+// ============================================================================
+// IMAGE PROCESSING
+// ============================================================================
+
+/**
+ * Processes an image for a specific platform
+ */
+function processImageForPlatform(
+	postImage: { src: string; alt: string },
+	platform: "mastodon" | "bluesky",
+	logger: Logger,
+): { path: string | null; size: number; mimeType: string } | null {
+	try {
+		// Get original image path
+		const originalImagePath = join(
+			process.cwd(),
+			"src",
+			"content",
+			"ephemera",
+			postImage.src.replace("./", ""),
+		);
+
+		// Try to find Astro-processed image first
+		const preferSmaller = platform === "bluesky"; // Bluesky has smaller limits
+		const processedImagePath = findProcessedImage(
+			originalImagePath,
+			preferSmaller,
+			logger,
+		);
+
+		let imagePath: string;
+		let imageBuffer: Buffer;
+
+		if (
+			processedImagePath &&
+			checkImageSize(processedImagePath, platform, logger)
+		) {
+			// Use Astro's optimized image
+			imagePath = processedImagePath;
+			imageBuffer = readFileSync(processedImagePath);
+			logger.debug(
+				`POSSE: Using Astro-optimized image for ${platform}: ${processedImagePath}`,
+			);
+		} else if (checkImageSize(originalImagePath, platform, logger)) {
+			// Fallback to original image
+			imagePath = originalImagePath;
+			imageBuffer = readFileSync(originalImagePath);
+			logger.debug(
+				`POSSE: Using original image for ${platform}: ${originalImagePath}`,
+			);
+		} else {
+			logger.warn(`POSSE: Image too large for ${platform}, skipping`);
+			return null;
+		}
+
+		const mimeType = getMimeType(imagePath);
+
+		return {
+			path: imagePath,
+			size: imageBuffer.length,
+			mimeType,
+		};
+	} catch (error) {
+		logger.warn(`POSSE: Image processing failed: ${error}`);
+		return null;
+	}
+}
+
+/**
+ * Finds Astro-processed images in dist/_astro/
+ */
+function findProcessedImage(
+	originalPath: string,
+	preferSmaller: boolean = false,
+	logger?: Logger,
+): string | null {
+	try {
+		const filename = basename(originalPath, extname(originalPath));
+		const astroDir = join(process.cwd(), "dist", "_astro");
+
+		// Look for processed files that start with the original filename
+		const files = readdirSync(astroDir);
+		const processedFiles = files.filter(
+			(file) =>
+				file.startsWith(filename + ".") &&
+				(file.endsWith(".jpg") ||
+					file.endsWith(".jpeg") ||
+					file.endsWith(".png") ||
+					file.endsWith(".webp")),
+		);
+
+		if (processedFiles.length === 0) {
+			return null;
+		}
+
+		// Find best file using functional approach
+		const extensionPriority = { ".webp": 3, ".jpg": 2, ".jpeg": 2, ".png": 1 };
+
+		const bestFile = processedFiles.reduce(
+			(best: { file: string | null; size: number; priority: number }, file) => {
+				const filePath = join(astroDir, file);
+				const fileSize = statSync(filePath).size;
+				const fileExt = extname(file).toLowerCase();
+				const priority =
+					extensionPriority[fileExt as keyof typeof extensionPriority] || 0;
+
+				if (preferSmaller) {
+					// Find smallest file
+					return fileSize < best.size
+						? { file, size: fileSize, priority }
+						: best;
+				} else {
+					// Find highest priority (WebP > JPG > PNG), then smallest size
+					if (
+						priority > best.priority ||
+						(priority === best.priority && fileSize < best.size)
+					) {
+						return { file, size: fileSize, priority };
+					}
+					return best;
+				}
+			},
+			{
+				file: null as string | null,
+				size: preferSmaller ? Infinity : 0,
+				priority: preferSmaller ? 0 : -1,
+			},
+		);
+
+		return bestFile.file ? join(astroDir, bestFile.file) : null;
+	} catch (error) {
+		// Directory doesn't exist or can't be read - this is expected during first build
+		if (logger) {
+			logger.debug(
+				`POSSE: Could not find processed images for ${basename(originalPath)}: ${error}`,
+			);
+		}
+		return null;
+	}
+}
+
+/**
+ * Checks if an image meets platform size limits
+ */
+function checkImageSize(
+	imagePath: string,
+	platform: "mastodon" | "bluesky",
+	logger?: Logger,
+): boolean {
+	try {
+		const stats = statSync(imagePath);
+		const sizeMB = stats.size / (1024 * 1024);
+		const sizeKB = stats.size / 1024;
+
+		const limits = {
+			mastodon: 8, // 8MB (Mastodon allows up to 8MB)
+			bluesky: 0.8, // 800KB (Conservative limit well under Bluesky's 1MB = 1,000,000 bytes)
+		};
+
+		const withinLimit = sizeMB <= limits[platform];
+		if (logger) {
+			const limitBytes = Math.floor(limits[platform] * 1024 * 1024);
+			logger.debug(
+				`POSSE: Image size check - ${imagePath}: ${sizeMB.toFixed(2)}MB (${sizeKB.toFixed(1)}KB, ${stats.size} bytes), limit: ${limits[platform]}MB (${limitBytes} bytes), within limit: ${withinLimit}`,
+			);
+		}
+
+		return withinLimit;
+	} catch (error) {
+		if (logger) {
+			logger.warn(
+				`POSSE: Could not check image size for ${imagePath}: ${error}`,
+			);
+		}
+		return false;
+	}
+}
+
+/**
+ * Gets MIME type for a given filename
+ */
+function getMimeType(filename: string): string {
+	const ext = filename.toLowerCase().split(".").pop() || "";
+
+	switch (ext) {
+		case "jpg":
+		case "jpeg":
+			return "image/jpeg";
+		case "png":
+			return "image/png";
+		case "gif":
+			return "image/gif";
+		case "webp":
+			return "image/webp";
+		default:
+			return "image/jpeg"; // fallback
+	}
+}

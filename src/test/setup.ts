@@ -42,7 +42,7 @@ vi.mock("gray-matter", () => ({
 const mockCwd = "/mock/project/root";
 vi.spyOn(process, "cwd").mockReturnValue(mockCwd);
 
-import type { TestUtils, MockLogger } from "../types/posse";
+import type { TestUtils, MockLogger } from "../integrations/posse";
 
 // Global test utilities
 declare global {
@@ -66,7 +66,7 @@ global.testUtils = {
 			...((overrides.data as Record<string, unknown>) || {}),
 		},
 		body: "Test content",
-		image: overrides.image,
+		image: overrides.image as { src: string; alt: string } | undefined,
 	}),
 
 	createMockConfig: () => ({
