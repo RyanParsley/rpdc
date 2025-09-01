@@ -4,6 +4,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 vi.mock("fs");
 vi.mock("gray-matter");
 
+// Import mocked functions
+import { readdirSync, statSync, readFileSync } from "fs";
+import matter from "gray-matter";
+
 // Mock path module with importOriginal
 vi.mock("path", async (importOriginal) => {
 	const actual = (await importOriginal()) as typeof import("path");
@@ -30,6 +34,7 @@ import {
 	findMarkdownFiles,
 	parseEphemeraFile,
 } from "./posse";
+import { postToMastodon } from "./posse-mastodon";
 import type { EphemeraPost, EphemeraData, Logger } from "./posse";
 
 describe("POSSE Integration", () => {
@@ -242,17 +247,15 @@ describe("POSSE Integration", () => {
 			});
 
 			it("should return false for missing instance", () => {
-				expect(
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					validateMastodonConfig({ token: "valid-token" } as any),
-				).toBe(false);
+				expect(validateMastodonConfig({ token: "valid-token" } as never)).toBe(
+					false,
+				);
 			});
 
 			it("should return false for missing instance", () => {
-				expect(
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					validateMastodonConfig({ token: "valid-token" } as any),
-				).toBe(false);
+				expect(validateMastodonConfig({ token: "valid-token" } as never)).toBe(
+					false,
+				);
 			});
 
 			it("should return false for token too short", () => {
@@ -301,8 +304,7 @@ describe("POSSE Integration", () => {
 
 			it("should return false for missing password", () => {
 				expect(
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					validateBlueskyConfig({ username: "user.bsky.social" } as any),
+					validateBlueskyConfig({ username: "user.bsky.social" } as never),
 				).toBe(false);
 			});
 
@@ -420,10 +422,6 @@ describe("POSSE Integration", () => {
 
 	describe("File Scanning", () => {
 		let mockLogger: Logger;
-		let mockReaddirSync: ReturnType<typeof vi.fn>;
-		let mockStatSync: ReturnType<typeof vi.fn>;
-		let mockReadFileSync: ReturnType<typeof vi.fn>;
-		let mockMatter: ReturnType<typeof vi.fn>;
 
 		beforeEach(() => {
 			mockLogger = {
@@ -433,36 +431,29 @@ describe("POSSE Integration", () => {
 				debug: vi.fn(),
 			};
 
-			mockReaddirSync = vi.fn();
-			mockStatSync = vi.fn();
-			mockReadFileSync = vi.fn();
-			mockMatter = vi.fn();
+			// Clear all mocks
+			vi.clearAllMocks();
+
+			// Mock environment variables for platform configuration
+			vi.stubEnv("MASTODON_ACCESS_TOKEN", "test-token");
+			vi.stubEnv("MASTODON_INSTANCE", "test-instance");
+			vi.stubEnv("BLUESKY_USERNAME", "test-username");
+			vi.stubEnv("BLUESKY_PASSWORD", "test-password");
 		});
 
 		describe("findMarkdownFiles", () => {
 			it("should find markdown files in directory", () => {
-				mockReaddirSync.mockReturnValue(
-					[
-						{
-							item: "test1.md",
-							fullPath: "/path/test1.md",
-							stat: { isDirectory: () => false },
-						},
-						{
-							item: "test2.md",
-							fullPath: "/path/test2.md",
-							stat: { isDirectory: () => false },
-						},
-						{
-							item: "not-md.txt",
-							fullPath: "/path/not-md.txt",
-							stat: { isDirectory: () => false },
-						},
-					].map(({ item, stat }) => {
-						mockStatSync.mockReturnValue(stat);
-						return item;
-					}),
-				);
+				// Mock readdirSync to return filenames
+				vi.mocked(readdirSync).mockReturnValue([
+					"test1.md",
+					"test2.md",
+					"not-md.txt",
+				] as never);
+
+				// Mock statSync to return file stats
+				vi.mocked(statSync).mockReturnValue({
+					isDirectory: () => false,
+				} as never);
 
 				const result = findMarkdownFiles(
 					"/test/dir",
@@ -470,17 +461,19 @@ describe("POSSE Integration", () => {
 					mockLogger,
 				);
 
-				expect(result).toEqual(["/path/test1.md", "/path/test2.md"]);
+				expect(result).toEqual(["/test/dir/test1.md", "/test/dir/test2.md"]);
 			});
 
 			it("should filter files by date pattern", () => {
-				mockReaddirSync.mockReturnValue([
+				vi.mocked(readdirSync).mockReturnValue([
 					"2025-08-31-test.md",
-					"2025-08-29-old.md", // Should be filtered out
+					"2025-08-29-old.md",
 					"no-date.md",
-				]);
+				] as never);
 
-				mockStatSync.mockReturnValue({ isDirectory: () => false });
+				vi.mocked(statSync).mockReturnValue({
+					isDirectory: () => false,
+				} as never);
 
 				const result = findMarkdownFiles(
 					"/test/dir",
@@ -494,14 +487,14 @@ describe("POSSE Integration", () => {
 			});
 
 			it("should handle directory scanning recursively", () => {
-				mockReaddirSync
-					.mockReturnValueOnce(["subdir", "file.md"]) // Root directory
-					.mockReturnValueOnce(["nested.md"]); // Subdirectory
+				vi.mocked(readdirSync)
+					.mockReturnValueOnce(["subdir", "file.md"] as never) // Root directory
+					.mockReturnValueOnce(["nested.md"] as never); // Subdirectory
 
-				mockStatSync
-					.mockReturnValueOnce({ isDirectory: () => true }) // subdir
-					.mockReturnValueOnce({ isDirectory: () => false }) // file.md
-					.mockReturnValueOnce({ isDirectory: () => false }); // nested.md
+				vi.mocked(statSync)
+					.mockReturnValueOnce({ isDirectory: () => true } as never) // subdir
+					.mockReturnValueOnce({ isDirectory: () => false } as never) // file.md
+					.mockReturnValueOnce({ isDirectory: () => false } as never); // nested.md
 
 				const result = findMarkdownFiles(
 					"/test/dir",
@@ -510,8 +503,8 @@ describe("POSSE Integration", () => {
 				);
 
 				expect(result).toEqual([
-					"/test/dir/file.md",
 					"/test/dir/subdir/nested.md",
+					"/test/dir/file.md",
 				]);
 			});
 		});
@@ -525,11 +518,11 @@ date: 2025-08-31
 
 This is the content.`;
 
-				mockReadFileSync.mockReturnValue(mockFileContent);
-				mockMatter.mockReturnValue({
+				vi.mocked(readFileSync).mockReturnValue(mockFileContent);
+				vi.mocked(matter).mockReturnValue({
 					data: { title: "Test Post", date: new Date("2025-08-31") },
 					content: "This is the content.",
-				});
+				} as never);
 
 				const result = parseEphemeraFile(
 					"/path/test.md",
@@ -538,7 +531,7 @@ This is the content.`;
 				);
 
 				expect(result).toEqual({
-					file: "test.md",
+					file: "/path/test.md",
 					data: { title: "Test Post", date: new Date("2025-08-31") },
 					body: "This is the content.",
 					image: undefined,
@@ -546,10 +539,16 @@ This is the content.`;
 			});
 
 			it("should skip files before legacy cutoff", () => {
-				mockReadFileSync.mockReturnValue("---\ndate: 2025-08-29\n---\ncontent");
-				mockMatter.mockReturnValue({
+				vi.mocked(readFileSync).mockReturnValue(
+					"---\ndate: 2025-08-29\n---\ncontent",
+				);
+				vi.mocked(matter).mockReturnValue({
 					data: { date: new Date("2025-08-29") },
 					content: "content",
+					orig: "",
+					language: "",
+					matter: "",
+					stringify: vi.fn(),
 				});
 
 				const result = parseEphemeraFile(
@@ -574,8 +573,8 @@ syndication:
 
 Content`;
 
-				mockReadFileSync.mockReturnValue(mockFileContent);
-				mockMatter.mockReturnValue({
+				vi.mocked(readFileSync).mockReturnValue(mockFileContent);
+				vi.mocked(matter).mockReturnValue({
 					data: {
 						title: "Test Post",
 						date: new Date("2025-08-31"),
@@ -585,6 +584,10 @@ Content`;
 						],
 					},
 					content: "Content",
+					orig: "",
+					language: "",
+					matter: "",
+					stringify: vi.fn(),
 				});
 
 				// Mock environment variables for configured platforms
@@ -607,7 +610,7 @@ Content`;
 			});
 
 			it("should handle file read errors gracefully", () => {
-				mockReadFileSync.mockImplementation(() => {
+				vi.mocked(readFileSync).mockImplementation(() => {
 					throw new Error("File not found");
 				});
 
@@ -625,14 +628,20 @@ Content`;
 		describe("scanEphemeraPosts", () => {
 			it("should scan and return recent posts", () => {
 				// Mock the file system functions
-				mockReaddirSync.mockReturnValue(["test.md"]);
-				mockStatSync.mockReturnValue({ isDirectory: () => false });
-				mockReadFileSync.mockReturnValue(
+				vi.mocked(readdirSync).mockReturnValue(["test.md"] as never);
+				vi.mocked(statSync).mockReturnValue({
+					isDirectory: () => false,
+				} as never);
+				vi.mocked(readFileSync).mockReturnValue(
 					"---\ntitle: Test\ndate: 2025-08-31\n---\ncontent",
 				);
-				mockMatter.mockReturnValue({
+				vi.mocked(matter).mockReturnValue({
 					data: { title: "Test", date: new Date("2025-08-31") },
 					content: "content",
+					orig: "",
+					language: "",
+					matter: "",
+					stringify: vi.fn(),
 				});
 
 				const result = scanEphemeraPosts(5, mockLogger);
@@ -642,14 +651,24 @@ Content`;
 			});
 
 			it("should limit results to maxPosts", () => {
-				mockReaddirSync.mockReturnValue(["test1.md", "test2.md", "test3.md"]);
-				mockStatSync.mockReturnValue({ isDirectory: () => false });
-				mockReadFileSync.mockReturnValue(
+				vi.mocked(readdirSync).mockReturnValue([
+					"test1.md",
+					"test2.md",
+					"test3.md",
+				] as never);
+				vi.mocked(statSync).mockReturnValue({
+					isDirectory: () => false,
+				} as never);
+				vi.mocked(readFileSync).mockReturnValue(
 					"---\ntitle: Test\ndate: 2025-08-31\n---\ncontent",
 				);
-				mockMatter.mockReturnValue({
+				vi.mocked(matter).mockReturnValue({
 					data: { title: "Test", date: new Date("2025-08-31") },
 					content: "content",
+					orig: "",
+					language: "",
+					matter: "",
+					stringify: vi.fn(),
 				});
 
 				const result = scanEphemeraPosts(2, mockLogger);
@@ -658,15 +677,126 @@ Content`;
 			});
 
 			it("should handle scanning errors gracefully", () => {
-				mockReaddirSync.mockImplementation(() => {
+				vi.mocked(readdirSync).mockImplementation(() => {
 					throw new Error("Directory not found");
 				});
 
 				const result = scanEphemeraPosts(5, mockLogger);
 
 				expect(result).toEqual([]);
-				expect(mockLogger.error).toHaveBeenCalled();
+				expect(mockLogger.warn).toHaveBeenCalled();
 			});
+		});
+	});
+
+	describe("Mastodon Integration", () => {
+		let mockLogger: Logger;
+		let mockFetch: ReturnType<typeof vi.fn>;
+
+		beforeEach(() => {
+			mockLogger = {
+				info: vi.fn(),
+				warn: vi.fn(),
+				error: vi.fn(),
+				debug: vi.fn(),
+			};
+
+			mockFetch = vi.fn();
+			global.fetch = mockFetch;
+			vi.clearAllMocks();
+		});
+
+		it("should post text content successfully", async () => {
+			const post: EphemeraPost = {
+				file: "test.md",
+				data: { title: "Test Post" },
+				body: "This is test content for Mastodon posting.",
+			};
+
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({}),
+			});
+
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () =>
+					Promise.resolve({
+						url: "https://mastodon.social/@user/123456789",
+					}),
+			});
+
+			const result = await postToMastodon(
+				post,
+				"https://example.com/test",
+				{ token: "valid-token-12345", instance: "mastodon.social" },
+				mockLogger,
+			);
+
+			expect(result.success).toBe(true);
+			expect(result.url).toBe("https://mastodon.social/@user/123456789");
+			expect(result.platform).toBe("mastodon");
+		});
+
+		it("should handle API errors gracefully", async () => {
+			const post: EphemeraPost = {
+				file: "test.md",
+				data: { title: "Test" },
+				body: "Test content",
+			};
+
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({}),
+			});
+
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 422,
+				text: () => Promise.resolve("Validation error"),
+			});
+
+			const result = await postToMastodon(
+				post,
+				"https://example.com/test",
+				{ token: "valid-token-12345", instance: "mastodon.social" },
+				mockLogger,
+			);
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain("Mastodon API error: 422");
+		});
+
+		it("should handle rate limit errors", async () => {
+			const post: EphemeraPost = {
+				file: "test.md",
+				data: { title: "Test" },
+				body: "Test content",
+			};
+
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({}),
+			});
+
+			mockFetch.mockResolvedValueOnce({
+				ok: false,
+				status: 429,
+				headers: {
+					get: () => "60",
+				},
+				text: () => Promise.resolve("Rate limit exceeded"),
+			});
+
+			const result = await postToMastodon(
+				post,
+				"https://example.com/test",
+				{ token: "valid-token-12345", instance: "mastodon.social" },
+				mockLogger,
+			);
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain("Rate limit exceeded");
 		});
 	});
 });

@@ -2,6 +2,7 @@ import { beforeAll, afterEach, afterAll } from "vitest";
 import { setupServer } from "msw/node";
 import { mastodonHandlers } from "./mocks/mastodon";
 import { blueskyHandlers } from "./mocks/bluesky";
+import "@testing-library/jest-dom";
 
 // Setup MSW server for API mocking
 export const server = setupServer(...mastodonHandlers, ...blueskyHandlers);
