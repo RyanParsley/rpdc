@@ -229,22 +229,48 @@ async function runSyndication({
 		logger.info(
 			`POSSE: ===== PROCESSING POST: ${post.data.title || post.file} =====`,
 		);
+		const existingSyndication = post.data.syndication || [];
+		const mastodonConfigured = !!mastodon;
+		const blueskyConfigured = !!bluesky;
+
+		// Check which platforms are already syndicated
+		const hasMastodon = existingSyndication.some((s) => s.title === "Mastodon");
+		const hasBluesky = existingSyndication.some((s) => s.title === "Bluesky");
+
 		logger.info(
-			`POSSE: Post has syndication: ${!!post.data.syndication && post.data.syndication.length > 0}`,
+			`POSSE: Post syndication status: ${existingSyndication.length} platforms (${hasMastodon ? "Mastodon" : ""} ${hasBluesky ? "Bluesky" : ""})`,
 		);
 
-		if (!post.data.syndication || post.data.syndication.length === 0) {
-			if (dryRun) {
-				logger.info(
-					`POSSE: DRY RUN - Would syndicate: ${post.data.title || post.file}`,
-				);
-			} else {
-				logger.info(`POSSE: Syndicating: ${post.data.title || post.file}`);
-				await syndicateSinglePost(post, { mastodon, bluesky }, logger);
-			}
+		// Determine if we need to syndicate to any platforms
+		const needsMastodon = mastodonConfigured && !hasMastodon;
+		const needsBluesky = blueskyConfigured && !hasBluesky;
+
+		if (!needsMastodon && !needsBluesky) {
+			logger.info(
+				`POSSE: Skipping fully syndicated: ${post.data.title || post.file}`,
+			);
+			return;
+		}
+
+		const platformsToSyndicate = [];
+		if (needsMastodon) platformsToSyndicate.push("Mastodon");
+		if (needsBluesky) platformsToSyndicate.push("Bluesky");
+
+		if (dryRun) {
+			logger.info(
+				`POSSE: DRY RUN - Would syndicate ${post.data.title || post.file} to: ${platformsToSyndicate.join(", ")}`,
+			);
 		} else {
 			logger.info(
-				`POSSE: Skipping already syndicated: ${post.data.title || post.file}`,
+				`POSSE: Syndicating ${post.data.title || post.file} to: ${platformsToSyndicate.join(", ")}`,
+			);
+			await syndicateSinglePost(
+				post,
+				{
+					mastodon: needsMastodon ? mastodon : undefined,
+					bluesky: needsBluesky ? bluesky : undefined,
+				},
+				logger,
 			);
 		}
 
@@ -324,11 +350,33 @@ async function getRecentEphemeraPosts(
 						return null;
 					}
 
-					// Check if already syndicated
-					const hasSyndication = data.syndication?.length > 0;
-					if (hasSyndication) {
-						logger.info(`POSSE: Skipping ${relativePath} - already syndicated`);
+					// Check if already syndicated to ALL configured platforms
+					const existingSyndication = data.syndication || [];
+					const mastodonConfigured =
+						!!process.env.MASTODON_ACCESS_TOKEN &&
+						!!process.env.MASTODON_INSTANCE;
+					const blueskyConfigured =
+						!!process.env.BLUESKY_USERNAME && !!process.env.BLUESKY_PASSWORD;
+
+					// Count configured platforms
+					const configuredPlatforms = [
+						mastodonConfigured && "mastodon",
+						blueskyConfigured && "bluesky",
+					].filter(Boolean);
+					const configuredCount = configuredPlatforms.length;
+
+					// Count successful syndications
+					const successfulSyndications = existingSyndication.length;
+
+					if (successfulSyndications >= configuredCount) {
+						logger.info(
+							`POSSE: Skipping ${relativePath} - fully syndicated (${successfulSyndications}/${configuredCount} platforms)`,
+						);
 						return null;
+					} else if (successfulSyndications > 0) {
+						logger.info(
+							`POSSE: Will retry ${relativePath} - partially syndicated (${successfulSyndications}/${configuredCount} platforms)`,
+						);
 					}
 
 					logger.info(`POSSE: Will process ${relativePath}`);
