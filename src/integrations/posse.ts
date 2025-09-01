@@ -1,7 +1,6 @@
 import type { AstroIntegration } from "astro";
 import { readFileSync, writeFileSync, statSync, readdirSync } from "fs";
 import { join, extname, basename } from "path";
-import { execSync } from "child_process";
 import matter from "gray-matter";
 
 // Types
@@ -912,54 +911,11 @@ async function updatePostWithSyndication(
 		logger.info(`POSSE: File path: ${sourcePath}`);
 		logger.info(`POSSE: Syndication URLs: ${JSON.stringify(syndicationUrls)}`);
 
-		// Immediately commit and push the changes
-		try {
-			logger.info(`POSSE: Committing changes for ${post.file}...`);
-
-			// Configure git if needed
-			try {
-				execSync('git config user.name "CloudCannon POSSE"', { stdio: "pipe" });
-				execSync('git config user.email "posse@cloudcannon.com"', {
-					stdio: "pipe",
-				});
-			} catch (configError) {
-				logger.warn(`POSSE: Git config may already be set: ${configError}`);
-			}
-
-			// Add the specific file
-			execSync(`git add "${sourcePath}"`, { stdio: "pipe" });
-			logger.info(`POSSE: Added ${sourcePath} to git staging`);
-
-			// Check if there are changes to commit
-			const statusOutput = execSync("git status --porcelain", {
-				encoding: "utf8",
-				stdio: "pipe",
-			});
-			if (statusOutput.trim()) {
-				// Commit the changes
-				const commitMessage = `POSSE: Update syndication links for ${post.file}`;
-				execSync(`git commit -m "${commitMessage}"`, { stdio: "pipe" });
-				logger.info(`POSSE: Committed changes: ${commitMessage}`);
-
-				// Try to push to remote
-				try {
-					execSync("git push origin main", { stdio: "pipe" });
-					logger.info(`POSSE: Successfully pushed to origin/main`);
-				} catch {
-					try {
-						execSync("git push origin master", { stdio: "pipe" });
-						logger.info(`POSSE: Successfully pushed to origin/master`);
-					} catch (pushError) {
-						logger.warn(`POSSE: Failed to push to remote: ${pushError}`);
-					}
-				}
-			} else {
-				logger.info(`POSSE: No changes to commit for ${post.file}`);
-			}
-		} catch (gitError) {
-			logger.error(`POSSE: Git operation failed for ${post.file}: ${gitError}`);
-			// Don't fail the build if git operations fail
-		}
+		// File has been updated with syndication links
+		// Git operations will be handled by CloudCannon SYNC_PATHS
+		logger.info(
+			`POSSE: File updated successfully - SYNC_PATHS will commit changes`,
+		);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error(`POSSE: Failed to update post ${post.file}: ${errorMessage}`);
