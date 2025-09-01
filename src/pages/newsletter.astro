@@ -1,0 +1,136 @@
+---
+import Layout from "@layouts/Page.astro";
+import NewsletterSignup from "@components/NewsletterSignup.astro";
+---
+
+<Layout
+	title="Newsletter"
+	description="Subscribe to my newsletter for the latest posts, updates, and occasional thoughts."
+>
+	<section class="newsletter-intro">
+		<h1>Newsletter</h1>
+		<p>
+			I write about web development, technology, and occasional life updates.
+			Subscribe to get notified when I publish new content, and you'll also get
+			access to exclusive content and early access to new posts.
+		</p>
+
+		<div class="newsletter-benefits">
+			<h2>What you'll get</h2>
+			<ul>
+				<li>✨ New blog posts and articles</li>
+				<li>📝 Weekly notes and quick thoughts</li>
+				<li>🎯 Exclusive content and insights</li>
+				<li>🚀 Early access to new projects</li>
+				<li>📧 Occasional updates (not daily spam)</li>
+			</ul>
+		</div>
+	</section>
+
+	<NewsletterSignup
+		title="Ready to subscribe?"
+		description="Join other readers who get notified about new content."
+		buttonText="Subscribe Now"
+	/>
+
+	<section class="newsletter-info">
+		<h2>Privacy & Unsubscribe</h2>
+		<p>
+			Your email address will only be used to send you newsletter updates. You
+			can unsubscribe at any time using the link in any newsletter email, and
+			your data will be immediately removed from our system.
+		</p>
+
+		<h2>Previous Newsletters</h2>
+		<p>
+			While I don't have a traditional newsletter archive yet, you can find all
+			my content on the <a href="/blog">blog page</a> and <a href="/note"
+				>notes page</a
+			>. Once you subscribe, you'll get notified about new content as it's
+			published.
+		</p>
+	</section>
+</Layout>
+
+<style lang="scss">
+	.newsletter-intro {
+		margin-bottom: 3rem;
+
+		h1 {
+			font-size: 2.5rem;
+			margin-bottom: 1rem;
+			color: var(--nord6);
+		}
+
+		p {
+			font-size: 1.1rem;
+			line-height: 1.6;
+			color: var(--nord4);
+			margin-bottom: 2rem;
+		}
+	}
+
+	.newsletter-benefits {
+		background-color: var(--nord1);
+		padding: 2rem;
+		border-radius: 8px;
+		border: 1px solid var(--nord3);
+
+		h2 {
+			margin: 0 0 1rem 0;
+			font-size: 1.5rem;
+			color: var(--nord6);
+		}
+
+		ul {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+
+			li {
+				padding: 0.5rem 0;
+				color: var(--nord4);
+				font-size: 1rem;
+			}
+		}
+	}
+
+	.newsletter-info {
+		margin-top: 3rem;
+		padding-top: 3rem;
+		border-top: 1px solid var(--nord3);
+
+		h2 {
+			font-size: 1.5rem;
+			margin: 2rem 0 1rem 0;
+			color: var(--nord6);
+		}
+
+		p {
+			color: var(--nord4);
+			line-height: 1.6;
+			margin-bottom: 1.5rem;
+
+			a {
+				color: var(--nord8);
+				text-decoration: none;
+
+				&:hover {
+					text-decoration: underline;
+				}
+			}
+		}
+	}
+
+	@media (max-width: 768px) {
+		.newsletter-intro {
+			h1 {
+				font-size: 2rem;
+			}
+		}
+
+		.newsletter-benefits {
+			padding: 1.5rem;
+		}
+	}
+</style>

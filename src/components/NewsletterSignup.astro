@@ -1,0 +1,311 @@
+---
+interface Props {
+	readonly title?: string;
+	readonly description?: string;
+	readonly buttonText?: string;
+	readonly className?: string;
+}
+
+const {
+	title = "Subscribe to my newsletter",
+	description = "Get notified when I publish new posts and updates.",
+	buttonText = "Subscribe",
+	className = "",
+} = Astro.props;
+
+// Pure function to generate unique IDs for accessibility
+const generateIds = (baseId: string) =>
+	({
+		formId: `${baseId}-form`,
+		emailId: `${baseId}-email`,
+		messageId: `${baseId}-message`,
+	}) as const;
+
+const ids = generateIds("newsletter");
+---
+
+<div class={`newsletter-signup ${className}`}>
+	<h3>{title}</h3>
+	<p>{description}</p>
+
+	<form id={ids.formId} class="newsletter-form">
+		<div class="form-group">
+			<label for={ids.emailId} class="sr-only">Email address</label>
+			<input
+				type="email"
+				id={ids.emailId}
+				name="email"
+				placeholder="Enter your email address"
+				required
+				autocomplete="email"
+				aria-describedby={ids.messageId}
+			/>
+		</div>
+
+		<button type="submit" class="subscribe-button" disabled>
+			{buttonText}
+		</button>
+	</form>
+
+	<div
+		id={ids.messageId}
+		class="form-message"
+		style="display: none;"
+		role="alert"
+		aria-live="polite"
+	>
+	</div>
+</div>
+
+<script define:vars={{ ids }}>
+	// Pure functions for better functional programming
+	const createEmailRegex = () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+	const validateEmailFormat = (email) => {
+		return createEmailRegex().test(email);
+	};
+
+	const createFormData = (email, referrer) => ({
+		email_address: email,
+		referrer_url: referrer,
+	});
+
+	const showMessage =
+		(messageId) =>
+		(message, isError = false) => {
+			const messageEl = document.getElementById(messageId);
+			if (!messageEl) return;
+
+			messageEl.textContent = message;
+			messageEl.className = `form-message ${isError ? "error" : "success"}`;
+			messageEl.style.display = "block";
+
+			// Auto-hide success messages after 5 seconds
+			if (!isError) {
+				setTimeout(() => {
+					messageEl.style.display = "none";
+				}, 5000);
+			}
+		};
+
+	const setLoading = (formId, emailId) => (loading) => {
+		const form = document.getElementById(formId);
+		const button = document.querySelector(".subscribe-button");
+		const input = document.getElementById(emailId);
+
+		if (!form || !button || !input) return;
+
+		button.disabled = loading;
+		button.textContent = loading ? "Subscribing..." : "Subscribe";
+		input.disabled = loading;
+		form.style.opacity = loading ? "0.7" : "1";
+	};
+
+	const handleSubmit = (formId, messageId) => async (event) => {
+		event.preventDefault();
+
+		const form = event.target;
+		const emailInput = form.querySelector(`#${ids.emailId}`);
+		const email = emailInput.value.trim();
+
+		const displayMessage = showMessage(messageId);
+		const setFormLoading = setLoading(formId, ids.emailId);
+
+		if (!email) {
+			displayMessage("Please enter your email address.", true);
+			return;
+		}
+
+		if (!validateEmailFormat(email)) {
+			displayMessage("Please enter a valid email address.", true);
+			return;
+		}
+
+		setFormLoading(true);
+
+		try {
+			const response = await fetch("/api/newsletter/subscribe", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(createFormData(email, window.location.href)),
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.error || "Failed to subscribe");
+			}
+
+			displayMessage(
+				"Successfully subscribed! Check your email for confirmation.",
+			);
+			form.reset();
+
+			// Redirect to confirmation page after a short delay
+			setTimeout(() => {
+				window.location.href = "/newsletter/confirm?status=success";
+			}, 2000);
+		} catch (error) {
+			console.error("Newsletter signup error:", error);
+			const errorMessage =
+				error instanceof Error
+					? error.message
+					: "Failed to subscribe. Please try again.";
+			displayMessage(errorMessage, true);
+		} finally {
+			setFormLoading(false);
+		}
+	};
+
+	const validateEmailInput = (emailId) => () => {
+		const emailInput = document.getElementById(emailId);
+		const button = document.querySelector(".subscribe-button");
+
+		if (!emailInput || !button) return;
+
+		const email = emailInput.value.trim();
+		button.disabled = !email || !validateEmailFormat(email);
+	};
+
+	// Initialize form handling with functional composition
+	document.addEventListener("DOMContentLoaded", () => {
+		const form = document.getElementById(ids.formId);
+		const emailInput = document.getElementById(ids.emailId);
+
+		if (form) {
+			form.addEventListener("submit", handleSubmit(ids.formId, ids.messageId));
+		}
+
+		if (emailInput) {
+			const validate = validateEmailInput(ids.emailId);
+			emailInput.addEventListener("input", validate);
+			emailInput.addEventListener("blur", validate);
+		}
+	});
+</script>
+
+<style lang="scss">
+	.newsletter-signup {
+		margin: 2rem 0;
+		padding: 1.5rem;
+		border: 1px solid var(--nord4);
+		border-radius: 8px;
+		background-color: var(--nord0);
+
+		h3 {
+			margin: 0 0 0.5rem 0;
+			font-size: 1.25rem;
+			font-weight: 600;
+			color: var(--nord6);
+		}
+
+		p {
+			margin: 0 0 1rem 0;
+			color: var(--nord4);
+			font-size: 0.9rem;
+			line-height: 1.4;
+		}
+	}
+
+	.newsletter-form {
+		display: flex;
+		gap: 0.75rem;
+		align-items: flex-start;
+
+		@media (max-width: 600px) {
+			flex-direction: column;
+			align-items: stretch;
+		}
+	}
+
+	.form-group {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	input[type="email"] {
+		width: 100%;
+		padding: 0.75rem;
+		border: 1px solid var(--nord3);
+		border-radius: 4px;
+		font-size: 1rem;
+		background-color: var(--nord1);
+		color: var(--nord6);
+		transition: border-color 0.2s ease;
+
+		&:focus {
+			outline: none;
+			border-color: var(--nord8);
+			box-shadow: 0 0 0 2px rgba(136, 192, 208, 0.2);
+		}
+
+		&:disabled {
+			background-color: var(--nord2);
+			cursor: not-allowed;
+		}
+	}
+
+	.subscribe-button {
+		padding: 0.75rem 1.5rem;
+		background-color: var(--nord8);
+		color: var(--nord0);
+		border: none;
+		border-radius: 4px;
+		font-size: 1rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background-color 0.2s ease;
+		white-space: nowrap;
+
+		&:hover:not(:disabled) {
+			background-color: var(--nord9);
+		}
+
+		&:active:not(:disabled) {
+			background-color: var(--nord10);
+		}
+
+		&:disabled {
+			background-color: var(--nord4);
+			cursor: not-allowed;
+		}
+
+		@media (max-width: 600px) {
+			width: 100%;
+		}
+	}
+
+	.form-message {
+		margin-top: 1rem;
+		padding: 0.75rem;
+		border-radius: 4px;
+		font-size: 0.9rem;
+		font-weight: 500;
+
+		&.success {
+			background-color: rgba(163, 190, 140, 0.1);
+			border: 1px solid rgba(163, 190, 140, 0.3);
+			color: var(--nord14);
+		}
+
+		&.error {
+			background-color: rgba(191, 97, 106, 0.1);
+			border: 1px solid rgba(191, 97, 106, 0.3);
+			color: var(--nord11);
+		}
+	}
+</style>

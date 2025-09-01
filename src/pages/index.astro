@@ -3,6 +3,7 @@ import { getCollection } from "astro:content";
 import PostLink from "@components/PostLink.astro";
 import Layout from "@layouts/Page.astro";
 import Bio from "@components/Bio.astro";
+import NewsletterSignup from "@components/NewsletterSignup.astro";
 
 const posts = (await getCollection("blog"))
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
@@ -11,6 +12,7 @@ const posts = (await getCollection("blog"))
 
 <Layout title="Welcome!">
 	<Bio />
+
 	<section>
 		<h2>Recent Posts</h2>
 		<ul>
@@ -28,6 +30,11 @@ const posts = (await getCollection("blog"))
 			}
 		</ul>
 	</section>
+
+	<NewsletterSignup
+		title="Stay Updated"
+		description="Get notified when I publish new posts and share my latest thoughts."
+	/>
 </Layout>
 <style lang="scss">
 	ul {
