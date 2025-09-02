@@ -29,18 +29,16 @@ const ids = generateIds("newsletter");
 	<p>{description}</p>
 
 	<form id={ids.formId} class="newsletter-form">
-		<div class="form-group">
-			<label for={ids.emailId} class="sr-only">Email address</label>
-			<input
-				type="email"
-				id={ids.emailId}
-				name="email"
-				placeholder="Enter your email address"
-				required
-				autocomplete="email"
-				aria-describedby={ids.messageId}
-			/>
-		</div>
+		<label for={ids.emailId} class="sr-only">Email address</label>
+		<input
+			type="email"
+			id={ids.emailId}
+			name="email"
+			placeholder="Enter your email address"
+			required
+			autocomplete="email"
+			aria-describedby={ids.messageId}
+		/>
 
 		<button type="submit" class="subscribe-button" disabled>
 			{buttonText}
@@ -189,23 +187,14 @@ const ids = generateIds("newsletter");
 <style lang="scss">
 	.newsletter-signup {
 		margin: 2rem 0;
-		padding: 1.5rem;
+		padding: 0 1.5rem 0.5rem;
 		border: 1px solid var(--nord4);
 		border-radius: 8px;
-		background-color: var(--nord0);
 
-		h3 {
-			margin: 0 0 0.5rem 0;
-			font-size: 1.25rem;
-			font-weight: 600;
-			color: var(--nord6);
-		}
-
-		p {
-			margin: 0 0 1rem 0;
-			color: var(--nord4);
-			font-size: 0.9rem;
-			line-height: 1.4;
+		:global(aside) & {
+			padding: 0;
+			border: none;
+			margin: 0;
 		}
 	}
 
@@ -218,58 +207,14 @@ const ids = generateIds("newsletter");
 			flex-direction: column;
 			align-items: stretch;
 		}
-	}
 
-	/* Stack vertically in narrow containers (like sidebars) */
-	@media (max-width: 400px) {
-		.newsletter-form {
+		:global(aside) & {
 			flex-direction: column;
 			align-items: stretch;
+			gap: 0.5rem;
+			margin: 0;
+			padding: 0;
 		}
-
-		.subscribe-button {
-			width: 100%;
-		}
-	}
-
-	/* Additional narrow container support */
-	:global(.has-aside) .newsletter-signup .newsletter-form {
-		flex-direction: column;
-		align-items: stretch;
-		gap: 0.5rem;
-	}
-
-	:global(.has-aside) .newsletter-signup .subscribe-button {
-		width: 100%;
-		background-color: var(--nord10) !important;
-		border-color: var(--nord10) !important;
-		color: var(--nord6) !important;
-	}
-
-	/* Remove padding and border for aside layout */
-	:global(.has-aside) .newsletter-signup {
-		padding: 0;
-		border: none;
-		margin: 0;
-		background: transparent;
-	}
-
-	:global(.has-aside) .newsletter-signup .newsletter-form {
-		margin: 0;
-		padding: 0;
-		gap: 0.75rem;
-	}
-
-	:global(.has-aside) .newsletter-signup input[type="email"] {
-		margin-bottom: 0;
-		padding: 0.75rem;
-		box-sizing: border-box;
-		width: 100%;
-	}
-
-	.form-group {
-		flex: 1;
-		min-width: 0;
 	}
 
 	.sr-only {
@@ -286,13 +231,15 @@ const ids = generateIds("newsletter");
 
 	input[type="email"] {
 		width: 100%;
-		padding: 0.75rem;
+		padding: 0.5rem;
+		box-sizing: border-box;
 		border: 1px solid var(--nord3);
 		border-radius: 4px;
 		font-size: 1rem;
 		background-color: var(--nord1);
 		color: var(--nord6);
 		transition: border-color 0.2s ease;
+		flex: 1;
 
 		&:focus {
 			outline: none;
@@ -321,6 +268,10 @@ const ids = generateIds("newsletter");
 			color 0.2s ease;
 		white-space: nowrap;
 
+		:global(aside) & {
+			width: 100%;
+		}
+
 		&:hover:not(:disabled) {
 			cursor: pointer;
 			background-color: var(--nord9);
@@ -332,7 +283,7 @@ const ids = generateIds("newsletter");
 		}
 
 		&:disabled {
-			background-color: var(--nord4);
+			background-color: var(--nord3);
 			cursor: not-allowed;
 		}
 
