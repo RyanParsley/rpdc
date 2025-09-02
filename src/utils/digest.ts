@@ -142,25 +142,7 @@ export function formatDigestAsHtml(digest: WeeklyDigest): string {
 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #2e3440; color: #eceff4; padding: 20px;">
   <div style="background: #3b4252; padding: 30px; border-radius: 8px; text-align: center; margin-bottom: 30px;">
     <h1 style="color: #88c0d0; margin: 0 0 10px 0; font-size: 24px;">📝 Weekly Digest</h1>
-    <p style="color: #d8dee9; margin: 0;"><strong>${weekRange}</strong></p>
-    <div style="display: flex; justify-content: space-around; margin: 20px 0; flex-wrap: wrap;">
-      <div style="text-align: center; flex: 1; min-width: 80px;">
-        <div style="font-size: 32px; font-weight: bold; color: #88c0d0;">${digest.totalItems}</div>
-        <div style="color: #d8dee9; font-size: 14px;">Total Items</div>
-      </div>
-      <div style="text-align: center; flex: 1; min-width: 80px;">
-        <div style="font-size: 32px; font-weight: bold; color: #88c0d0;">${digest.blogCount}</div>
-        <div style="color: #d8dee9; font-size: 14px;">Blog Posts</div>
-      </div>
-      <div style="text-align: center; flex: 1; min-width: 80px;">
-        <div style="font-size: 32px; font-weight: bold; color: #88c0d0;">${digest.noteCount}</div>
-        <div style="color: #d8dee9; font-size: 14px;">Notes</div>
-      </div>
-      <div style="text-align: center; flex: 1; min-width: 80px;">
-        <div style="font-size: 32px; font-weight: bold; color: #88c0d0;">${digest.ephemeraCount}</div>
-        <div style="color: #d8dee9; font-size: 14px;">Ephemera</div>
-      </div>
-    </div>
+     <p style="color: #d8dee9; margin: 0;"><strong>${weekRange}</strong></p>
   </div>
 	`;
 
@@ -255,13 +237,6 @@ export function formatDigestAsText(digest: WeeklyDigest): string {
 	let text = `📝 WEEKLY DIGEST\n`;
 	text += `================\n\n`;
 	text += `${weekRange}\n\n`;
-
-	text += `📊 SUMMARY\n`;
-	text += `----------\n`;
-	text += `Total Items: ${digest.totalItems}\n`;
-	text += `Blog Posts: ${digest.blogCount}\n`;
-	text += `Notes: ${digest.noteCount}\n`;
-	text += `Ephemera: ${digest.ephemeraCount}\n\n`;
 
 	text += `═══════════════════════════════════════════════\n\n`;
 
