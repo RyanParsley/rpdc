@@ -224,9 +224,9 @@ collections_config:
         path: schemas/paginated-collection.md
         reorder_inputs: true
         hide_extra_inputs: false
-         remove_empty_inputs: false
-         remove_extra_inputs: true
-         icon: notes
+        remove_empty_inputs: false
+        remove_extra_inputs: true
+        icon: notes
 collection_groups:
   - heading: Content
     collections:
