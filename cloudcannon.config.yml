@@ -1,11 +1,9 @@
 _schema: _schema
-# Include .git folder for POSSE integration git operations
-include_git_folder: true
 paths:
   uploads: uploads
-  static: ""
-  collections: ""
-  data: ""
+  static: ''
+  collections: ''
+  data: ''
   layouts:
 collections_config:
   notes:
@@ -133,6 +131,7 @@ collections_config:
         path: schemas/post.md
         reorder_inputs: true
         hide_extra_inputs: false
+        remove_empty_inputs: false
         remove_extra_inputs: true
         name: New Post
         icon: notes
@@ -239,4 +238,6 @@ collection_groups:
   - heading: Drafts
     collections:
       - drafts
+base_url: https://ryanparsley.com
 timezone: America/New_York
+include_git_folder: true
