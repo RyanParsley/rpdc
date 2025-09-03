@@ -1,29 +1,29 @@
 _schema: _schema
 paths:
   uploads: uploads
-  static: ""
-  collections: ""
-  data: ""
+  static: ''
+  collections: ''
+  data: ''
   layouts:
 collections_config:
   notes:
     path: src/content/note
-    icon: notes
     glob:
-      - "!**/index.md"
-      - "!**/_index.md"
-    sort:
-      key: updatedDate
-      order: desc
+      - '!**/index.md'
+      - '!**/_index.md'
+    icon: notes
+    output: true
+    url: /note/[slug]
     preview:
       text:
         - key: title
       subtext:
-        - "Updated: "
+        - 'Updated: '
         - key: updatedDate
         - key: tags
-    output: true
-    url: /note/[slug]
+    sort:
+      key: updatedDate
+      order: desc
     _inputs:
       title:
         type: auto
@@ -64,24 +64,24 @@ collections_config:
         icon: notes
   posts:
     path: src/content/blog
-    icon: notes
     glob:
-      - "!**/index.md"
-      - "!**/_index.md"
-    sort:
-      key: pubDate
-      order: desc
+      - '!**/index.md'
+      - '!**/_index.md'
+    icon: notes
+    output: true
+    url: /blog/[slug]
     preview:
       text:
         - key: title
         - key: description
-      image: thumb_image.image
       subtext:
-        - "Published: "
+        - 'Published: '
         - key: pubDate
         - key: tags
-    output: true
-    url: /blog/[slug]
+      image: thumb_image.image
+    sort:
+      key: pubDate
+      order: desc
     _inputs:
       title:
         type: auto
@@ -165,10 +165,10 @@ collections_config:
         icon: notes
   ephemera:
     path: src/content/ephemera
-    icon: notes
     glob:
-      - "!**/index.md"
-      - "!**/_index.md"
+      - '!**/index.md'
+      - '!**/_index.md'
+    icon: notes
     output: true
     url: /ephemera/[slug]
     _inputs:
@@ -221,11 +221,11 @@ collections_config:
         icon: notes
   pages:
     path: src/pages
-    icon: wysiwyg
     glob:
-      - "!index.astro"
-      - "!**/rss.xml.js"
-      - "!**/[...*].astro"
+      - '!index.astro'
+      - '!**/rss.xml.js'
+      - '!**/[...*].astro'
+    icon: wysiwyg
     output: true
     url: /[slug]
     filter:
@@ -273,27 +273,19 @@ collection_groups:
   - heading: Drafts
     collections:
       - drafts
-base_url: https://ryanparsley.com
-data_config:
-  navigation:
-    path: data/navigation.yml
-build:
-  cache:
-    - node_modules
-    - .astro
-  command: "npm run build"
 _inputs:
   author:
     type: select
-    label: Author
     options:
+      allow_empty: true
       values:
-        - "Ryan Parsley"
+        - Ryan Parsley
+    label: Author
+    cascade: true
   tags:
     type: multiselect
-    label: Tags
-    allow_create: true
     options:
+      empty_type: array
       values:
         - posse
         - indieWeb
@@ -308,18 +300,33 @@ _inputs:
         - digitalGarden
         - 3DPrint
         - diy
+    label: Tags
+    cascade: true
+    allow_create: true
   categories:
     type: multiselect
-    label: Categories
-    allow_create: true
     options:
+      empty_type: array
       values:
         - code
         - music
         - writing
+    label: Categories
+    cascade: true
+    allow_create: true
   updatedDate:
     type: datetime
     label: Last Updated
-    default: "[date]"
+    cascade: true
+    default: '[date]'
+base_url: /
+data_config:
+  navigation:
+    path: data/navigation.yml
 timezone: America/New_York
+build:
+  cache:
+    - node_modules
+    - .astro
+  command: npm run build
 include_git_folder: true
