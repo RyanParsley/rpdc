@@ -261,7 +261,7 @@ describe("Webmentions Component", () => {
 	describe("Error Handling", () => {
 		it("should handle API failures gracefully", async () => {
 			const mockFetch = vi.fn(() => Promise.reject(new Error("API Error")));
-			(global.fetch as any) = mockFetch;
+			(global.fetch as typeof fetch) = mockFetch;
 
 			try {
 				await fetch(
