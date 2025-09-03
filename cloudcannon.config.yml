@@ -190,7 +190,7 @@ collections_config:
         name: New Ephemera
         icon: notes
   pages:
-    path: src/content/page
+    path: src/pages
     icon: wysiwyg
     output: true
     url: /[slug]
@@ -226,5 +226,17 @@ collections_config:
         hide_extra_inputs: false
         remove_empty_inputs: false
         remove_extra_inputs: true
-        icon: notes
+         icon: notes
+collection_groups:
+  - heading: Content
+    collections:
+      - posts
+      - notes
+      - ephemera
+  - heading: Pages
+    collections:
+      - pages
+  - heading: Drafts
+    collections:
+      - drafts
 timezone: America/New_York
