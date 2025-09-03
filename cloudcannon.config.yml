@@ -1,16 +1,16 @@
 _schema: _schema
 paths:
   uploads: uploads
-  static: ''
-  collections: ''
-  data: ''
+  static: ""
+  collections: ""
+  data: ""
   layouts:
 collections_config:
   notes:
     path: src/content/note
     glob:
-      - '!**/index.md'
-      - '!**/_index.md'
+      - "!**/index.md"
+      - "!**/_index.md"
     icon: notes
     output: true
     url: /note/[slug]
@@ -18,7 +18,7 @@ collections_config:
       text:
         - key: title
       subtext:
-        - 'Updated: '
+        - "Updated: "
         - key: updatedDate
         - key: tags
     sort:
@@ -38,9 +38,66 @@ collections_config:
         cascade: true
         empty_type: string
       author:
-        type: auto
+        type: string
+        label: Author
         cascade: true
         empty_type: string
+      thumb_image:
+        type: object
+        label: Thumbnail Image
+        cascade: true
+        empty_type: object
+        properties:
+          image:
+            type: file
+            label: Image File
+          image_alt:
+            type: string
+            label: Alt Text
+      featured_image:
+        type: object
+        label: Featured Image
+        cascade: true
+        empty_type: object
+        properties:
+          image:
+            type: file
+            label: Image File
+          image_alt:
+            type: string
+            label: Alt Text
+      seo:
+        type: object
+        label: SEO Settings
+        cascade: true
+        empty_type: object
+        properties:
+          page_description:
+            type: text
+            label: Page Description
+          canonical_url:
+            type: url
+            label: Canonical URL
+          featured_image:
+            type: file
+            label: Featured Image
+          featured_image_alt:
+            type: string
+            label: Featured Image Alt
+          author_twitter_handle:
+            type: string
+            label: Twitter Handle
+          open_graph_type:
+            type: select
+            label: Open Graph Type
+            options:
+              values:
+                - article
+                - website
+                - profile
+          no_index:
+            type: boolean
+            label: No Index
       tags:
         type: multiselect
         cascade: true
@@ -65,8 +122,8 @@ collections_config:
   posts:
     path: src/content/blog
     glob:
-      - '!**/index.md'
-      - '!**/_index.md'
+      - "!**/index.md"
+      - "!**/_index.md"
     icon: notes
     output: true
     url: /blog/[slug]
@@ -75,7 +132,7 @@ collections_config:
         - key: title
         - key: description
       subtext:
-        - 'Published: '
+        - "Published: "
         - key: pubDate
         - key: tags
       image: thumb_image.image
@@ -96,9 +153,66 @@ collections_config:
         cascade: true
         empty_type: string
       author:
-        type: auto
+        type: string
+        label: Author
         cascade: true
         empty_type: string
+      thumb_image:
+        type: object
+        label: Thumbnail Image
+        cascade: true
+        empty_type: object
+        properties:
+          image:
+            type: file
+            label: Image File
+          image_alt:
+            type: string
+            label: Alt Text
+      featured_image:
+        type: object
+        label: Featured Image
+        cascade: true
+        empty_type: object
+        properties:
+          image:
+            type: file
+            label: Image File
+          image_alt:
+            type: string
+            label: Alt Text
+      seo:
+        type: object
+        label: SEO Settings
+        cascade: true
+        empty_type: object
+        properties:
+          page_description:
+            type: text
+            label: Page Description
+          canonical_url:
+            type: url
+            label: Canonical URL
+          featured_image:
+            type: file
+            label: Featured Image
+          featured_image_alt:
+            type: string
+            label: Featured Image Alt
+          author_twitter_handle:
+            type: string
+            label: Twitter Handle
+          open_graph_type:
+            type: select
+            label: Open Graph Type
+            options:
+              values:
+                - article
+                - website
+                - profile
+          no_index:
+            type: boolean
+            label: No Index
       tags:
         type: multiselect
         cascade: true
@@ -139,9 +253,66 @@ collections_config:
         cascade: true
         empty_type: string
       author:
-        type: auto
+        type: string
+        label: Author
         cascade: true
         empty_type: string
+      thumb_image:
+        type: object
+        label: Thumbnail Image
+        cascade: true
+        empty_type: object
+        properties:
+          image:
+            type: file
+            label: Image File
+          image_alt:
+            type: string
+            label: Alt Text
+      featured_image:
+        type: object
+        label: Featured Image
+        cascade: true
+        empty_type: object
+        properties:
+          image:
+            type: file
+            label: Image File
+          image_alt:
+            type: string
+            label: Alt Text
+      seo:
+        type: object
+        label: SEO Settings
+        cascade: true
+        empty_type: object
+        properties:
+          page_description:
+            type: text
+            label: Page Description
+          canonical_url:
+            type: url
+            label: Canonical URL
+          featured_image:
+            type: file
+            label: Featured Image
+          featured_image_alt:
+            type: string
+            label: Featured Image Alt
+          author_twitter_handle:
+            type: string
+            label: Twitter Handle
+          open_graph_type:
+            type: select
+            label: Open Graph Type
+            options:
+              values:
+                - article
+                - website
+                - profile
+          no_index:
+            type: boolean
+            label: No Index
       tags:
         type: multiselect
         cascade: true
@@ -166,8 +337,8 @@ collections_config:
   ephemera:
     path: src/content/ephemera
     glob:
-      - '!**/index.md'
-      - '!**/_index.md'
+      - "!**/index.md"
+      - "!**/_index.md"
     icon: notes
     output: true
     url: /ephemera/[slug]
@@ -222,9 +393,9 @@ collections_config:
   pages:
     path: src/pages
     glob:
-      - '!index.astro'
-      - '!**/rss.xml.js'
-      - '!**/[...*].astro'
+      - "!index.astro"
+      - "!**/rss.xml.js"
+      - "!**/[...*].astro"
     icon: wysiwyg
     output: true
     url: /[slug]
@@ -233,8 +404,46 @@ collections_config:
     _enabled_editors:
       - visual
     _inputs:
+      title:
+        type: string
+        label: Title
+        cascade: true
+        empty_type: string
+      seo:
+        type: object
+        label: SEO Settings
+        cascade: true
+        empty_type: object
+        properties:
+          page_description:
+            type: text
+            label: Page Description
+          canonical_url:
+            type: url
+            label: Canonical URL
+          featured_image:
+            type: file
+            label: Featured Image
+          featured_image_alt:
+            type: string
+            label: Featured Image Alt
+          author_twitter_handle:
+            type: string
+            label: Twitter Handle
+          open_graph_type:
+            type: select
+            label: Open Graph Type
+            options:
+              values:
+                - article
+                - website
+                - profile
+          no_index:
+            type: boolean
+            label: No Index
       content_blocks:
-        type: auto
+        type: array
+        label: Content Blocks
         cascade: true
         empty_type: array
     add_options:
@@ -318,7 +527,7 @@ _inputs:
     type: datetime
     label: Last Updated
     cascade: true
-    default: '[date]'
+    default: "[date]"
 base_url: /
 data_config:
   navigation:
