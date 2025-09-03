@@ -20,7 +20,7 @@ syndication:
   type: array
   label: Syndication Links
   comment: Links to syndicated versions on social media platforms
-  items:
+  entry:
     type: object
     properties:
       href:
