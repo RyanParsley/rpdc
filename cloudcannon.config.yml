@@ -12,6 +12,16 @@ collections_config:
     glob:
       - "!**/index.md"
       - "!**/_index.md"
+    sort:
+      key: updatedDate
+      order: desc
+    preview:
+      text:
+        - key: title
+      subtext:
+        - "Updated: "
+        - key: updatedDate
+        - key: tags
     output: true
     url: /note/[slug]
     _inputs:
@@ -58,6 +68,18 @@ collections_config:
     glob:
       - "!**/index.md"
       - "!**/_index.md"
+    sort:
+      key: pubDate
+      order: desc
+    preview:
+      text:
+        - key: title
+        - key: description
+      image: thumb_image.image
+      subtext:
+        - "Published: "
+        - key: pubDate
+        - key: tags
     output: true
     url: /blog/[slug]
     _inputs:
@@ -255,5 +277,49 @@ base_url: https://ryanparsley.com
 data_config:
   navigation:
     path: data/navigation.yml
+build:
+  cache:
+    - node_modules
+    - .astro
+  command: "npm run build"
+_inputs:
+  author:
+    type: select
+    label: Author
+    options:
+      values:
+        - "Ryan Parsley"
+  tags:
+    type: multiselect
+    label: Tags
+    allow_create: true
+    options:
+      values:
+        - posse
+        - indieWeb
+        - typeScript
+        - astro
+        - music
+        - lsdj
+        - neovim
+        - vim
+        - code
+        - dotfiles
+        - digitalGarden
+        - 3DPrint
+        - diy
+  categories:
+    type: multiselect
+    label: Categories
+    allow_create: true
+    options:
+      values:
+        - code
+        - music
+        - writing
+  updatedDate:
+    type: datetime
+    label: Last Updated
+    default: "[date]"
 timezone: America/New_York
 include_git_folder: true
