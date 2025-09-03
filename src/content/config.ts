@@ -35,30 +35,6 @@ const postSchema = {
 	categories: z.array(z.string()).optional(),
 	tags: z.array(z.string()).optional(),
 	featured: z.boolean().optional(),
-	author: z.string().optional(),
-	thumb_image: z
-		.object({
-			image: z.string(),
-			image_alt: z.string(),
-		})
-		.optional(),
-	featured_image: z
-		.object({
-			image: z.string(),
-			image_alt: z.string(),
-		})
-		.optional(),
-	seo: z
-		.object({
-			page_description: z.string().optional(),
-			canonical_url: z.string().optional(),
-			featured_image: z.string().optional(),
-			featured_image_alt: z.string().optional(),
-			author_twitter_handle: z.string().optional(),
-			open_graph_type: z.string().optional(),
-			no_index: z.boolean().optional(),
-		})
-		.optional(),
 };
 
 const blogCollection = defineCollection({
@@ -119,29 +95,9 @@ const ephemeraCollection = defineCollection({
 		}),
 });
 
-const pageCollection = defineCollection({
-	schema: () =>
-		z.object({
-			title: z.string(),
-			seo: z
-				.object({
-					page_description: z.string().optional(),
-					canonical_url: z.string().optional(),
-					featured_image: z.string().optional(),
-					featured_image_alt: z.string().optional(),
-					author_twitter_handle: z.string().optional(),
-					open_graph_type: z.string().optional(),
-					no_index: z.boolean().optional(),
-				})
-				.optional(),
-			content_blocks: z.array(z.any()).optional(),
-		}),
-});
-
 export const collections = {
 	blog: blogCollection,
 	draft: draftCollection,
 	note: noteCollection,
 	ephemera: ephemeraCollection,
-	page: pageCollection,
 };
