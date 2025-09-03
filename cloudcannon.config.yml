@@ -238,6 +238,6 @@ collection_groups:
   - heading: Drafts
     collections:
       - drafts
-base_url: ryanparsley.com
+base_url: https://ryanparsley.com
 timezone: America/New_York
 include_git_folder: true
