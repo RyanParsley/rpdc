@@ -10,7 +10,6 @@ collections_config:
     path: src/content/note
     glob:
       - "!**/index.md"
-      - "!**/_index.md"
     icon: notes
     output: true
     url: /note/[slug]
@@ -59,6 +58,16 @@ collections_config:
         type: boolean
         label: Featured
         cascade: true
+      OGImage:
+        type: image
+        label: Open Graph Image
+        cascade: true
+        empty_type: string
+      heroImage:
+        type: image
+        label: Hero Image
+        cascade: true
+        empty_type: string
     add_options:
       - name: Add New Note
         icon: post_add
@@ -130,6 +139,15 @@ collections_config:
         type: boolean
         label: Featured
         cascade: true
+      OGImage:
+        type: image
+        label: Open Graph Image
+        cascade: true
+        empty_type: string
+      heroImage:
+        label: Hero Image
+        cascade: true
+        empty_type: string
     add_options:
       - name: Add New Post
         icon: post_add
@@ -171,25 +189,32 @@ collections_config:
         label: Last Updated
         cascade: true
       categories:
-        type: multiselect
         label: Categories
         cascade: true
         allow_create: true
         empty_type: array
       tags:
-        type: multiselect
         label: Tags
         cascade: true
         allow_create: true
         empty_type: array
       featured:
-        type: boolean
         label: Featured
         cascade: true
+      OGImage:
+        label: Open Graph Image
+        cascade: true
+        empty_type: string
+      heroImage:
+        cascade: true
+        empty_type: string
       no_index:
         type: boolean
         label: No Index
     add_options:
+      - name: Add New Post
+        icon: post_add
+        schema: default
       - name: Add New Post
         icon: post_add
         schema: default
