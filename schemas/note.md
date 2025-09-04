@@ -3,7 +3,9 @@ title: ""
 description: ""
 pubDate:
 updatedDate:
-featured: false
+categories:
+  - ""
 tags:
   - note
+featured: false
 ---

@@ -1,16 +1,15 @@
 _schema: _schema
 paths:
   uploads: uploads
-  static: ''
-  collections: ''
-  data: ''
+  static: ""
+  collections: ""
+  data: ""
   layouts:
 collections_config:
   notes:
     path: src/content/note
     glob:
-      - '!**/index.md'
-      - '!**/_index.md'
+      - "!**/index.md"
     icon: notes
     output: true
     url: /note/[slug]
@@ -18,7 +17,7 @@ collections_config:
       text:
         - key: title
       subtext:
-        - 'Updated: '
+        - "Updated: "
         - key: updatedDate
         - key: tags
     sort:
@@ -26,26 +25,49 @@ collections_config:
       order: desc
     _inputs:
       title:
-        type: auto
+        type: string
+        label: Title
         cascade: true
         empty_type: string
-      image:
-        type: auto
+      description:
+        type: text
+        label: Description
         cascade: true
         empty_type: string
-      image_alt:
-        type: auto
+      pubDate:
+        type: datetime
+        label: Publication Date
         cascade: true
-        empty_type: string
-      author:
-        type: auto
+      updatedDate:
+        type: datetime
+        label: Last Updated
         cascade: true
-        empty_type: string
-      tags:
+      categories:
         type: multiselect
+        label: Categories
         cascade: true
         allow_create: true
         empty_type: array
+      tags:
+        type: multiselect
+        label: Tags
+        cascade: true
+        allow_create: true
+        empty_type: array
+      featured:
+        type: boolean
+        label: Featured
+        cascade: true
+      OGImage:
+        type: image
+        label: Open Graph Image
+        cascade: true
+        empty_type: string
+      heroImage:
+        type: image
+        label: Hero Image
+        cascade: true
+        empty_type: string
     add_options:
       - name: Add New Note
         icon: post_add
@@ -65,8 +87,8 @@ collections_config:
   posts:
     path: src/content/blog
     glob:
-      - '!**/index.md'
-      - '!**/_index.md'
+      - "!**/index.md"
+      - "!**/_index.md"
     icon: notes
     output: true
     url: /blog/[slug]
@@ -75,7 +97,7 @@ collections_config:
         - key: title
         - key: description
       subtext:
-        - 'Published: '
+        - "Published: "
         - key: pubDate
         - key: tags
       image: thumb_image.image
@@ -84,26 +106,48 @@ collections_config:
       order: desc
     _inputs:
       title:
-        type: auto
+        type: string
+        label: Title
         cascade: true
         empty_type: string
-      image:
-        type: auto
+      description:
+        type: text
+        label: Description
         cascade: true
         empty_type: string
-      image_alt:
-        type: auto
+      pubDate:
+        type: datetime
+        label: Publication Date
         cascade: true
-        empty_type: string
-      author:
-        type: auto
+      updatedDate:
+        type: datetime
+        label: Last Updated
         cascade: true
-        empty_type: string
-      tags:
+      categories:
         type: multiselect
+        label: Categories
         cascade: true
         allow_create: true
         empty_type: array
+      tags:
+        type: multiselect
+        label: Tags
+        cascade: true
+        allow_create: true
+        empty_type: array
+      featured:
+        type: boolean
+        label: Featured
+        cascade: true
+      OGImage:
+        type: image
+        label: Open Graph Image
+        cascade: true
+        empty_type: string
+      heroImage:
+        label: Hero Image
+        cascade: true
+        empty_type: string
     add_options:
       - name: Add New Post
         icon: post_add
@@ -127,27 +171,50 @@ collections_config:
     url: /blog/[slug]
     _inputs:
       title:
-        type: auto
+        type: string
+        label: Title
         cascade: true
         empty_type: string
-      image:
-        type: auto
+      description:
+        type: text
+        label: Description
         cascade: true
         empty_type: string
-      image_alt:
-        type: auto
+      pubDate:
+        type: datetime
+        label: Publication Date
         cascade: true
-        empty_type: string
-      author:
-        type: auto
+      updatedDate:
+        type: datetime
+        label: Last Updated
         cascade: true
-        empty_type: string
-      tags:
-        type: multiselect
+      categories:
+        label: Categories
         cascade: true
         allow_create: true
         empty_type: array
+      tags:
+        label: Tags
+        cascade: true
+        allow_create: true
+        empty_type: array
+      featured:
+        label: Featured
+        cascade: true
+      OGImage:
+        label: Open Graph Image
+        cascade: true
+        empty_type: string
+      heroImage:
+        cascade: true
+        empty_type: string
+      no_index:
+        type: boolean
+        label: No Index
     add_options:
+      - name: Add New Post
+        icon: post_add
+        schema: default
       - name: Add New Post
         icon: post_add
         schema: default
@@ -166,43 +233,48 @@ collections_config:
   ephemera:
     path: src/content/ephemera
     glob:
-      - '!**/index.md'
-      - '!**/_index.md'
+      - "!**/index.md"
+      - "!**/_index.md"
     icon: notes
     output: true
     url: /ephemera/[slug]
     _inputs:
-      title:
-        type: auto
-        cascade: true
-        empty_type: string
       date:
-        type: auto
+        type: datetime
+        label: Publication Date
+        cascade: true
+      syndication:
+        type: array
+        label: Syndication Links
+        cascade: true
+        empty_type: array
+        structures:
+          - name: Syndication Link
+            icon: link
+            fields:
+              href:
+                type: url
+                label: URL
+                comment: The URL of the syndicated post
+              title:
+                type: string
+                label: Platform
+                comment: Name of the platform (e.g., Mastodon, Bluesky)
+      youtube:
+        type: url
+        label: YouTube URL
         cascade: true
         empty_type: string
       image:
-        type: auto
+        type: file
+        label: Image
         cascade: true
         empty_type: string
       image_alt:
-        type: auto
+        type: string
+        label: Image Alt Text
         cascade: true
         empty_type: string
-      syndication:
-        type: array
-        cascade: true
-        empty_type: array
-        items:
-          type: object
-          properties:
-            href:
-              type: url
-              label: URL
-              comment: The URL of the syndicated post
-            title:
-              type: string
-              label: Platform
-              comment: Name of the platform (e.g., Mastodon, Bluesky)
     add_options:
       - name: Add New Ephemera
         icon: post_add
@@ -219,48 +291,7 @@ collections_config:
         remove_extra_inputs: true
         name: New Ephemera
         icon: notes
-  pages:
-    path: src/pages
-    glob:
-      - '!index.astro'
-      - '!**/rss.xml.js'
-      - '!**/[...*].astro'
-    icon: wysiwyg
-    output: true
-    url: /[slug]
-    filter:
-      base: strict
-    _enabled_editors:
-      - visual
-    _inputs:
-      content_blocks:
-        type: auto
-        cascade: true
-        empty_type: array
-    add_options:
-      - name: Add New Page
-        icon: note_add
-        schema: default
-    disable_add: false
-    disable_add_folder: false
-    disable_file_actions: false
-    schemas:
-      default:
-        path: schemas/page.md
-        reorder_inputs: true
-        hide_extra_inputs: false
-        remove_empty_inputs: false
-        remove_extra_inputs: true
-        name: New Page
-        icon: notes
-        new_preview_url: /
-      paginated_collection:
-        path: schemas/paginated-collection.md
-        reorder_inputs: true
-        hide_extra_inputs: false
-        remove_empty_inputs: false
-        remove_extra_inputs: true
-        icon: notes
+
 collection_groups:
   - heading: Content
     collections:
@@ -273,6 +304,7 @@ collection_groups:
   - heading: Drafts
     collections:
       - drafts
+
 _inputs:
   author:
     type: select
@@ -318,7 +350,8 @@ _inputs:
     type: datetime
     label: Last Updated
     cascade: true
-    default: '[date]'
+    default: "[date]"
+
 base_url: /
 data_config:
   navigation:
