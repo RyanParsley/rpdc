@@ -235,6 +235,9 @@ collections_config:
     glob:
       - "!**/index.md"
       - "!**/_index.md"
+      - "!**/*.jpg"
+      - "!**/*.png"
+      - "!**/*.gif"
     icon: notes
     output: true
     url: /ephemera/[slug]
@@ -243,6 +246,8 @@ collections_config:
         type: datetime
         label: Publication Date
         cascade: true
+        options:
+          timezone: America/New_York
       syndication:
         type: array
         label: Syndication Links
