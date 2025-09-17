@@ -1,9 +1,8 @@
 // POSSE Bluesky Module
 // Handles Bluesky-specific posting logic
 
-import { readFileSync } from "fs";
+import { readFileSync, statSync, readdirSync } from "fs";
 import { join, extname, basename } from "path";
-import { statSync, readdirSync } from "fs";
 import {
 	generatePostContent,
 	type EphemeraPost,
@@ -123,7 +122,7 @@ async function uploadImageToBluesky(
 		const imageResult = processImageForPlatform(post.image, "bluesky", logger);
 		if (!imageResult) return null;
 
-		const imageBuffer = readFileSync(imageResult.path!);
+		const imageBuffer = imageResult.buffer;
 
 		const blobResponse = await fetch(
 			"https://bsky.social/xrpc/com.atproto.repo.uploadBlob",
@@ -307,66 +306,97 @@ interface BlueskySession {
 // ============================================================================
 
 /**
- * Processes an image for a specific platform
+ * Resolves image path based on source format
  */
-function processImageForPlatform(
-	postImage: { src: string; alt: string },
+function resolveImagePath(src: string): string {
+	return src.startsWith("./")
+		? join(process.cwd(), "src", "content", "ephemera", src.slice(2))
+		: src.startsWith("/")
+			? join(process.cwd(), "public", src.slice(1))
+			: join(process.cwd(), "src", "content", "ephemera", src);
+}
+
+/**
+ * Selects the best available image source
+ */
+function selectImageSource(
+	processedPath: string | null,
+	originalPath: string,
 	platform: "mastodon" | "bluesky",
-	logger: Logger,
-): { path: string | null; size: number; mimeType: string } | null {
+	logger: { debug: (msg: string) => void; warn: (msg: string) => void },
+): { path: string; buffer: Buffer } | null {
+	if (processedPath && checkImageSize(processedPath, platform, logger)) {
+		logger.debug(
+			`POSSE: Using Astro-optimized image for ${platform}: ${processedPath}`,
+		);
+		return { path: processedPath, buffer: readFileSync(processedPath) };
+	}
+
+	if (checkImageSize(originalPath, platform, logger)) {
+		logger.debug(
+			`POSSE: Using original image for ${platform}: ${originalPath}`,
+		);
+		return { path: originalPath, buffer: readFileSync(originalPath) };
+	}
+
+	return null;
+}
+
+/**
+ * Checks if an image meets platform size limits
+ */
+function checkImageSize(
+	imagePath: string,
+	platform: "mastodon" | "bluesky",
+	logger?: { debug: (msg: string) => void; warn: (msg: string) => void },
+): boolean {
 	try {
-		// Get original image path
-		const originalImagePath = join(
-			process.cwd(),
-			"src",
-			"content",
-			"ephemera",
-			postImage.src.replace("./", ""),
-		);
+		const stats = statSync(imagePath);
+		const sizeMB = stats.size / (1024 * 1024);
+		const sizeKB = stats.size / 1024;
 
-		// Try to find Astro-processed image first
-		const preferSmaller = platform === "bluesky"; // Bluesky has smaller limits
-		const processedImagePath = findProcessedImage(
-			originalImagePath,
-			preferSmaller,
-			logger,
-		);
+		const limits = {
+			mastodon: 8, // 8MB (Mastodon allows up to 8MB)
+			bluesky: 0.8, // 800KB (Conservative limit well under Bluesky's 1MB = 1,000,000 bytes)
+		};
 
-		let imagePath: string;
-		let imageBuffer: Buffer;
-
-		if (
-			processedImagePath &&
-			checkImageSize(processedImagePath, platform, logger)
-		) {
-			// Use Astro's optimized image
-			imagePath = processedImagePath;
-			imageBuffer = readFileSync(processedImagePath);
+		const withinLimit = sizeMB <= limits[platform];
+		if (logger) {
+			const limitBytes = Math.floor(limits[platform] * 1024 * 1024);
 			logger.debug(
-				`POSSE: Using Astro-optimized image for ${platform}: ${processedImagePath}`,
+				`POSSE: Image size check - ${imagePath}: ${sizeMB.toFixed(2)}MB (${sizeKB.toFixed(1)}KB, ${stats.size} bytes), limit: ${limits[platform]}MB (${limitBytes} bytes), within limit: ${withinLimit}`,
 			);
-		} else if (checkImageSize(originalImagePath, platform, logger)) {
-			// Fallback to original image
-			imagePath = originalImagePath;
-			imageBuffer = readFileSync(originalImagePath);
-			logger.debug(
-				`POSSE: Using original image for ${platform}: ${originalImagePath}`,
-			);
-		} else {
-			logger.warn(`POSSE: Image too large for ${platform}, skipping`);
-			return null;
 		}
 
-		const mimeType = getMimeType(imagePath);
-
-		return {
-			path: imagePath,
-			size: imageBuffer.length,
-			mimeType,
-		};
+		return withinLimit;
 	} catch (error) {
-		logger.warn(`POSSE: Image processing failed: ${error}`);
-		return null;
+		if (logger) {
+			logger.warn(
+				`POSSE: Could not check image size for ${imagePath}: ${error}`,
+			);
+		}
+		return false;
+	}
+}
+
+/**
+ * Gets MIME type for a given filename
+ */
+function getMimeType(filename: string): string {
+	const ext = filename.toLowerCase().split(".").pop() || "";
+
+	switch (ext) {
+		case "jpg":
+		case "jpeg":
+			return "image/jpeg";
+		case "png":
+			return "image/png";
+		case "gif":
+			return "image/gif";
+		case "webp":
+			return "image/webp";
+		default:
+			return "image/jpeg"; // fallback
 	}
 }
 
@@ -376,7 +406,7 @@ function processImageForPlatform(
 function findProcessedImage(
 	originalPath: string,
 	preferSmaller: boolean = false,
-	logger?: Logger,
+	logger?: { debug: (msg: string) => void },
 ): string | null {
 	try {
 		const filename = basename(originalPath, extname(originalPath));
@@ -444,59 +474,45 @@ function findProcessedImage(
 }
 
 /**
- * Checks if an image meets platform size limits
+ * Processes an image for a specific platform
  */
-function checkImageSize(
-	imagePath: string,
+function processImageForPlatform(
+	postImage: { src: string; alt: string },
 	platform: "mastodon" | "bluesky",
-	logger?: Logger,
-): boolean {
+	logger: { debug: (msg: string) => void; warn: (msg: string) => void },
+): { path: string; buffer: Buffer; size: number; mimeType: string } | null {
 	try {
-		const stats = statSync(imagePath);
-		const sizeMB = stats.size / (1024 * 1024);
-		const sizeKB = stats.size / 1024;
+		const originalImagePath = resolveImagePath(postImage.src);
+		const processedImagePath = findProcessedImage(
+			originalImagePath,
+			platform === "bluesky",
+			logger,
+		);
 
-		const limits = {
-			mastodon: 8, // 8MB (Mastodon allows up to 8MB)
-			bluesky: 0.8, // 800KB (Conservative limit well under Bluesky's 1MB = 1,000,000 bytes)
+		const imageResult = selectImageSource(
+			processedImagePath,
+			originalImagePath,
+			platform,
+			logger,
+		);
+
+		if (!imageResult) {
+			logger.warn(`POSSE: Image too large for ${platform}, skipping`);
+			return null;
+		}
+
+		return {
+			path: imageResult.path,
+			buffer: imageResult.buffer,
+			size: imageResult.buffer.length,
+			mimeType: getMimeType(imageResult.path),
 		};
-
-		const withinLimit = sizeMB <= limits[platform];
-		if (logger) {
-			const limitBytes = Math.floor(limits[platform] * 1024 * 1024);
-			logger.debug(
-				`POSSE: Image size check - ${imagePath}: ${sizeMB.toFixed(2)}MB (${sizeKB.toFixed(1)}KB, ${stats.size} bytes), limit: ${limits[platform]}MB (${limitBytes} bytes), within limit: ${withinLimit}`,
-			);
-		}
-
-		return withinLimit;
 	} catch (error) {
-		if (logger) {
-			logger.warn(
-				`POSSE: Could not check image size for ${imagePath}: ${error}`,
-			);
-		}
-		return false;
+		logger.warn(`POSSE: Image processing failed: ${error}`);
+		return null;
 	}
 }
 
-/**
- * Gets MIME type for a given filename
- */
-function getMimeType(filename: string): string {
-	const ext = filename.toLowerCase().split(".").pop() || "";
-
-	switch (ext) {
-		case "jpg":
-		case "jpeg":
-			return "image/jpeg";
-		case "png":
-			return "image/png";
-		case "gif":
-			return "image/gif";
-		case "webp":
-			return "image/webp";
-		default:
-			return "image/jpeg"; // fallback
-	}
-}
+// ============================================================================
+// IMAGE PROCESSING
+// ============================================================================
