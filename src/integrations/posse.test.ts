@@ -35,6 +35,7 @@ import {
 	parseEphemeraFile,
 } from "./posse";
 import { postToMastodon } from "./posse-mastodon";
+import { postToBluesky, parseUrlFacets } from "./posse-bluesky";
 import type { EphemeraPost, EphemeraData, Logger } from "./posse";
 
 describe("POSSE Integration", () => {
@@ -121,13 +122,25 @@ describe("POSSE Integration", () => {
 			expect(result).toContain("• Sub-sub Header");
 		});
 
-		it("should remove markdown links but keep text", () => {
+		it("should remove markdown links but keep text for Mastodon", () => {
 			const markdown =
 				"Check out [this link](https://example.com) for more info.";
-			const result = cleanContentForSocial(markdown);
+			const result = cleanContentForSocial(markdown, "mastodon");
 
 			expect(result).toContain("Check out this link for more info.");
 			expect(result).not.toContain("https://example.com");
+			expect(result).not.toContain("[");
+			expect(result).not.toContain("]");
+		});
+
+		it("should keep URLs in text for Bluesky facets", () => {
+			const markdown =
+				"Check out [this link](https://example.com) for more info.";
+			const result = cleanContentForSocial(markdown, "bluesky");
+
+			expect(result).toContain(
+				"Check out this link https://example.com for more info.",
+			);
 			expect(result).not.toContain("[");
 			expect(result).not.toContain("]");
 		});
@@ -797,6 +810,290 @@ Content`;
 
 			expect(result.success).toBe(false);
 			expect(result.error).toContain("Rate limit exceeded");
+		});
+	});
+
+	describe("Bluesky Integration", () => {
+		let mockLogger: Logger;
+		let mockFetch: ReturnType<typeof vi.fn>;
+
+		beforeEach(() => {
+			mockLogger = {
+				info: vi.fn(),
+				warn: vi.fn(),
+				error: vi.fn(),
+				debug: vi.fn(),
+			};
+
+			mockFetch = vi.fn();
+			global.fetch = mockFetch;
+			vi.clearAllMocks();
+		});
+
+		describe("parseUrlFacets", () => {
+			it("should parse URLs and create facets with correct byte positions", () => {
+				const text =
+					"Check out https://example.com and http://test.org for more info.";
+				const result = parseUrlFacets(text);
+
+				expect(result).toBeDefined();
+				expect(result).toHaveLength(2);
+				const facets = result!;
+				expect(facets[0].features[0].uri).toBe("https://example.com");
+				expect(facets[1].features[0].uri).toBe("http://test.org");
+
+				// Check byte positions are numbers and start < end
+				expect(typeof facets[0].index.byteStart).toBe("number");
+				expect(typeof facets[0].index.byteEnd).toBe("number");
+				expect(facets[0].index.byteStart).toBeLessThan(facets[0].index.byteEnd);
+			});
+
+			it("should handle URLs with special characters", () => {
+				const text = "Visit https://example.com/path?query=value&other=123";
+				const result = parseUrlFacets(text);
+
+				expect(result).toHaveLength(1);
+				expect(result?.[0].features[0].uri).toBe(
+					"https://example.com/path?query=value&other=123",
+				);
+			});
+
+			it("should handle multi-byte characters correctly", () => {
+				const text = "🌟 Check https://example.com for info!";
+				const result = parseUrlFacets(text);
+
+				expect(result).toHaveLength(1);
+				// The emoji takes 4 bytes, so byteStart should account for that
+				const expectedByteStart = new TextEncoder().encode("🌟 Check ").length; // Byte position
+				expect(result?.[0].index.byteStart).toBe(expectedByteStart);
+			});
+
+			it("should return undefined when no URLs found", () => {
+				const text = "This is just plain text with no URLs.";
+				const result = parseUrlFacets(text);
+
+				expect(result).toBeUndefined();
+			});
+
+			it("should filter out invalid facets where start >= end", () => {
+				// This is hard to trigger naturally, but we can test the filter logic
+				const text = "Valid https://example.com";
+				const result = parseUrlFacets(text);
+
+				expect(result).toHaveLength(1);
+				expect(result?.[0].index.byteStart).toBeLessThan(
+					result?.[0].index.byteEnd,
+				);
+			});
+
+			it("should strip trailing punctuation from URIs and adjust byteEnd", () => {
+				const text = "Visit https://example.com, for more info.";
+				const result = parseUrlFacets(text);
+
+				expect(result).toBeDefined();
+				expect(result).toHaveLength(1);
+				expect(result![0].features[0].uri).toBe("https://example.com");
+				// byteEnd should be adjusted to exclude the comma
+				const expectedEnd = new TextEncoder().encode(
+					"Visit https://example.com",
+				).length;
+				expect(result![0].index.byteEnd).toBe(expectedEnd);
+			});
+
+			it("should strip trailing parenthesis if no opening paren", () => {
+				const text = "Check (https://example.com) and more";
+				const result = parseUrlFacets(text);
+
+				expect(result).toBeDefined();
+				expect(result).toHaveLength(1);
+				expect(result![0].features[0].uri).toBe("https://example.com");
+			});
+
+			it("should skip invalid URLs", () => {
+				const text = "Invalid https:// and valid https://example.com";
+				const result = parseUrlFacets(text);
+
+				expect(result).toBeDefined();
+				expect(result).toHaveLength(1);
+				expect(result![0].features[0].uri).toBe("https://example.com");
+			});
+		});
+
+		describe("postToBluesky", () => {
+			it("should post text content successfully", async () => {
+				const post: EphemeraPost = {
+					file: "test.md",
+					data: { title: "Test Post" },
+					body: "This is test content with https://example.com link.",
+				};
+
+				// Mock authentication
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					json: () =>
+						Promise.resolve({
+							accessJwt: "test-jwt",
+							did: "test-did",
+							handle: "test-handle",
+						}),
+				});
+
+				// Mock post creation
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					json: () =>
+						Promise.resolve({
+							uri: "at://did:plc:test/app.bsky.feed.post/123",
+						}),
+				});
+
+				const result = await postToBluesky(
+					post,
+					"https://example.com/test",
+					{ username: "test.bsky.social", password: "password" },
+					mockLogger,
+				);
+
+				expect(result.success).toBe(true);
+				expect(result.url).toContain("test.bsky.social");
+				expect(result.platform).toBe("bluesky");
+			});
+
+			it("should handle URLs in content and create facets", async () => {
+				const post: EphemeraPost = {
+					file: "test.md",
+					data: { title: "Test Post" },
+					body: "Check this link: https://example.com",
+				};
+
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					json: () =>
+						Promise.resolve({
+							accessJwt: "test-jwt",
+							did: "test-did",
+							handle: "test-handle",
+						}),
+				});
+
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					json: () =>
+						Promise.resolve({
+							uri: "at://did:plc:test/app.bsky.feed.post/123",
+						}),
+				});
+
+				await postToBluesky(
+					post,
+					"https://example.com/test",
+					{ username: "test.bsky.social", password: "password" },
+					mockLogger,
+				);
+
+				// Check that the second fetch (post creation) was called with facets
+				expect(mockFetch).toHaveBeenCalledTimes(2);
+				const postCall = mockFetch.mock.calls[1][1];
+				const postData = JSON.parse(postCall.body as string);
+				expect(postData.record.facets).toBeDefined();
+				expect(postData.record.facets).toHaveLength(2);
+			});
+
+			it("should handle authentication failure", async () => {
+				const post: EphemeraPost = {
+					file: "test.md",
+					data: { title: "Test" },
+					body: "Test content",
+				};
+
+				mockFetch.mockResolvedValueOnce({
+					ok: false,
+					status: 401,
+				});
+
+				const result = await postToBluesky(
+					post,
+					"https://example.com/test",
+					{ username: "test.bsky.social", password: "password" },
+					mockLogger,
+				);
+
+				expect(result.success).toBe(false);
+				expect(result.error).toContain("Bluesky auth failed");
+			});
+
+			it("should handle post creation failure", async () => {
+				const post: EphemeraPost = {
+					file: "test.md",
+					data: { title: "Test" },
+					body: "Test content",
+				};
+
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					json: () =>
+						Promise.resolve({
+							accessJwt: "test-jwt",
+							did: "test-did",
+							handle: "test-handle",
+						}),
+				});
+
+				mockFetch.mockResolvedValueOnce({
+					ok: false,
+					status: 400,
+					text: () => Promise.resolve("Invalid request"),
+				});
+
+				const result = await postToBluesky(
+					post,
+					"https://example.com/test",
+					{ username: "test.bsky.social", password: "password" },
+					mockLogger,
+				);
+
+				expect(result.success).toBe(false);
+				expect(result.error).toContain("Bluesky post failed");
+			});
+
+			it("should truncate content for Bluesky's character limit", async () => {
+				const longBody = "A".repeat(300);
+				const post: EphemeraPost = {
+					file: "test.md",
+					data: { title: "Test Post" },
+					body: longBody,
+				};
+
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					json: () =>
+						Promise.resolve({
+							accessJwt: "test-jwt",
+							did: "test-did",
+							handle: "test-handle",
+						}),
+				});
+
+				mockFetch.mockResolvedValueOnce({
+					ok: true,
+					json: () =>
+						Promise.resolve({
+							uri: "at://did:plc:test/app.bsky.feed.post/123",
+						}),
+				});
+
+				await postToBluesky(
+					post,
+					"https://example.com/test",
+					{ username: "test.bsky.social", password: "password" },
+					mockLogger,
+				);
+
+				const postCall = mockFetch.mock.calls[1][1];
+				const postData = JSON.parse(postCall.body as string);
+				expect(postData.record.text.length).toBeLessThanOrEqual(280);
+				expect(postData.record.text).toContain("..."); // Should be truncated
+			});
 		});
 	});
 });

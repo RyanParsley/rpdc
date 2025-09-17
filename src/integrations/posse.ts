@@ -586,7 +586,9 @@ export function generatePostContent(
 	body: string,
 	platform: "mastodon" | "bluesky",
 ): string {
-	const initialContent = body?.trim() ? cleanContentForSocial(body.trim()) : "";
+	const initialContent = body?.trim()
+		? cleanContentForSocial(body.trim(), platform)
+		: "";
 	const content =
 		!initialContent || initialContent.length < 10
 			? data.title || "New ephemera post"
@@ -619,12 +621,18 @@ export function generatePostContent(
 /**
  * Cleans markdown content for social media consumption
  */
-export function cleanContentForSocial(markdown: string): string {
+export function cleanContentForSocial(
+	markdown: string,
+	platform: "mastodon" | "bluesky" = "mastodon",
+): string {
 	return markdown
 		.replace(/^###\s+(.+)$/gm, "• $1") // ### Header → • Header
 		.replace(/^##\s+(.+)$/gm, "$1") // ## Header → Header
 		.replace(/^#\s+(.+)$/gm, "$1") // # Header → Header
-		.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1") // Remove link syntax, keep text
+		.replace(
+			/\[([^\]]+)\]\(([^)]+)\)/g,
+			platform === "bluesky" ? "$1 $2" : "$1",
+		) // For Bluesky, keep URL in text for facets
 		.replace(/\*\*([^*]+)\*\*/g, "$1") // Remove bold formatting
 		.replace(/\*([^*]+)\*/g, "$1") // Remove italic formatting
 		.replace(/```[\s\S]*?```/g, "[code block]") // Replace code blocks

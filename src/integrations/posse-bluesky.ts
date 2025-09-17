@@ -154,6 +154,60 @@ async function uploadImageToBluesky(
 }
 
 /**
+ * Parses URLs from text and creates facets for clickable links
+ */
+export function parseUrlFacets(text: string): BlueskyFacet[] | undefined {
+	const urlRegex = /(https?:\/\/[^\s]+)/g;
+	const encoder = new TextEncoder();
+
+	const facets = [...text.matchAll(urlRegex)]
+		.map((match) => {
+			let uri = match[0];
+			let endOffset = match[0].length;
+
+			// Strip trailing punctuation
+			if (/[.,;!?]$/.test(uri)) {
+				uri = uri.slice(0, -1);
+				endOffset--;
+			}
+			if (/[)]$/.test(uri) && !uri.includes("(")) {
+				uri = uri.slice(0, -1);
+				endOffset--;
+			}
+
+			// Validate URL
+			try {
+				new URL(uri);
+			} catch {
+				return null; // Invalid URL, skip
+			}
+
+			const byteStart = encoder.encode(text.slice(0, match.index!)).length;
+			const byteEnd = encoder.encode(
+				text.slice(0, match.index! + endOffset),
+			).length;
+
+			if (byteStart >= byteEnd) return null;
+
+			return {
+				index: {
+					byteStart,
+					byteEnd,
+				},
+				features: [
+					{
+						$type: "app.bsky.richtext.facet#link" as const,
+						uri,
+					},
+				],
+			};
+		})
+		.filter((facet): facet is BlueskyFacet => facet !== null);
+
+	return facets.length > 0 ? facets : undefined;
+}
+
+/**
  * Creates a post on Bluesky
  */
 async function createBlueskyPost(
@@ -165,14 +219,19 @@ async function createBlueskyPost(
 ): Promise<string> {
 	logger.debug("POSSE: Creating Bluesky post...");
 
+	// Parse URLs and create facets for clickable links
+	const facets = parseUrlFacets(content);
+
 	const postRecord: {
 		text: string;
 		createdAt: string;
 		embed?: BlueskyEmbed;
+		facets?: BlueskyFacet[];
 	} = {
 		text: content,
 		createdAt: new Date().toISOString(),
 		...(embed && { embed }),
+		...(facets && { facets }),
 	};
 
 	const postResponse = await fetch(
@@ -223,6 +282,17 @@ interface BlueskyEmbed {
 	images: Array<{
 		image: BlueskyBlob;
 		alt: string;
+	}>;
+}
+
+interface BlueskyFacet {
+	index: {
+		byteStart: number;
+		byteEnd: number;
+	};
+	features: Array<{
+		$type: "app.bsky.richtext.facet#link";
+		uri: string;
 	}>;
 }
 
