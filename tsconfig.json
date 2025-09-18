@@ -2,6 +2,7 @@
   "extends": "astro/tsconfigs/strictest",
   "exclude": ["node_modules", "public", "dist"],
   "compilerOptions": {
+    "lib": ["ESNext"],
     "strictNullChecks": true,
     "baseUrl": ".",
     "paths": {

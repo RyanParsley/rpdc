@@ -586,7 +586,9 @@ export function generatePostContent(
 	body: string,
 	platform: "mastodon" | "bluesky",
 ): string {
-	const initialContent = body?.trim() ? cleanContentForSocial(body.trim()) : "";
+	const initialContent = body?.trim()
+		? cleanContentForSocial(body.trim(), platform)
+		: "";
 	const content =
 		!initialContent || initialContent.length < 10
 			? data.title || "New ephemera post"
@@ -619,18 +621,120 @@ export function generatePostContent(
 /**
  * Cleans markdown content for social media consumption
  */
-export function cleanContentForSocial(markdown: string): string {
+export function cleanContentForSocial(
+	markdown: string,
+	platform: "mastodon" | "bluesky" = "mastodon",
+): string {
 	return markdown
 		.replace(/^###\s+(.+)$/gm, "• $1") // ### Header → • Header
 		.replace(/^##\s+(.+)$/gm, "$1") // ## Header → Header
 		.replace(/^#\s+(.+)$/gm, "$1") // # Header → Header
-		.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1") // Remove link syntax, keep text
+		.replace(
+			/\[([^\]]+)\]\(([^)]+)\)/g,
+			platform === "bluesky" ? "$1 $2" : "$1",
+		) // For Bluesky, keep URL in text for facets
 		.replace(/\*\*([^*]+)\*\*/g, "$1") // Remove bold formatting
 		.replace(/\*([^*]+)\*/g, "$1") // Remove italic formatting
 		.replace(/```[\s\S]*?```/g, "[code block]") // Replace code blocks
 		.replace(/\n\s*\n\s*\n/g, "\n\n") // Normalize multiple line breaks
 		.replace(/[ \t]+/g, " ") // Normalize whitespace
 		.trim();
+}
+
+// ============================================================================
+// IMAGE PROCESSING UTILITIES
+// ============================================================================
+
+/**
+ * Resolves image path based on source format
+ */
+export function resolveImagePath(src: string): string {
+	return src.startsWith("./")
+		? join(process.cwd(), "src", "content", "ephemera", src.slice(2))
+		: src.startsWith("/")
+			? join(process.cwd(), "public", src.slice(1))
+			: join(process.cwd(), "src", "content", "ephemera", src);
+}
+
+/**
+ * Selects the best available image source
+ */
+export function selectImageSource(
+	processedPath: string | null,
+	originalPath: string,
+	platform: "mastodon" | "bluesky",
+	logger: { debug: (msg: string) => void; warn: (msg: string) => void },
+): { path: string; buffer: Buffer } | null {
+	if (processedPath && checkImageSize(processedPath, platform, logger)) {
+		logger.debug(
+			`POSSE: Using Astro-optimized image for ${platform}: ${processedPath}`,
+		);
+		return { path: processedPath, buffer: readFileSync(processedPath) };
+	}
+
+	if (checkImageSize(originalPath, platform, logger)) {
+		logger.debug(
+			`POSSE: Using original image for ${platform}: ${originalPath}`,
+		);
+		return { path: originalPath, buffer: readFileSync(originalPath) };
+	}
+
+	return null;
+}
+
+/**
+ * Creates the final image result object
+ */
+export function createImageResult(imageResult: {
+	path: string;
+	buffer: Buffer;
+}): {
+	path: string;
+	size: number;
+	mimeType: string;
+} {
+	return {
+		path: imageResult.path,
+		size: imageResult.buffer.length,
+		mimeType: getMimeType(imageResult.path),
+	};
+}
+
+/**
+ * Checks if an image meets platform size limits
+ */
+export function checkImageSize(
+	imagePath: string,
+	platform: "mastodon" | "bluesky",
+	logger?: { debug: (msg: string) => void; warn: (msg: string) => void },
+): boolean {
+	try {
+		const stats = statSync(imagePath);
+		const sizeMB = stats.size / (1024 * 1024);
+		const sizeKB = stats.size / 1024;
+
+		const limits = {
+			mastodon: 8, // 8MB (Mastodon allows up to 8MB)
+			bluesky: 0.8, // 800KB (Conservative limit well under Bluesky's 1MB = 1,000,000 bytes)
+		};
+
+		const withinLimit = sizeMB <= limits[platform];
+		if (logger) {
+			const limitBytes = Math.floor(limits[platform] * 1024 * 1024);
+			logger.debug(
+				`POSSE: Image size check - ${imagePath}: ${sizeMB.toFixed(2)}MB (${sizeKB.toFixed(1)}KB, ${stats.size} bytes), limit: ${limits[platform]}MB (${limitBytes} bytes), within limit: ${withinLimit}`,
+			);
+		}
+
+		return withinLimit;
+	} catch (error) {
+		if (logger) {
+			logger.warn(
+				`POSSE: Could not check image size for ${imagePath}: ${error}`,
+			);
+		}
+		return false;
+	}
 }
 
 /**
