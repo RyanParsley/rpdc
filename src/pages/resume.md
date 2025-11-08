@@ -3,14 +3,28 @@ title: Resume
 permalink: /resume/
 layout: "@layouts/Page.astro"
 ---
+
 <!-- markdownlint-disable MD024 -->
 <!--
 This markdwon rule is about duplicate headers. I want that for effect here.
 -->
-I’m a web developer with a background in design. Additionally, I’ve done a bit
-of public speaking where I’ve been a proponent of such topics as: HTML5, Sass,
-web standards and design in the browser. Beyond the web, I’ve worked on a wide
-range of projects from print to mobile apps.
+
+I've been building software professionally for over 22 years, moving between
+startups, agencies, and large enterprise environments. This career diversity has
+taught me that architectural rigor is paramount, regardless of the context.
+
+For the last seven years, I’ve specialized deeply in enterprise Angular and
+TypeScript architecture, where I set technical standards and governance. My
+technical obsession is code quality: specifically, dialing in pedantic linters
+to push run-time surprises all the way back to compile-time errors. This mindset
+naturally led me to study the philosophy and idioms of Rust.
+
+I am a proven leader who architects solutions end-to-end, and I treat mentorship
+as a first-class responsibility for driving the adoption of new tools and
+architectural standards. My professional focus has been to drill deep,
+establishing a commanding expertise in TypeScript and front-end architecture. My
+next personal goal is to expand the breadth of my skills by achieving fluency in
+Rust.
 
 ## Experience
 
