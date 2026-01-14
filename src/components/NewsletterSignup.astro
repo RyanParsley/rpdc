@@ -55,7 +55,7 @@ const ids = generateIds("newsletter");
 	</div>
 </div>
 
-<script define:vars={{ ids }}>
+<script is:inline define:vars={{ ids }}>
 	// Pure functions for better functional programming
 	const createEmailRegex = () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
