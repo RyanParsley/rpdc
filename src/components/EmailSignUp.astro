@@ -1,0 +1,24 @@
+---
+// Construct the Mailchimp URL using environment variables
+const listId = import.meta.env.MAILCHIMP_LIST_ID;
+const apiKey = import.meta.env.MAILCHIMP_API_KEY;
+const userId = '41ec7d5dd861a3fe096044a7d';
+const dataCenter = apiKey.split("-")[1];
+const url = `https://${dataCenter}.api.mailchimp.com/3.0/lists/${listId}/members`;
+//const url = `https://ryanparsley.${dataCenter}.list-manage.com/subscribe/post?u=${userId}&amp;id=${listId}&amp;f_id=00f7f5e4f0`
+---
+
+<form action={url} method="post" class="newsletter-form">
+  <div>
+    <label for="email">Email Address</label>
+    <input type="email" id="email" name="EMAIL" required />
+    <label for="name">First Name</label>
+    <input type="name" id="name" name="FNAME" required />
+  </div>
+  
+  <!-- Add any other hidden fields Mailchimp might need, like the list ID -->
+	<input type="hidden" name="u" value={userId} />
+	<input type="hidden" name="id" value={listId} />
+  
+  <button type="submit">Subscribe</button>
+</form>
