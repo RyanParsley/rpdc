@@ -7,6 +7,9 @@ import pagefind from "astro-pagefind";
 import posseIntegration from "./src/integrations/posse";
 
 export default defineConfig({
+	experimental: {
+		assets: true,
+	},
 	site: "https://ryanparsley.com",
 	vite: {
 		css: {
