@@ -1,7 +1,7 @@
 ---
 title: "Hello Faircamp"
 description: "I want to share the story of wiring up a selfhosted music portfolio using Faircamp."
-pubDate: "2026-02-28"
+pubDate: "2026-02-28T23:53:00-05:00"
 tags: ["music", "ssg", "homelab"]
 ---
 
