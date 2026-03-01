@@ -1,10 +1,27 @@
 ---
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
+
 interface Props {
 	target: string;
 }
 const { target } = Astro.props;
 
-const API_TOKEN = import.meta.env.WEBMENTION_IO_TOKEN;
+// Load from project .env first, then fallback to ~/.env
+let API_TOKEN = import.meta.env.WEBMENTION_IO_TOKEN;
+
+if (!API_TOKEN) {
+	const homeEnvPath = process.env.HOME ? join(process.env.HOME, ".env") : null;
+if (homeEnvPath && existsSync(homeEnvPath)) {
+		const homeEnvContent = readFileSync(homeEnvPath, "utf-8");
+		homeEnvContent.split("\n").forEach((line) => {
+			const match = line.match(/^export\s+WEBMENTION_IO_TOKEN=(.*)$/);
+			if (match && match[1]) {
+				API_TOKEN = match[1].replace(/^["']|["']$/g, "");
+			}
+		});
+	}
+}
 
 const fetchWebmentions = async (target: string) => {
 	try {

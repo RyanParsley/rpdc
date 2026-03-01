@@ -18,6 +18,7 @@
     "new:ephemera": "npm run new-content -- --type ephemera",
     "new:blog": "npm run new-content -- --type blog",
     "new:note": "npm run new-content -- --type note",
+    "pesos": "node scripts/pesos-mastodon.js",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
