@@ -285,10 +285,151 @@ describe("Webmentions Component", () => {
 		});
 
 		it("should validate retry configuration", () => {
-			// Test that our retry constants are reasonable
 			const maxRetries = 3;
 			expect(maxRetries).toBeGreaterThan(0);
-			expect(maxRetries).toBeLessThan(10); // Not too many retries
+			expect(maxRetries).toBeLessThan(10);
+		});
+	});
+
+	describe("URL Variants", () => {
+		const getUrlVariants = (url: string): string[] => {
+			const variants: string[] = [];
+			const hasTrailingSlash = url.endsWith("/");
+			const hasHtmlExtension = url.endsWith(".html");
+
+			variants.push(url);
+
+			if (hasTrailingSlash) {
+				variants.push(url.slice(0, -1));
+			} else {
+				variants.push(url + "/");
+			}
+
+			if (!hasHtmlExtension) {
+				const baseUrl = hasTrailingSlash ? url.slice(0, -1) : url;
+				variants.push(`${baseUrl}.html`);
+			}
+
+			return [...new Set(variants)];
+		};
+
+		it("should generate variants for URL without trailing slash or .html", () => {
+			const url = "https://example.com/blog/my-post";
+			const variants = getUrlVariants(url);
+
+			expect(variants).toContain("https://example.com/blog/my-post");
+			expect(variants).toContain("https://example.com/blog/my-post/");
+			expect(variants).toContain("https://example.com/blog/my-post.html");
+			expect(variants).toHaveLength(3);
+		});
+
+		it("should generate variants for URL with trailing slash", () => {
+			const url = "https://example.com/blog/my-post/";
+			const variants = getUrlVariants(url);
+
+			expect(variants).toContain("https://example.com/blog/my-post/");
+			expect(variants).toContain("https://example.com/blog/my-post");
+			expect(variants).toContain("https://example.com/blog/my-post.html");
+			expect(variants).toHaveLength(3);
+		});
+
+		it("should generate variants for URL with .html extension", () => {
+			const url = "https://example.com/blog/my-post.html";
+			const variants = getUrlVariants(url);
+
+			expect(variants).toContain("https://example.com/blog/my-post.html");
+			expect(variants).toContain("https://example.com/blog/my-post.html/");
+			expect(variants).toHaveLength(2);
+		});
+
+		it("should not add duplicate variants", () => {
+			const url = "https://example.com/blog/my-post.html";
+			const variants = getUrlVariants(url);
+
+			const uniqueVariants = new Set(variants);
+			expect(variants.length).toBe(uniqueVariants.size);
+		});
+	});
+
+	describe("Deduplication", () => {
+		it("should deduplicate webmentions by url", () => {
+			const mentions = [
+				{
+					url: "https://example.com/1",
+					author: { name: "User 1" },
+					"wm-property": "like-of",
+				},
+				{
+					url: "https://example.com/2",
+					author: { name: "User 2" },
+					"wm-property": "repost-of",
+				},
+				{
+					url: "https://example.com/1",
+					author: { name: "User 1" },
+					"wm-property": "like-of",
+				},
+				{
+					url: "https://example.com/3",
+					author: { name: "User 3" },
+					"wm-property": "mention-of",
+				},
+			];
+
+			const deduplicated = mentions.filter(
+				(mention, index, self) =>
+					self.findIndex((m) => m?.url === mention.url) === index,
+			);
+
+			expect(deduplicated).toHaveLength(3);
+			expect(deduplicated.map((m) => m.url)).toEqual([
+				"https://example.com/1",
+				"https://example.com/2",
+				"https://example.com/3",
+			]);
+		});
+
+		it("should deduplicate mentions with same missing url", () => {
+			const mentions = [
+				{
+					url: "https://example.com/1",
+					author: { name: "User 1" },
+					"wm-property": "like-of",
+				},
+				{
+					url: "https://example.com/2",
+					author: { name: "User 2" },
+					"wm-property": "repost-of",
+				},
+				{
+					url: "https://example.com/1",
+					author: { name: "User 1" },
+					"wm-property": "like-of",
+				},
+			];
+
+			const deduplicated = mentions.filter(
+				(mention, index, self) =>
+					self.findIndex((m) => m?.url === mention.url) === index,
+			);
+
+			expect(deduplicated).toHaveLength(2);
+		});
+
+		it("should filter out null and undefined mentions", () => {
+			const mentions = [
+				{ "wm-id": 1, author: { name: "User 1" } },
+				null,
+				undefined,
+				{ "wm-id": 2, author: { name: "User 2" } },
+			];
+
+			const filtered = mentions.filter(
+				(mention): mention is NonNullable<typeof mention> =>
+					mention !== null && mention !== undefined,
+			);
+
+			expect(filtered).toHaveLength(2);
 		});
 	});
 });

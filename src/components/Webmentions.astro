@@ -71,10 +71,27 @@ const isProperty = (item: WebmentionEntry, property: string): boolean => {
 	return item["wm-property"] === property;
 };
 
-const children = [
-	...(await fetchWebmentions(target)),
-	...(await fetchWebmentions(`${target}.html`)),
-].filter((mention) => mention !== null && mention !== undefined);
+const getUrlVariants = (url: string): string[] =>
+	[
+		url,
+		url.endsWith("/") ? url.slice(0, -1) : url + "/",
+		url.endsWith(".html")
+			? null
+			: `${url.endsWith("/") ? url.slice(0, -1) : url}.html`,
+	].filter((variant): variant is string => variant !== null);
+
+const children = (
+	await Promise.all(
+		getUrlVariants(target).map((variant) => fetchWebmentions(variant)),
+	)
+)
+	.flat()
+	.filter(
+		(mention, index, self) =>
+			mention !== null &&
+			mention !== undefined &&
+			self.findIndex((m) => m?.url === mention.url) === index,
+	);
 
 const counts = children.reduce(
 	(
