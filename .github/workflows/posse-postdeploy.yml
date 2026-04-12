@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     # Only run for CloudCannon post-deploy commits (not manual edits, not POSSE commits)
+    # CloudCannon pattern: support@cloudcannon.com with message "Updated '...' via CloudCannon"
     if: |
-      contains(github.event.head_commit.message, 'via CloudCannon') ||
       github.event.head_commit.author.email == 'support@cloudcannon.com' ||
-      contains(github.event.head_commit.message, '[cloudcannon]')
+      contains(github.event.head_commit.message, 'via CloudCannon')
 
     steps:
       - name: Checkout repository
