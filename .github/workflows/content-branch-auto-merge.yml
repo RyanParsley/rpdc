@@ -200,5 +200,3 @@ jobs:
           echo "Check the validation output above for details"
           echo "The content branch has NOT been merged to main"
           echo "You can review the branch manually and try again"
-
-# Force workflow refresh - testing
