@@ -130,9 +130,16 @@ Add your detailed notes here...
 			optional: ["syndication", "youtube", "image"],
 		},
 		template: (data) => `---
-date: "${data.date}"
-${data.image ? `image:\n  src: "${data.image.src}"\n  alt: "${data.image.alt}"` : ""}
-${data.youtube ? `youtube: "${data.youtube}"` : ""}
+date: ${data.date}
+${
+	data.image
+		? `image:
+  src: ./${data.image.src}
+  alt: >-
+    ${data.image.alt}`
+		: ""
+}
+${data.youtube ? `youtube: ${data.youtube}` : ""}
 ---
 
 ${data.content || "Add your ephemera content here..."}
@@ -250,13 +257,8 @@ async function main() {
 		const data = { pubDate: dateString, date: dateString };
 
 		if (contentType === "ephemera") {
-			// Use full timestamp for ephemera date
-			const timestamp = now
-				.toISOString()
-				.replace("T", "-")
-				.replace(/:\d{2}\.\d{3}Z$/, "")
-				.replace(":", "");
-			data.date = timestamp;
+			// Use full ISO timestamp for ephemera date
+			data.date = now.toISOString();
 			data.content = await prompt(
 				"Content",
 				"Add your ephemera content here...",
