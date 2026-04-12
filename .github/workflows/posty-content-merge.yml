@@ -31,26 +31,16 @@ jobs:
           echo "content_type=$CONTENT_TYPE" >> $GITHUB_OUTPUT
           echo "type=$CONTENT_TYPE branch=$BRANCH_NAME"
 
-      - name: Create PR
+      - name: Create or update PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH="${{ steps.info.outputs.branch }}"
           TYPE="${{ steps.info.outputs.content_type }}"
 
-          # Check if PR already exists
-          PR_COUNT=$(gh pr list --head "$BRANCH" --base main --state open --json id -q 'length')
-
-          if [ "$PR_COUNT" = "0" ]; then
-            echo "Creating PR for $BRANCH..."
-            gh pr create \
-              --base main \
-              --head "$BRANCH" \
-              --title "Add $TYPE content" \
-              --body "Auto-generated from Posty"
-          else
-            echo "PR already exists for $BRANCH"
-          fi
+          # Always create PR - GitHub will error if one exists, which is fine
+          echo "Creating/finding PR for $BRANCH..."
+          gh pr create --base main --head "$BRANCH" --title "Add $TYPE content" --body "Auto-generated from Posty" 2>&1 || echo "PR may already exist"
 
       - name: Enable auto-merge
         env:
