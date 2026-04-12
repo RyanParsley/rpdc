@@ -1,0 +1,170 @@
+---
+name: POSSE - Post-Deploy Syndication
+
+# This workflow runs on a schedule to check for newly published ephemera
+# that needs syndication. It only syndicates AFTER verifying the post is live.
+
+on:
+  schedule:
+    # Check every 15 minutes for content needing syndication
+    # This is a reasonable balance between responsiveness and usage
+    - cron: "*/15 * * * *"
+
+  workflow_dispatch:
+    inputs:
+      force_check:
+        description: "Force check all ephemera (not just recent)"
+        required: false
+        default: false
+
+jobs:
+  syndicate-after-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find ephemera needing syndication
+        id: find
+        run: |
+          echo "🔍 Checking for ephemera posts that need syndication..."
+
+          # Look for posts that:
+          # 1. Have been merged to main (exist in src/content/ephemera)
+          # 2. Have a date in the last 24 hours (recently published)
+          # 3. Don't have syndication links yet
+
+          needs_syndication=""
+          cutoff_date=$(date -d '24 hours ago' +%s)
+
+          for file in $(find src/content/ephemera -name "*.md" -type f 2>/dev/null); do
+            # Extract date from frontmatter
+            file_date=$(grep -E "^date:" "$file" | head -1 | sed 's/date: *//' | tr -d '"' || echo "")
+            
+            if [ -z "$file_date" ]; then
+              continue
+            fi
+            
+            # Convert to timestamp for comparison
+            file_timestamp=$(date -d "$file_date" +%s 2>/dev/null || echo 0)
+            
+            if [ "$file_timestamp" -lt "$cutoff_date" ]; then
+              continue  # Skip old posts
+            fi
+            
+            # Check if already syndicated
+            if grep -q "syndication:" "$file"; then
+              continue  # Already has syndication links
+            fi
+            
+            # Extract post slug from filename
+            slug=$(basename "$file" .md)
+            
+            # Check if post is live on the site
+            post_url="https://ryanparsley.com/ephemera/${slug}/"
+            http_status=$(curl -s -o /dev/null -w "%{http_code}" "$post_url" || echo "000")
+            
+            if [ "$http_status" = "200" ]; then
+              echo "✅ Post is LIVE: $slug"
+              needs_syndication="$needs_syndication $file"
+            else
+              echo "⏳ Post not live yet (HTTP $http_status): $slug"
+            fi
+          done
+
+          if [ -n "$needs_syndication" ]; then
+            echo "files=${needs_syndication}" >> $GITHUB_OUTPUT
+            echo "needs_syndication=true" >> $GITHUB_OUTPUT
+            echo "📝 Found posts needing syndication:"
+            echo "$needs_syndication" | tr ' ' '\n'
+          else
+            echo "needs_syndication=false" >> $GITHUB_OUTPUT
+            echo "✅ No posts need syndication right now"
+          fi
+
+      - name: Setup Node.js
+        if: steps.find.outputs.needs_syndication == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        if: steps.find.outputs.needs_syndication == 'true'
+        run: npm ci
+
+      - name: Run POSSE syndication
+        if: steps.find.outputs.needs_syndication == 'true'
+        id: posse
+        env:
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          MASTODON_INSTANCE: ${{ secrets.MASTODON_INSTANCE }}
+          BLUESKY_USERNAME: ${{ secrets.BLUESKY_USERNAME }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+        run: |
+          echo "🚀 Syndicating posts to Mastodon/Bluesky..."
+
+          # Run build which triggers POSSE integration
+          # The POSSE module will only process files without existing syndication
+          npm run build 2>&1 | tee build.log
+
+          # Check results
+          syndicated_count=$(grep -c "POSSE: Updated" build.log 2>/dev/null || echo 0)
+          echo "syndicated_count=${syndicated_count}" >> $GITHUB_OUTPUT
+
+          if [ "$syndicated_count" -gt 0 ]; then
+            echo "✅ Syndicated ${syndicated_count} post(s)"
+            grep "POSSE: Updated" build.log | tail -5
+          else
+            echo "ℹ️ No new syndications (may already be done or no valid posts)"
+          fi
+
+      - name: Check for file updates
+        id: check
+        run: |
+          if git diff --name-only | grep -q "src/content/ephemera"; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            echo "📝 Files updated with syndication links:"
+            git diff --stat | grep ephemera
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit syndication links
+        if: steps.check.outputs.has_updates == 'true'
+        run: |
+          git config user.name "POSSE Bot"
+          git config user.email "posse@ryanparsley.com"
+
+          git add src/content/ephemera/
+
+          if git diff --cached --quiet; then
+            echo "✅ No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "🤖 POSSE: Add syndication links [skip ci]
+
+          Auto-added Mastodon/Bluesky URLs for recently published ephemera.
+          Post was live, syndicated, and links added for display."
+
+          # Push to main - this will trigger CloudCannon to rebuild
+          # The [skip ci] prevents GitHub Actions from running again
+          git push origin main
+
+          echo "✅ Syndication links committed!"
+          echo "   CloudCannon will rebuild to display the links."
+
+      - name: Summary
+        run: |
+          echo "=== POSSE Post-Deploy Summary ==="
+          echo "Checked: $(date -u)"
+          echo "Posts found needing syndication: ${{ steps.find.outputs.needs_syndication }}"
+          echo "Posts syndicated: ${{ steps.posse.outputs.syndicated_count }}"
+          echo "Files updated: ${{ steps.check.outputs.has_updates }}"
+          echo ""
+          echo "Next check: 15 minutes"
