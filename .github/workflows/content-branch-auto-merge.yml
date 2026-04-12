@@ -74,9 +74,16 @@ jobs:
 
               # Check for date field (varies by content type)
               if [[ "$CONTENT_TYPE" == "ephemera" ]]; then
-                # Ephemera uses 'date'
-                if ! head -20 "$file" | grep -qE "^date:"; then
+                # Ephemera uses 'date' - validate format
+                date_line=$(head -20 "$file" | grep -E "^date:")
+                if [[ -z "$date_line" ]]; then
                   errors+=("$file: Missing date in frontmatter")
+                  rm "$file"
+                  continue
+                fi
+                # Check if date is Unix timestamp (numeric only) - REJECT
+                if [[ "$date_line" =~ ^date:[[:space:]]*[0-9]{10,}$ ]]; then
+                  errors+=("$file: Date is Unix timestamp, must be ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)")
                   rm "$file"
                   continue
                 fi
