@@ -1,0 +1,84 @@
+---
+name: POSSE Sync - Rebuild After Syndication
+
+on:
+  schedule:
+    # Run every 5 minutes to check for posts that need syndication synced back
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Manual trigger reason"
+        required: false
+        default: "Manual sync check"
+
+jobs:
+  check-and-rebuild:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for ephemera files missing syndication
+        id: check
+        run: |
+          echo "🔍 Checking for ephemera files that may need syndication sync..."
+
+          # Find recently created/modified ephemera files (last 30 minutes)
+          needs_rebuild=false
+
+          for file in $(find src/content/ephemera -name "*.md" -mmin -30 2>/dev/null || true); do
+            echo "Checking: $file"
+            
+            # Check if file has content but no syndication links
+            if grep -q "^date:" "$file" && ! grep -q "syndication:" "$file"; then
+              echo "  ⏳ Published but waiting for syndication: $file"
+              needs_rebuild=true
+            fi
+            
+            # Check if file was recently updated WITH syndication (needs rebuild)
+            if grep -q "syndication:" "$file"; then
+              # Check if modified in last 10 minutes
+              if [ -n "$(find "$file" -mmin -10 2>/dev/null)" ]; then
+                echo "  🔄 Syndication recently added, needs rebuild: $file"
+                needs_rebuild=true
+              fi
+            fi
+          done
+
+          if [ "$needs_rebuild" = true ]; then
+            echo "needs_rebuild=true" >> $GITHUB_OUTPUT
+            echo "📝 Ephemera content needs rebuild"
+          else
+            echo "needs_rebuild=false" >> $GITHUB_OUTPUT
+            echo "✅ No rebuild needed"
+          fi
+
+      - name: Trigger CloudCannon rebuild
+        if: steps.check.outputs.needs_rebuild == 'true'
+        run: |
+          echo "🚀 Triggering site rebuild..."
+
+          # Option 1: Make a harmless commit to trigger CloudCannon
+          git config user.name "POSSE Sync Bot"
+          git config user.email "posse-sync@ryanparsley.com"
+
+          # Create a sync marker file
+          echo "$(date -u)" > .last-posse-sync
+          git add .last-posse-sync
+          git commit -m "🤖 POSSE: Trigger rebuild after syndication sync [skip ci]"
+
+          # Push to trigger CloudCannon build
+          git push origin main
+
+          echo "✅ Rebuild triggered - CloudCannon should deploy shortly"
+
+      - name: Summary
+        run: |
+          echo "=== POSSE Sync Summary ==="
+          echo "Checked: $(date -u)"
+          echo "Rebuild needed: ${{ steps.check.outputs.needs_rebuild }}"

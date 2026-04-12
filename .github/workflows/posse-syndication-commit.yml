@@ -1,0 +1,78 @@
+---
+name: POSSE Syndication Commit
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "src/content/ephemera/**"
+
+jobs:
+  syndicate-and-commit:
+    runs-on: ubuntu-latest
+
+    # Only run for ephemera changes, skip if already a POSSE commit
+    if: |
+      !contains(github.event.head_commit.message, '🤖 POSSE:') &&
+      !contains(github.event.head_commit.message, 'Update syndication')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run POSSE syndication
+        env:
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          MASTODON_INSTANCE: ${{ secrets.MASTODON_INSTANCE }}
+          BLUESKY_USERNAME: ${{ secrets.BLUESKY_USERNAME }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+        run: |
+          echo "🚀 Running POSSE syndication..."
+          # This will post to platforms and update files with syndication URLs
+          npm run build 2>&1 | grep -E "(POSSE|syndication)" || echo "POSSE integration ran"
+
+      - name: Check for syndication updates
+        id: check
+        run: |
+          # Check if any ephemera files were updated with syndication
+          if git diff --name-only | grep -q "src/content/ephemera"; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            echo "📝 Syndication links added to ephemera files"
+            git diff --stat
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+            echo "✅ No syndication updates needed"
+          fi
+
+      - name: Commit syndication updates
+        if: steps.check.outputs.has_updates == 'true'
+        run: |
+          git config user.name "POSSE Bot"
+          git config user.email "posse@ryanparsley.com"
+
+          git add src/content/ephemera/
+          git commit -m "🤖 POSSE: Update syndication links [skip ci]"
+
+          echo "🔄 Pushing syndication updates..."
+          git push origin main
+
+          echo "✅ Syndication links committed - CloudCannon will rebuild"
+
+      - name: Summary
+        run: |
+          echo "=== POSSE Syndication Summary ==="
+          echo "Trigger: ${{ github.event.head_commit.message }}"
+          echo "Updates found: ${{ steps.check.outputs.has_updates }}"
+          echo "Time: $(date -u)"

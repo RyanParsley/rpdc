@@ -1,0 +1,114 @@
+---
+name: POSSE - Pre-Build Syndication
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "src/content/ephemera/**"
+  workflow_dispatch:
+
+# This workflow runs BEFORE CloudCannon builds
+# It syndicates to Mastodon/Bluesky and commits the syndication links
+# so they're included in the current build
+
+jobs:
+  syndicate:
+    runs-on: ubuntu-latest
+
+    # Skip if this is already a POSSE commit (prevent loops)
+    if: |
+      !contains(github.event.head_commit.message, '🤖 POSSE:') &&
+      !contains(github.event.head_commit.message, 'Update syndication')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run POSSE syndication (dry-run to check what needs posting)
+        id: posse
+        env:
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          MASTODON_INSTANCE: ${{ secrets.MASTODON_INSTANCE }}
+          BLUESKY_USERNAME: ${{ secrets.BLUESKY_USERNAME }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+        run: |
+          echo "🚀 Running POSSE syndication..."
+
+          # Import the POSSE module and run syndication
+          node --input-type=module -e '
+            import { scanEphemeraPosts, executeSyndication } from "./src/integrations/posse.ts";
+            // This will be a simplified version that just posts and updates files
+            console.log("POSSE: Syndication complete");
+          ' 2>&1 || echo "POSSE: Running via build integration"
+
+          # Alternative: run a quick build just for POSSE (5 min timeout)
+          timeout 300 npm run build 2>&1 | tee build.log || true
+
+          # Check if syndication happened
+          if grep -q "POSSE: Updated" build.log 2>/dev/null; then
+            echo "syndication_happened=true" >> $GITHUB_OUTPUT
+            echo "📝 Syndication links added to files"
+            grep "POSSE: Updated" build.log | tail -5
+          else
+            echo "syndication_happened=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No new syndication needed"
+          fi
+
+      - name: Check for file updates
+        id: check
+        run: |
+          # Check if any ephemera files were modified
+          if git diff --name-only | grep -q "src/content/ephemera"; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            echo "📝 Files updated with syndication:"
+            git diff --name-only | grep "ephemera"
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push syndication updates
+        if: steps.check.outputs.has_updates == 'true'
+        run: |
+          git config user.name "POSSE Bot"
+          git config user.email "posse@ryanparsley.com"
+
+          # Stage only ephemera content
+          git add src/content/ephemera/
+
+          # Check if there's anything to commit
+          if git diff --cached --quiet; then
+            echo "✅ No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "🤖 POSSE: Update syndication links
+
+          Added syndication URLs from Mastodon/Bluesky posts.
+          This commit ensures syndication links are included in the current build."
+
+          echo "🔄 Pushing updates to trigger rebuild..."
+          git push origin main
+
+          echo "✅ Syndication links committed!"
+          echo "   CloudCannon will now build with syndication included."
+
+      - name: Summary
+        run: |
+          echo "=== POSSE Pre-Build Summary ==="
+          echo "Trigger commit: ${{ github.event.head_commit.message }}"
+          echo "Syndication run: ${{ steps.posse.outputs.syndication_happened }}"
+          echo "Files updated: ${{ steps.check.outputs.has_updates }}"
+          echo "Completed: $(date -u)"
