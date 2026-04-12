@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout main branch
@@ -144,50 +145,52 @@ jobs:
           echo ""
           echo "✅ Content validation complete"
 
-      - name: Commit and merge to main
+      - name: Create PR and enable auto-merge
         if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="${{ steps.branch.outputs.branch }}"
           CONTENT_TYPE="${{ steps.branch.outputs.content_type }}"
 
-          # Configure git
-          git config user.name "Posty Bot"
-          git config user.email "posty@ryanparsley.com"
+          echo "Creating PR from $BRANCH_NAME to main..."
+          PR_BODY="Auto-generated PR from Posty. Content type: $CONTENT_TYPE. Branch: $BRANCH_NAME. Auto-merge enabled after build check passes."
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "Add $CONTENT_TYPE content: $BRANCH_NAME" \
+            --body "$PR_BODY")
 
-          # Stage all valid files
-          git add -A
+          echo "Created PR: $PR_URL"
 
-          # Commit with descriptive message
-          git commit -m "Add $CONTENT_TYPE content from $BRANCH_NAME" \
-            -m "Auto-merged via GitHub Actions" \
-            -m "Published via Posty"
+          echo "Enabling auto-merge..."
+          gh pr merge "$PR_URL" --auto --merge
 
-          # Pull latest changes and rebase to handle CloudCannon race conditions
-          # This handles the case where CloudCannon pushed to main while we were validating
-          if ! git pull --rebase origin main; then
-            echo "⚠️  Conflict with concurrent changes, attempting retry..."
-            sleep 2
-            if ! git pull --rebase origin main; then
-              echo "❌ Failed to rebase after retry"
-              echo "CloudCannon may have pushed conflicting changes to main"
-              exit 1
-            fi
-          fi
+          echo "✅ PR created with auto-merge enabled"
+          echo "Build check must pass before merge completes"
 
-          # Push to main
-          git push origin main
-
-          echo "✅ Content merged to main"
-
-      - name: Delete content branch
+      - name: Wait for merge and cleanup
         if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BRANCH_NAME="${{ steps.branch.outputs.branch }}"
 
-          # Delete the remote branch
-          git push origin --delete "$BRANCH_NAME" || true
+          echo "Waiting for PR to merge (build check must pass)..."
+          sleep 30
 
-          echo "✅ Deleted branch: $BRANCH_NAME"
+          PR_STATE=$(gh pr view "$BRANCH_NAME" --json state -q '.state' 2>/dev/null || echo "UNKNOWN")
+
+          if [ "$PR_STATE" = "MERGED" ]; then
+            echo "✅ PR was merged successfully"
+            git push origin --delete "$BRANCH_NAME" || true
+            echo "✅ Deleted branch: $BRANCH_NAME"
+          elif [ "$PR_STATE" = "OPEN" ]; then
+            echo "⏳ PR is still open (build check may still be running)"
+            echo "Branch $BRANCH_NAME will be deleted after merge completes"
+          else
+            echo "⚠️ PR state: $PR_STATE"
+          fi
 
       - name: Notify on failure
         if: failure()
