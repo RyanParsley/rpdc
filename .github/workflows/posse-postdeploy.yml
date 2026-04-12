@@ -1,0 +1,128 @@
+---
+name: POSSE - Post-Deploy Syndication
+
+# This workflow runs when CloudCannon deploys new ephemera content.
+# CloudCannon makes a commit after deploying, which triggers this workflow.
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "src/content/ephemera/**"
+
+jobs:
+  syndicate-after-deploy:
+    runs-on: ubuntu-latest
+
+    # Only run for CloudCannon post-deploy commits (not manual edits, not POSSE commits)
+    if: contains(github.event.head_commit.message, 'via CloudCannon')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find newly published ephemera
+        id: find
+        run: |
+          echo "🔍 Checking for ephemera that needs syndication..."
+
+          # Get files changed in this CloudCannon commit
+          changed_files=$(git diff --name-only HEAD~1 HEAD -- "src/content/ephemera/" || true)
+
+          needs_syndication=""
+
+          for file in $changed_files; do
+            if [[ ! "$file" =~ \.md$ ]]; then
+              continue
+            fi
+            
+            # Check if already has syndication (skip if yes)
+            if grep -q "syndication:" "$file"; then
+              echo "  ✓ Already syndicated: $file"
+              continue
+            fi
+            
+            # Extract post slug from filename
+            slug=$(basename "$file" .md)
+            echo "  📝 Found new post: $slug"
+            needs_syndication="$needs_syndication $file"
+          done
+
+          if [ -n "$needs_syndication" ]; then
+            echo "files=${needs_syndication}" >> $GITHUB_OUTPUT
+            echo "needs_syndication=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs_syndication=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        if: steps.find.outputs.needs_syndication == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        if: steps.find.outputs.needs_syndication == 'true'
+        run: npm ci
+
+      - name: Run POSSE syndication
+        if: steps.find.outputs.needs_syndication == 'true'
+        id: posse
+        env:
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          MASTODON_INSTANCE: ${{ secrets.MASTODON_INSTANCE }}
+          BLUESKY_USERNAME: ${{ secrets.BLUESKY_USERNAME }}
+          BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
+        run: |
+          echo "🚀 Syndicating to Mastodon/Bluesky..."
+
+          # Run build which triggers POSSE integration
+          npm run build 2>&1 | tee build.log
+
+          syndicated_count=$(grep -c "POSSE: Updated" build.log 2>/dev/null || echo 0)
+          echo "syndicated_count=${syndicated_count}" >> $GITHUB_OUTPUT
+
+          if [ "$syndicated_count" -gt 0 ]; then
+            echo "✅ Syndicated ${syndicated_count} post(s)"
+            grep "POSSE: Updated" build.log | tail -5
+          fi
+
+      - name: Check for file updates
+        id: check
+        run: |
+          if git diff --name-only | grep -q "src/content/ephemera"; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            git diff --stat | grep ephemera || true
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit syndication links
+        if: steps.check.outputs.has_updates == 'true'
+        run: |
+          git config user.name "POSSE Bot"
+          git config user.email "posse@ryanparsley.com"
+
+          git add src/content/ephemera/
+
+          if git diff --cached --quiet; then
+            echo "✅ No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "🤖 POSSE: Add syndication links [skip ci]"
+          git push origin main
+
+          echo "✅ Syndication links committed!"
+
+      - name: Summary
+        run: |
+          echo "=== POSSE Syndication Summary ==="
+          echo "Trigger: CloudCannon deploy"
+          echo "Commit: ${{ github.event.head_commit.message }}"
+          echo "Syndicated: ${{ steps.posse.outputs.syndicated_count }}"
+          echo "Updated: ${{ steps.check.outputs.has_updates }}"
