@@ -1,25 +1,25 @@
 ---
 name: POSSE - Pre-Build Syndication
 
+# This workflow runs when content branches are pushed (before merge to main)
+# It syndicates to Mastodon/Bluesky and updates the files WITH syndication links
+# so when the PR merges, main already has the syndication data
+
 on:
   push:
-    branches: [main, master]
-    paths:
-      - "src/content/ephemera/**"
+    branches:
+      - "ephemera/*"
+      - "blog/*"
+      - "note/*"
+      - "link/*"
   workflow_dispatch:
 
-# This workflow runs BEFORE CloudCannon builds
-# It syndicates to Mastodon/Bluesky and commits the syndication links
-# so they're included in the current build
+# This runs on the CONTENT BRANCH, not main
+# So the syndication links are added before the merge
 
 jobs:
   syndicate:
     runs-on: ubuntu-latest
-
-    # Skip if this is already a POSSE commit (prevent loops)
-    if: |
-      !contains(github.event.head_commit.message, '🤖 POSSE:') &&
-      !contains(github.event.head_commit.message, 'Update syndication')
 
     steps:
       - name: Checkout repository
@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run POSSE syndication (dry-run to check what needs posting)
+      - name: Run POSSE syndication
         id: posse
         env:
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
@@ -45,48 +45,44 @@ jobs:
           BLUESKY_USERNAME: ${{ secrets.BLUESKY_USERNAME }}
           BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
         run: |
-          echo "🚀 Running POSSE syndication..."
+          echo "🚀 Running POSSE syndication on content branch..."
 
-          # Import the POSSE module and run syndication
-          node --input-type=module -e '
-            import { scanEphemeraPosts, executeSyndication } from "./src/integrations/posse.ts";
-            // This will be a simplified version that just posts and updates files
-            console.log("POSSE: Syndication complete");
-          ' 2>&1 || echo "POSSE: Running via build integration"
-
-          # Alternative: run a quick build just for POSSE (5 min timeout)
-          timeout 300 npm run build 2>&1 | tee build.log || true
+          # Run build which triggers POSSE integration
+          # This posts to platforms and updates local files
+          npm run build 2>&1 | tee build.log
 
           # Check if syndication happened
           if grep -q "POSSE: Updated" build.log 2>/dev/null; then
             echo "syndication_happened=true" >> $GITHUB_OUTPUT
-            echo "📝 Syndication links added to files"
+            echo "📝 Syndication completed:"
             grep "POSSE: Updated" build.log | tail -5
           else
             echo "syndication_happened=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ No new syndication needed"
+            echo "ℹ️ No syndication needed or already done"
           fi
 
       - name: Check for file updates
         id: check
         run: |
           # Check if any ephemera files were modified
-          if git diff --name-only | grep -q "src/content/ephemera"; then
+          if git diff --name-only | grep -q "src/content/"; then
             echo "has_updates=true" >> $GITHUB_OUTPUT
-            echo "📝 Files updated with syndication:"
-            git diff --name-only | grep "ephemera"
+            echo "📝 Content files updated with syndication:"
+            git diff --name-only | grep "src/content/"
           else
             echo "has_updates=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit and push syndication updates
+      - name: Commit syndication to content branch
         if: steps.check.outputs.has_updates == 'true'
         run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+
           git config user.name "POSSE Bot"
           git config user.email "posse@ryanparsley.com"
 
-          # Stage only ephemera content
-          git add src/content/ephemera/
+          # Stage content files
+          git add src/content/
 
           # Check if there's anything to commit
           if git diff --cached --quiet; then
@@ -94,21 +90,21 @@ jobs:
             exit 0
           fi
 
-          git commit -m "🤖 POSSE: Update syndication links
+          git commit -m "🤖 POSSE: Add syndication links
 
-          Added syndication URLs from Mastodon/Bluesky posts.
-          This commit ensures syndication links are included in the current build."
+          Auto-added Mastodon/Bluesky syndication URLs.
+          These links will be included when this branch merges to main."
 
-          echo "🔄 Pushing updates to trigger rebuild..."
-          git push origin main
+          echo "🔄 Pushing to $BRANCH_NAME..."
+          git push origin "$BRANCH_NAME"
 
-          echo "✅ Syndication links committed!"
-          echo "   CloudCannon will now build with syndication included."
+          echo "✅ Syndication links committed to content branch"
+          echo "   The PR will now include syndication data"
 
       - name: Summary
         run: |
           echo "=== POSSE Pre-Build Summary ==="
-          echo "Trigger commit: ${{ github.event.head_commit.message }}"
+          echo "Branch: ${{ github.ref_name }}"
           echo "Syndication run: ${{ steps.posse.outputs.syndication_happened }}"
           echo "Files updated: ${{ steps.check.outputs.has_updates }}"
-          echo "Completed: $(date -u)"
+          echo "Next: PR should auto-merge with syndication included"
