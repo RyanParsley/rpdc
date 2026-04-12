@@ -1,0 +1,199 @@
+# Auto-merge per-content-type branches to main
+# This workflow runs when Posty pushes to branches like ephemera/2026-04-12
+# It validates and extracts only the expected content files, ignoring anything else
+
+name: Content Branch Auto-Merge
+
+on:
+  push:
+    branches:
+      - "ephemera/*"
+      - "blog/*"
+      - "note/*"
+      - "link/*"
+
+jobs:
+  validate-and-merge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract branch name
+        id: branch
+        run: |
+          # Extract content type from branch name (e.g., ephemera/2026-04-12 -> ephemera)
+          BRANCH_NAME="${{ github.ref_name }}"
+          CONTENT_TYPE=$(echo "$BRANCH_NAME" | cut -d'/' -f1)
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "content_type=$CONTENT_TYPE" >> $GITHUB_OUTPUT
+          echo "Processing content type: $CONTENT_TYPE from branch: $BRANCH_NAME"
+
+      - name: Fetch content branch
+        run: |
+          git fetch origin "${{ steps.branch.outputs.branch }}"
+
+      - name: Extract and validate content
+        id: extract
+        run: |
+          CONTENT_TYPE="${{ steps.branch.outputs.content_type }}"
+          BRANCH_NAME="${{ steps.branch.outputs.branch }}"
+
+          # Get list of changed files in content directories only
+          changed_files=$(git diff --name-only HEAD..origin/$BRANCH_NAME -- "src/content/" || true)
+
+          echo "Changed content files:"
+          echo "$changed_files"
+
+          # Track valid files to cherry-pick
+          valid_files=()
+          errors=()
+
+          for file in $changed_files; do
+            # Only process markdown files in the correct content directory
+            if [[ "$file" =~ ^src/content/$CONTENT_TYPE/.*\.md$ ]]; then
+              echo "Processing: $file"
+
+              # Extract the file from the content branch
+              git checkout origin/$BRANCH_NAME -- "$file"
+
+              # Validate frontmatter
+              if ! head -20 "$file" | grep -q "^---"; then
+                errors+=("$file: Missing frontmatter (---)")
+                rm "$file"
+                continue
+              fi
+
+              # Check for date field (varies by content type)
+              if [[ "$CONTENT_TYPE" == "ephemera" ]]; then
+                # Ephemera uses 'date'
+                if ! head -20 "$file" | grep -qE "^date:"; then
+                  errors+=("$file: Missing date in frontmatter")
+                  rm "$file"
+                  continue
+                fi
+              else
+                # Blog/notes use 'pubDate'
+                if ! head -20 "$file" | grep -qE "^pubDate:"; then
+                  errors+=("$file: Missing pubDate in frontmatter")
+                  rm "$file"
+                  continue
+                fi
+              fi
+
+              # Check file isn't empty
+              if [ ! -s "$file" ]; then
+                errors+=("$file: File is empty")
+                rm "$file"
+                continue
+              fi
+
+              # Check for suspicious content (basic safety check)
+              if grep -qE "(eval\(|exec\(|system\()" "$file"; then
+                errors+=("$file: Contains suspicious code patterns")
+                rm "$file"
+                continue
+              fi
+
+              valid_files+=("$file")
+              echo "  ✓ $file is valid"
+            else
+              echo "  ⚠ Ignoring non-$CONTENT_TYPE file: $file"
+            fi
+          done
+
+          # Check for associated images (only allowed for ephemera)
+          if [[ "$CONTENT_TYPE" == "ephemera" ]]; then
+            image_files=$(git diff --name-only HEAD..origin/$BRANCH_NAME -- "src/content/$CONTENT_TYPE/" | grep -E "\.(jpg|jpeg|png|gif|webp)$" || true)
+            for img in $image_files; do
+              if [[ "$img" =~ ^src/content/ephemera/ ]]; then
+                git checkout origin/$BRANCH_NAME -- "$img"
+                valid_files+=("$img")
+                echo "  ✓ Image: $img"
+              fi
+            done
+          fi
+
+          # Report results
+          echo ""
+          echo "Validation Summary:"
+          echo "  Valid files: ${#valid_files[@]}"
+          echo "  Errors: ${#errors[@]}"
+
+          if [ ${#errors[@]} -gt 0 ]; then
+            echo ""
+            echo "❌ Validation errors (these files were NOT merged):"
+            for error in "${errors[@]}"; do
+              echo "  - $error"
+            done
+          fi
+
+          if [ ${#valid_files[@]} -eq 0 ]; then
+            echo ""
+            echo "❌ No valid content files to merge"
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ Content validation complete"
+
+      - name: Commit and merge to main
+        if: success()
+        run: |
+          BRANCH_NAME="${{ steps.branch.outputs.branch }}"
+          CONTENT_TYPE="${{ steps.branch.outputs.content_type }}"
+
+          # Configure git
+          git config user.name "Posty Bot"
+          git config user.email "posty@ryanparsley.com"
+
+          # Stage all valid files
+          git add -A
+
+          # Commit with descriptive message
+          git commit -m "Add $CONTENT_TYPE content from $BRANCH_NAME" \
+            -m "Auto-merged via GitHub Actions" \
+            -m "Published via Posty"
+
+          # Pull latest changes and rebase to handle CloudCannon race conditions
+          # This handles the case where CloudCannon pushed to main while we were validating
+          if ! git pull --rebase origin main; then
+            echo "⚠️  Conflict with concurrent changes, attempting retry..."
+            sleep 2
+            if ! git pull --rebase origin main; then
+              echo "❌ Failed to rebase after retry"
+              echo "CloudCannon may have pushed conflicting changes to main"
+              exit 1
+            fi
+          fi
+
+          # Push to main
+          git push origin main
+
+          echo "✅ Content merged to main"
+
+      - name: Delete content branch
+        if: success()
+        run: |
+          BRANCH_NAME="${{ steps.branch.outputs.branch }}"
+
+          # Delete the remote branch
+          git push origin --delete "$BRANCH_NAME" || true
+
+          echo "✅ Deleted branch: $BRANCH_NAME"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          BRANCH_NAME="${{ steps.branch.outputs.branch }}"
+          echo "❌ Content merge failed for branch: $BRANCH_NAME"
+          echo "Check the validation output above for details"
+          echo "The content branch has NOT been merged to main"
+          echo "You can review the branch manually and try again"
