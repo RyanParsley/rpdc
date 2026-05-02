@@ -74,7 +74,7 @@ If we treat the Software Engineering Ecosystem as a dynamical system:
 
 1.  The AI is the Endogenous Engine (performing the high-speed, repetitive,
     pattern-matching work).
-2.  The Human is the Exogenous Driver (providing catalystic impact, the
+2.  The Human is the Exogenous Driver (providing catalytic impact, the
     "unpredictable" context, true understanding and curation).
 3.  The Thesis is that removing the Driver to increase the Engine's speed causes
     the System to crash into a state of zero-information equilibrium.
