@@ -77,7 +77,7 @@ If we treat the Software Engineering Ecosystem as a dynamical system:
 2.  The Human is the Exogenous Driver (providing catalytic impact, the
     "unpredictable" context, true understanding and curation).
 3.  The Thesis is that removing the Driver to increase the Engine's speed causes
-    the System to crash into a state of zero-information equilibrium.
+    the System to crash into a state mediocrity.
 
 ---
 
