@@ -277,6 +277,7 @@ blockquote {
 	border: 1px solid var(--nord2);
 	color: var(--nord6);
 	box-sizing: border-box;
+	margin-bottom: 0;
 }
 
 .callout input[type="email"]:focus {
