@@ -13,8 +13,8 @@ const {
 	className = "",
 } = Astro.props;
 
-const buttondownUsername = import.meta.env.BUTTONDOWN_USERNAME;
-const formAction = `https://buttondown.com/api/emails/embed-subscribe/${buttondownUsername}`;
+const BUTTONDOWN_USERNAME = "RyanParsley";
+const formAction = `https://buttondown.com/api/emails/embed-subscribe/${BUTTONDOWN_USERNAME}`;
 ---
 
 <div class={`newsletter-signup ${className}`}>
