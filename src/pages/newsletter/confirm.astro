@@ -2,11 +2,6 @@
 import Layout from "@layouts/Page.astro";
 import SubscribeBlock from "@components/SubscribeBlock.astro";
 import ElsewhereBlock from "@components/ElsewhereBlock.astro";
-
-const { url } = Astro;
-const searchParams = url.searchParams;
-const status = searchParams.get("status");
-const message = searchParams.get("message");
 ---
 
 <Layout
@@ -15,43 +10,16 @@ const message = searchParams.get("message");
 	description="Subscribe to my newsletter for the latest posts, updates, and occasional thoughts."
 >
 	<section class="confirmation-page">
-		{
-			status === "success" ? (
-				<>
-					<h1>Thanks for signing up!</h1>
-					<h2>Pending confirmation</h2>
-					<p>
-						I deliver email via Buttondown and they'll be sending a confirmation
-						to you that you really want these. Please be on the lookout for that
-						so you can start receiving the emails.
-					</p>
-					<p>
-						In the meantime, <a href="/">enjoy my backlog</a>.
-					</p>
-				</>
-			) : status === "error" ? (
-				<>
-					<h1>Something went wrong</h1>
-					<p>{message || "There was an error processing your subscription."}</p>
-					<p>
-						<a href="/">Continue reading →</a>
-					</p>
-				</>
-			) : (
-				<>
-					<h1>Thanks for signing up!</h1>
-					<h2>Pending confirmation</h2>
-					<p>
-						I deliver email via Buttondown and they'll be sending a confirmation
-						to you that you really want these. Please be on the lookout for that
-						so you can start receiving the emails.
-					</p>
-					<p>
-						In the meantime, <a href="/">enjoy my backlog</a>.
-					</p>
-				</>
-			)
-		}
+		<h1>Thanks for signing up!</h1>
+		<h2>Pending confirmation</h2>
+		<p>
+			I deliver email via Buttondown and they'll be sending a confirmation to
+			you that you really want these. Please be on the lookout for that so you
+			can start receiving the emails.
+		</p>
+		<p>
+			In the meantime, <a href="/">enjoy my backlog</a>.
+		</p>
 	</section>
 	<aside>
 		<SubscribeBlock />

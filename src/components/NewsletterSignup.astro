@@ -12,13 +12,16 @@ const {
 	buttonText = "Subscribe",
 	className = "",
 } = Astro.props;
+
+const buttondownUsername = import.meta.env.BUTTONDOWN_USERNAME;
+const formAction = `https://buttondown.com/api/emails/embed-subscribe/${buttondownUsername}`;
 ---
 
 <div class={`newsletter-signup ${className}`}>
 	<h3>{title}</h3>
 	<p>{description}</p>
 
-	<form method="POST" action="/api/newsletter/subscribe">
+	<form method="POST" action={formAction}>
 		<label for="newsletter-email" class="sr-only">Email address</label>
 		<input
 			type="email"
@@ -28,6 +31,7 @@ const {
 			required
 			autocomplete="email"
 		/>
+		<input type="hidden" name="embed" value="1" />
 		<button type="submit">{buttonText}</button>
 	</form>
 </div>
