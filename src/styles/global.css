@@ -268,3 +268,19 @@ aside form {
 	flex-direction: column;
 	gap: 0.5rem;
 }
+
+.form-inline {
+	display: flex;
+	gap: 0.75rem;
+	align-items: flex-start;
+}
+
+.form-inline input[type="email"] {
+	flex: 1;
+}
+
+@media (width <= 600px) {
+	.form-inline {
+		flex-direction: column;
+	}
+}
