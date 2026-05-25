@@ -16,7 +16,7 @@ const blueskyShareUrl = `https://bsky.app/intent/compose?text=${encodedBlueskySh
 const mastodonShareUrl = `https://mastodon.social/share?text=${encodedTitle}&url=${encodedUrl}`;
 ---
 
-<div class="webmention-share-prompt">
+<div class="callout webmention-share-prompt">
 	<h3>Continue the converstion elsewhere</h3>
 	<h4>Let's chat more on the platform of your choice.</h4>
 	<div class="share-buttons">
@@ -70,13 +70,6 @@ const mastodonShareUrl = `https://mastodon.social/share?text=${encodedTitle}&url
 </div>
 
 <style>
-	.webmention-share-prompt {
-		background-color: var(--nord1);
-		padding: 0.25rem 1rem 1rem;
-		margin-top: 1.5rem;
-		border-radius: 0.5rem;
-	}
-
 	.share-buttons {
 		display: flex;
 		gap: 1rem;
