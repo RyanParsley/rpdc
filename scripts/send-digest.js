@@ -102,11 +102,11 @@ function getDateFromFile(filePath, frontmatter) {
 function getTitleFromContent(content, filePath) {
   // Try frontmatter
   const frontmatter = parseFrontmatter(content);
-  if (frontmatter.title) return frontmatter.title;
+  if (frontmatter.title) return frontmatter.title.replace(/"/g, "").trim();
 
   // Try first h1
   const h1Match = content.match(/^#\s+(.+)$/m);
-  if (h1Match) return h1Match[1];
+  if (h1Match) return h1Match[1].replace(/"/g, "").trim();
 
   // Fall back to filename
   return path.basename(filePath, path.extname(filePath));
@@ -125,8 +125,15 @@ function getDescription(content) {
   for (const p of paragraphs) {
     const trimmed = p.trim();
     if (trimmed && !trimmed.startsWith("#") && trimmed.length > 20) {
-      // Remove markdown formatting
-      return trimmed.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*_`#]/g, "");
+      // Remove markdown formatting and HTML entities
+      return trimmed
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/[*_`#]/g, "")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&39;/g, "'")
+        .replace(/&quot;/g, '"');
     }
   }
 
@@ -138,10 +145,10 @@ function getDescription(content) {
  */
 function getTags(frontmatter) {
   if (!frontmatter.tags) return [];
-  if (Array.isArray(frontmatter.tags)) return frontmatter.tags;
+  if (Array.isArray(frontmatter.tags)) return frontmatter.tags.map(t => t.replace(/"/g, "").trim());
   if (typeof frontmatter.tags === "string") {
     return frontmatter.tags
-      .replace(/[\[\]]/g, "")
+      .replace(/[\[\]"]/g, "")
       .split(",")
       .map((t) => t.trim().replace(/^#/, ""));
   }
@@ -151,15 +158,16 @@ function getTags(frontmatter) {
 /**
  * Build URL from file path
  */
-function filePathToUrl(filePath, baseType) {
+function filePathToUrl(filePath) {
   const relative = path.relative(
     path.join(__dirname, "../src/content"),
     filePath
   );
 
-  // Handle nested paths like blog/2025/2025-08-31-posse-astro-integration.md
+  // Remove extension and convert to URL path
+  // e.g., "blog/2025/2025-08-31-posse-astro-integration.md" → "/blog/2025/2025-08-31-posse-astro-integration"
   const withoutExt = relative.replace(/\.(md|mdx)$/, "");
-  return `${SITE_URL}/${baseType}/${withoutExt}`;
+  return `${SITE_URL}/${withoutExt}`;
 }
 
 /**
@@ -178,7 +186,7 @@ function formatDate(date) {
  * Collect content from past week
  */
 async function collectWeeklyContent() {
-  const oneWeekAgo = new Date();
+  const oneWeekAgo = new Date("2026-01-07");
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
   const content = {
@@ -199,7 +207,7 @@ async function collectWeeklyContent() {
     if (date >= oneWeekAgo) {
       content.blog.push({
         title: getTitleFromContent(fileContent, file),
-        url: filePathToUrl(file, "blog"),
+        url: filePathToUrl(file),
         date,
         description: getDescription(fileContent),
         tags: getTags(frontmatter),
@@ -227,7 +235,7 @@ async function collectWeeklyContent() {
     if (date >= oneWeekAgo) {
       content.note.push({
         title: getTitleFromContent(fileContent, file),
-        url: filePathToUrl(file, "note"),
+        url: filePathToUrl(file),
         date,
         description: getDescription(fileContent),
         tags: getTags(frontmatter),
@@ -250,7 +258,7 @@ async function collectWeeklyContent() {
       const slug = path.basename(file, path.extname(file));
       content.ephemera.push({
         title: frontmatter.title || slug,
-        url: filePathToUrl(file, "ephemera"),
+        url: filePathToUrl(file),
         date,
         description: getDescription(fileContent),
         tags: getTags(frontmatter),
@@ -333,6 +341,8 @@ ${dateRange}
  * Send email via Buttondown API
  */
 async function sendEmail(subject, body) {
+  const publishDate = new Date().toISOString();
+
   const response = await fetch(`${BUTTONDOWN_API_URL}/emails`, {
     method: "POST",
     headers: {
@@ -344,6 +354,8 @@ async function sendEmail(subject, body) {
       subject,
       body,
       email_type: "public",
+      status: "sent",
+      publish_date: publishDate,
     }),
   });
 
