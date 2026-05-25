@@ -3,7 +3,12 @@ name: Weekly Digest
 on:
   schedule:
     - cron: "0 9 * * MON"  # Every Monday at 9:00 AM UTC
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      test_date_range:
+        description: "Test date range (e.g., '2026-01-07' to use as start date for testing)"
+        required: false
+        type: string
 
 jobs:
   send-digest:
@@ -28,3 +33,4 @@ jobs:
         run: node scripts/send-digest.js
         env:
           BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
+          TEST_DATE_RANGE: ${{ github.event.inputs.test_date_range }}

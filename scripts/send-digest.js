@@ -183,12 +183,9 @@ function formatDate(date) {
 }
 
 /**
- * Collect content from past week
+ * Collect content from date range
  */
-async function collectWeeklyContent() {
-  const oneWeekAgo = new Date("2026-01-07");
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
+async function collectWeeklyContent(weekStart, weekEnd) {
   const content = {
     blog: [],
     note: [],
@@ -204,7 +201,7 @@ async function collectWeeklyContent() {
     const frontmatter = parseFrontmatter(fileContent);
     const date = getDateFromFile(file, frontmatter);
 
-    if (date >= oneWeekAgo) {
+    if (date >= weekStart && date <= weekEnd) {
       content.blog.push({
         title: getTitleFromContent(fileContent, file),
         url: filePathToUrl(file),
@@ -232,7 +229,7 @@ async function collectWeeklyContent() {
     const frontmatter = parseFrontmatter(fileContent);
     const date = getDateFromFile(file, frontmatter);
 
-    if (date >= oneWeekAgo) {
+    if (date >= weekStart && date <= weekEnd) {
       content.note.push({
         title: getTitleFromContent(fileContent, file),
         url: filePathToUrl(file),
@@ -253,7 +250,7 @@ async function collectWeeklyContent() {
     const frontmatter = parseFrontmatter(fileContent);
     const date = getDateFromFile(file, frontmatter);
 
-    if (date >= oneWeekAgo) {
+    if (date >= weekStart && date <= weekEnd) {
       // Ephemera uses slug as title if no title in frontmatter
       const slug = path.basename(file, path.extname(file));
       content.ephemera.push({
@@ -273,12 +270,8 @@ async function collectWeeklyContent() {
 /**
  * Generate Markdown digest
  */
-function generateMarkdownDigest(content) {
-  const now = new Date();
-  const weekStart = new Date(now);
-  weekStart.setDate(weekStart.getDate() - 7);
-
-  const dateRange = `${formatDate(weekStart)} - ${formatDate(now)}`;
+function generateMarkdownDigest(content, weekStart, weekEnd) {
+  const dateRange = `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
 
   let markdown = `📝 **Weekly Digest**
 ================
@@ -375,9 +368,20 @@ async function main() {
   console.log("📝 Starting weekly digest generation...\n");
 
   try {
+    // Calculate date range
+    // Allow override via TEST_DATE_RANGE env var for manual testing
+    const endDate = process.env.TEST_DATE_RANGE
+      ? new Date(process.env.TEST_DATE_RANGE)
+      : new Date();
+
+    const weekStart = new Date(endDate);
+    weekStart.setDate(weekStart.getDate() - 7);
+
+    console.log(`   Date range: ${formatDate(weekStart)} - ${formatDate(endDate)}`);
+
     // Collect content from past week
     console.log("🔍 Collecting content from the past week...");
-    const content = await collectWeeklyContent();
+    const content = await collectWeeklyContent(weekStart, endDate);
 
     const totalItems =
       content.blog.length + content.note.length + content.ephemera.length;
@@ -394,16 +398,13 @@ async function main() {
 
     // Generate digest
     console.log("📄 Generating Markdown digest...");
-    const body = generateMarkdownDigest(content);
+    const body = generateMarkdownDigest(content, weekStart, endDate);
 
     // Generate subject line
-    const now = new Date();
-    const weekStart = new Date(now);
-    weekStart.setDate(weekStart.getDate() - 7);
     const subject = `Weekly Digest: ${weekStart.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-    })} - ${now.toLocaleDateString("en-US", {
+    })} - ${endDate.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
