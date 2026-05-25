@@ -1,0 +1,39 @@
+---
+interface Props {
+	readonly title?: string;
+	readonly description?: string;
+	readonly buttonText?: string;
+	readonly className?: string;
+	readonly formClass?: string;
+}
+
+const {
+	title = "Subscribe to my newsletter",
+	description = "Get notified when I publish new posts and updates.",
+	buttonText = "Subscribe",
+	className = "",
+	formClass = "",
+} = Astro.props;
+
+const BUTTONDOWN_USERNAME = "RyanParsley";
+const formAction = `https://buttondown.com/api/emails/embed-subscribe/${BUTTONDOWN_USERNAME}`;
+---
+
+<div class={`callout ${className}`}>
+	<h3>{title}</h3>
+	<p>{description}</p>
+
+	<form method="POST" action={formAction} class={formClass}>
+		<label for="newsletter-email" class="visually-hidden">Email address</label>
+		<input
+			type="email"
+			id="newsletter-email"
+			name="email"
+			placeholder="Enter your email address"
+			required
+			autocomplete="email"
+		/>
+		<input type="hidden" name="embed" value="1" />
+		<button type="submit">{buttonText}</button>
+	</form>
+</div>

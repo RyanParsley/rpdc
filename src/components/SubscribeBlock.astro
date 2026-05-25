@@ -1,21 +1,28 @@
 ---
-
+import NewsletterSignup from "./NewsletterSignup.astro";
 ---
 
 <h3>Subscribe</h3>
-<p>RSS is alive and well, here are a few feeds I provide.</p>
-<ul>
-	<li>
-		<a href="/rss.xml">Articles</a>
-	</li>
-	<li>
-		<a href="/note/rss.xml">Notes</a>
-	</li>
-</ul>
+<p>
+	Get notified when I publish new posts and updates, or subscribe to my RSS
+	feeds.
+</p>
 
-<style lang="scss">
-	ul {
-		margin: 0.75rem 0 0 0;
-		padding: 0 0 0 1rem;
-	}
-</style>
+<NewsletterSignup
+	title=""
+	description="Join my newsletter for the latest posts and updates."
+	buttonText="Subscribe"
+/>
+
+<div class="card-separated">
+	<h4>Or follow via RSS</h4>
+	<p>RSS is alive and well, here are a few feeds I provide.</p>
+	<ul>
+		<li>
+			<a href="/rss.xml">Articles</a>
+		</li>
+		<li>
+			<a href="/note/rss.xml">Notes</a>
+		</li>
+	</ul>
+</div>

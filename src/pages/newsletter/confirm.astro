@@ -1,0 +1,28 @@
+---
+import Layout from "@layouts/Page.astro";
+import SubscribeBlock from "@components/SubscribeBlock.astro";
+import ElsewhereBlock from "@components/ElsewhereBlock.astro";
+---
+
+<Layout
+	class="has-aside"
+	title="Newsletter"
+	description="Subscribe to my newsletter for the latest posts, updates, and occasional thoughts."
+>
+	<section class="confirmation-page">
+		<h1>Thanks for signing up!</h1>
+		<h2>Pending confirmation</h2>
+		<p>
+			I deliver email via Buttondown and they'll be sending a confirmation to
+			you that you really want these. Please be on the lookout for that so you
+			can start receiving the emails.
+		</p>
+		<p>
+			In the meantime, <a href="/">enjoy my backlog</a>.
+		</p>
+	</section>
+	<aside>
+		<SubscribeBlock />
+		<ElsewhereBlock />
+	</aside>
+</Layout>

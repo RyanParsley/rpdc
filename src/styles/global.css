@@ -151,6 +151,11 @@ button[type="submit"],
 	text-decoration: none;
 }
 
+aside input[type="email"],
+aside button[type="submit"] {
+	width: 100%;
+}
+
 input[type="submit"]:hover,
 button[type="submit"]:hover,
 .button:hover {
@@ -221,4 +226,103 @@ blockquote {
 	clip: rect(0, 0, 0, 0);
 	white-space: nowrap;
 	border-width: 0;
+}
+
+.card {
+	border: 1px solid var(--nord4);
+	border-radius: 8px;
+	padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.card-separated {
+	padding: 0 1.5rem 0.5rem;
+	border: 1px solid var(--nord4);
+	border-radius: 8px;
+}
+
+.callout {
+	background-color: var(--nord1);
+	padding: 0.25rem 1rem 1rem;
+	margin-top: 1.5rem;
+	border-radius: 0.5rem;
+}
+
+.form-inline {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.form-inline input[type="email"] {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+@media (width >= 600px) {
+	.form-inline {
+		flex-direction: row;
+		align-items: flex-start;
+	}
+
+	.form-inline input[type="email"] {
+		width: auto;
+		flex: 1;
+	}
+}
+
+.callout input[type="email"] {
+	background-color: var(--nord0);
+	border: 1px solid var(--nord2);
+	color: var(--nord6);
+	box-sizing: border-box;
+	margin-bottom: 0;
+}
+
+.callout input[type="email"]:focus {
+	border-color: var(--nord8);
+	box-shadow: 0 0 0 2px rgb(136 192 208 / 20%);
+	outline: none;
+}
+
+.callout input[type="email"]::placeholder {
+	color: var(--nord3);
+}
+
+.callout button[type="submit"] {
+	background-color: var(--nord10);
+	color: var(--nord6);
+}
+
+.callout button[type="submit"]:hover {
+	background-color: var(--nord9);
+	color: var(--nord6);
+}
+
+.callout button[type="submit"]:focus {
+	outline: 2px solid var(--nord8);
+	outline-offset: 2px;
+}
+
+aside .card,
+aside .card-separated {
+	padding: 0;
+	border: none;
+	margin: 0;
+}
+
+aside .callout {
+	padding: 0;
+	margin: 0;
+	background: transparent;
+}
+
+.card-separated + .card-separated {
+	margin-top: 1rem;
+}
+
+aside form {
+	flex-direction: column;
+	gap: 0.5rem;
 }
