@@ -25,7 +25,9 @@ const message = searchParams.get("message");
 				<>
 					<h1>Something went wrong</h1>
 					<p>{message || "There was an error processing your subscription."}</p>
-					<p>Please try again or contact me if the problem persists.</p>
+					<p>
+						<a href="/">Continue reading →</a>
+					</p>
 				</>
 			) : (
 				<>
@@ -52,6 +54,15 @@ const message = searchParams.get("message");
 			line-height: 1.6;
 			margin-bottom: 1rem;
 			font-size: 1.1rem;
+
+			a {
+				color: var(--nord8);
+				text-decoration: none;
+
+				&:hover {
+					text-decoration: underline;
+				}
+			}
 		}
 	}
 </style>
