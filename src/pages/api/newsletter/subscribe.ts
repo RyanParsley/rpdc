@@ -1,118 +1,73 @@
 import type { APIRoute } from "astro";
 import { subscribeToNewsletter } from "../../../utils/buttondown";
 
-// Disable prerendering for this API route since it makes external API calls
 export const prerender = false;
 
-// Type for the expected request body
-interface NewsletterRequestBody {
-	email_address: string;
-	referrer_url?: string;
-	[key: string]: unknown; // Allow additional properties
-}
-
-// Type for API response data
-type ApiResponseData = Record<string, unknown> | { error: string };
-
-// Pure function for email validation
 const validateEmail = (email: string): boolean => {
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	return emailRegex.test(email);
 };
 
-// Pure function to create subscriber data with UTM tracking
-const createSubscriberData = (body: NewsletterRequestBody, referrer?: string) =>
-	({
-		...body,
-		utm_source: "website",
-		utm_medium: "newsletter_signup",
-		referrer_url: body.referrer_url || referrer || "",
-	}) as const;
-
-// Pure function to handle API errors
-const handleApiError = (
-	error: unknown,
-): { message: string; statusCode: number } => {
-	if (!(error instanceof Error)) {
-		return { message: "An unexpected error occurred", statusCode: 500 };
-	}
-
-	const errorMessage = error.message;
-
-	// Handle specific error cases with appropriate status codes
-	if (errorMessage.includes("already subscribed")) {
-		return { message: errorMessage, statusCode: 409 };
-	}
-
-	if (errorMessage.includes("API key not configured")) {
-		return {
-			message: "Newsletter service is not properly configured",
-			statusCode: 500,
-		};
-	}
-
-	if (errorMessage.includes("Invalid API key")) {
-		return { message: errorMessage, statusCode: 500 };
-	}
-
-	return { message: errorMessage, statusCode: 400 };
+const getErrorRedirectUrl = (message: string): string => {
+	const encodedMessage = encodeURIComponent(message);
+	return `/newsletter/confirm?status=error&message=${encodedMessage}`;
 };
 
-// Pure function to create JSON response
-const createJsonResponse = (data: ApiResponseData, status = 200) =>
-	new Response(JSON.stringify(data), {
-		status,
-		headers: {
-			"Content-Type": "application/json",
-		},
-	});
+const getSuccessRedirectUrl = (): string => {
+	return "/newsletter/confirm?status=success";
+};
 
 export const POST: APIRoute = async ({ request }) => {
-	try {
-		// Parse and validate request body
-		const body = (await request.json()) as NewsletterRequestBody;
-
-		// Validate required fields using functional approach
-		if (!body.email_address || typeof body.email_address !== "string") {
-			return createJsonResponse(
-				{ error: "Email address is required and must be a string" },
-				400,
-			);
-		}
-
-		// Validate email format
-		if (!validateEmail(body.email_address)) {
-			return createJsonResponse(
-				{ error: "Please enter a valid email address" },
-				400,
-			);
-		}
-
-		// Create subscriber data with UTM tracking
-		const subscriberData = createSubscriberData(
-			body,
-			request.headers.get("referer") || undefined,
+	if (request.headers.get("content-type")?.includes("application/json")) {
+		return new Response(
+			JSON.stringify({ error: "Use form submission, not JSON" }),
+			{ status: 400, headers: { "Content-Type": "application/json" } },
 		);
+	}
 
-		// Make API call using functional approach
+	try {
+		const formData = await request.formData();
+		const email = formData.get("email");
+
+		if (!email || typeof email !== "string") {
+			return Response.redirect(
+				getErrorRedirectUrl("Email address is required"),
+				302,
+			);
+		}
+
+		const emailTrimmed = email.trim();
+
+		if (!validateEmail(emailTrimmed)) {
+			return Response.redirect(
+				getErrorRedirectUrl("Please enter a valid email address"),
+				302,
+			);
+		}
+
+		const subscriberData = {
+			email_address: emailTrimmed,
+			utm_source: "website" as const,
+			utm_medium: "newsletter_signup" as const,
+		};
+
 		const result = await subscribeToNewsletter(subscriberData);
 
 		if (!result.success) {
-			const { message, statusCode } = handleApiError(
-				new Error(result.error.detail),
-			);
-			return createJsonResponse({ error: message }, statusCode);
+			const errorMessage = result.error.detail;
+			const redirectUrl = getErrorRedirectUrl(errorMessage);
+			return Response.redirect(redirectUrl, 302);
 		}
 
-		// Success response
-		return createJsonResponse({
-			success: true,
-			message: "Successfully subscribed!",
-			subscriber: result.data,
-		});
+		return Response.redirect(getSuccessRedirectUrl(), 302);
 	} catch (error) {
 		console.error("Newsletter subscription error:", error);
-		const { message, statusCode } = handleApiError(error);
-		return createJsonResponse({ error: message }, statusCode);
+		const message =
+			error instanceof Error ? error.message : "An unexpected error occurred";
+		return Response.redirect(getErrorRedirectUrl(message), 302);
 	}
+};
+
+export const GET: APIRoute = async () => {
+	return Response.redirect("/newsletter", 302);
 };
