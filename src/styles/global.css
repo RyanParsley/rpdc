@@ -151,6 +151,11 @@ button[type="submit"],
 	text-decoration: none;
 }
 
+aside input[type="email"],
+aside button[type="submit"] {
+	width: 100%;
+}
+
 input[type="submit"]:hover,
 button[type="submit"]:hover,
 .button:hover {
@@ -235,6 +240,18 @@ blockquote {
 	border-radius: 8px;
 }
 
+aside .card,
+aside .card-separated {
+	padding: 0;
+	border: none;
+	margin: 0;
+}
+
 .card-separated + .card-separated {
 	margin-top: 1rem;
+}
+
+aside form {
+	flex-direction: column;
+	gap: 0.5rem;
 }
