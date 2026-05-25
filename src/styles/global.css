@@ -324,5 +324,7 @@ aside .callout {
 
 aside form {
 	flex-direction: column;
-	gap: 0.5rem;
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+	display: flex;
 }
