@@ -1,5 +1,6 @@
 import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
+import node from "@astrojs/node";
 import partytown from "@astrojs/partytown";
 import sitemap from "@astrojs/sitemap";
 import remarkMermaid from "remark-mermaidjs";
@@ -8,6 +9,10 @@ import posseIntegration from "./src/integrations/posse";
 
 export default defineConfig({
 	site: "https://ryanparsley.com",
+	output: "server",
+	adapter: node({
+		mode: "standalone",
+	}),
 	vite: {
 		css: {
 			preprocessorOptions: {
