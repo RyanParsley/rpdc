@@ -9,53 +9,20 @@ import NewsletterSignup from "@components/NewsletterSignup.astro";
 >
 	<section class="newsletter-content">
 		<p>
-			I mostly write for myself, but occasionally something lands well enough
-			that I want to share it more broadly. If you want to know when that
-			happens, you can leave your email here.
-		</p>
-
-		<p>
-			I don't have a strict schedule. Some months are quiet, others have more to
-			say. When something goes out, you'll get it.
+			When something I've written feels worth sharing more broadly, I'll send it
+			here. No schedule, no set expectations — just a heads up when there's
+			something new.
 		</p>
 
 		<NewsletterSignup title="" description="" buttonText="Leave your email" />
 
 		<p>
-			Your email stays with me. No spam, no selling your address, no third-party
-			trackers. Unsubscribe anytime.
+			No spam, no selling your address. Unsubscribe anytime if it stops being
+			useful.
 		</p>
 
 		<p>
-			If you prefer RSS, there's a feed <a href="/rss.xml">here</a>.
+			RSS works too — <a href="/rss.xml">here's the feed</a>.
 		</p>
 	</section>
 </Layout>
-
-<style lang="scss">
-	.newsletter-content {
-		max-width: 600px;
-
-		h1 {
-			font-size: 2rem;
-			margin-bottom: 1.5rem;
-			color: var(--nord6);
-		}
-
-		p {
-			font-size: 1.1rem;
-			line-height: 1.7;
-			color: var(--nord4);
-			margin-bottom: 1.5rem;
-		}
-
-		a {
-			color: var(--nord8);
-			text-decoration: none;
-
-			&:hover {
-				text-decoration: underline;
-			}
-		}
-	}
-</style>
