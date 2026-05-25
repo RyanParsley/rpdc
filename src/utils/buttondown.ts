@@ -3,12 +3,12 @@
  * Handles newsletter subscription management with functional programming patterns
  */
 
-// Configuration with const assertion for immutability
-const BUTTONDOWN_CONFIG = {
+// Configuration - read env lazily for testability
+const getConfig = () => ({
 	baseUrl: "https://api.buttondown.com/v1",
 	apiKey: import.meta.env.BUTTONDOWN_API_KEY,
-	version: "v1",
-} as const;
+	version: "v1" as const,
+});
 
 // More specific types for better type safety
 export interface SubscriberMetadata {
@@ -77,6 +77,7 @@ const handleApiResponse = async <T>(
 				errorData = {
 					detail: `HTTP ${response.status}: ${response.statusText}`,
 					metadata: { responseBody: responseText },
+					code: "PARSING_ERROR",
 				};
 			}
 
@@ -103,7 +104,7 @@ const handleApiResponse = async <T>(
 export async function subscribeToNewsletter(
 	subscriberData: SubscriberInput,
 ): Promise<ButtondownResult<SubscriberResponse>> {
-	if (!validateApiKey(BUTTONDOWN_CONFIG.apiKey)) {
+	if (!validateApiKey(getConfig().apiKey)) {
 		return {
 			success: false,
 			error: { detail: "Buttondown API key not configured" },
@@ -111,9 +112,9 @@ export async function subscribeToNewsletter(
 	}
 
 	try {
-		const response = await fetch(`${BUTTONDOWN_CONFIG.baseUrl}/subscribers`, {
+		const response = await fetch(`${getConfig().baseUrl}/subscribers`, {
 			method: "POST",
-			headers: createApiHeaders(BUTTONDOWN_CONFIG.apiKey),
+			headers: createApiHeaders(getConfig().apiKey),
 			body: JSON.stringify(subscriberData),
 		});
 
@@ -171,7 +172,7 @@ export async function subscribeToNewsletterLegacy(
 export async function checkSubscription(
 	email: string,
 ): Promise<ButtondownResult<boolean>> {
-	if (!validateApiKey(BUTTONDOWN_CONFIG.apiKey)) {
+	if (!validateApiKey(getConfig().apiKey)) {
 		return {
 			success: false,
 			error: { detail: "Buttondown API key not configured" },
@@ -180,10 +181,10 @@ export async function checkSubscription(
 
 	try {
 		const response = await fetch(
-			`${BUTTONDOWN_CONFIG.baseUrl}/subscribers?email_address=${encodeURIComponent(email)}`,
+			`${getConfig().baseUrl}/subscribers?email_address=${encodeURIComponent(email)}`,
 			{
 				method: "GET",
-				headers: createApiHeaders(BUTTONDOWN_CONFIG.apiKey),
+				headers: createApiHeaders(getConfig().apiKey),
 			},
 		);
 
@@ -245,7 +246,7 @@ export interface EmailResponse {
 export async function createEmail(
 	emailData: EmailInput,
 ): Promise<ButtondownResult<EmailResponse>> {
-	if (!validateApiKey(BUTTONDOWN_CONFIG.apiKey)) {
+	if (!validateApiKey(getConfig().apiKey)) {
 		return {
 			success: false,
 			error: { detail: "Buttondown API key not configured" },
@@ -253,9 +254,9 @@ export async function createEmail(
 	}
 
 	try {
-		const response = await fetch(`${BUTTONDOWN_CONFIG.baseUrl}/emails`, {
+		const response = await fetch(`${getConfig().baseUrl}/emails`, {
 			method: "POST",
-			headers: createApiHeaders(BUTTONDOWN_CONFIG.apiKey),
+			headers: createApiHeaders(getConfig().apiKey),
 			body: JSON.stringify(emailData),
 		});
 
