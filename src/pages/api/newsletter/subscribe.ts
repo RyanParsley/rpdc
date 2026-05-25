@@ -3,6 +3,10 @@ import { subscribeToNewsletter } from "../../../utils/buttondown";
 
 export const prerender = false;
 
+const getBaseUrl = (): string => {
+	return import.meta.env.SITE_URL || "http://localhost:4321";
+};
+
 const validateEmail = (email: string): boolean => {
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	return emailRegex.test(email);
@@ -10,11 +14,11 @@ const validateEmail = (email: string): boolean => {
 
 const getErrorRedirectUrl = (message: string): string => {
 	const encodedMessage = encodeURIComponent(message);
-	return `/newsletter/confirm?status=error&message=${encodedMessage}`;
+	return `${getBaseUrl()}/newsletter/confirm?status=error&message=${encodedMessage}`;
 };
 
 const getSuccessRedirectUrl = (): string => {
-	return "/newsletter/confirm?status=success";
+	return `${getBaseUrl()}/newsletter/confirm?status=success`;
 };
 
 export const POST: APIRoute = async ({ request }) => {
@@ -69,5 +73,5 @@ export const POST: APIRoute = async ({ request }) => {
 };
 
 export const GET: APIRoute = async () => {
-	return Response.redirect("/newsletter", 302);
+	return Response.redirect(`${getBaseUrl()}/newsletter`, 302);
 };
