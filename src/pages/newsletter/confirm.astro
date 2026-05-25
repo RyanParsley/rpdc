@@ -1,5 +1,7 @@
 ---
 import Layout from "@layouts/Page.astro";
+import SubscribeBlock from "@components/SubscribeBlock.astro";
+import ElsewhereBlock from "@components/ElsewhereBlock.astro";
 
 const { url } = Astro;
 const searchParams = url.searchParams;
@@ -8,6 +10,7 @@ const message = searchParams.get("message");
 ---
 
 <Layout
+	class="has-aside"
 	title="Newsletter"
 	description="Subscribe to my newsletter for the latest posts, updates, and occasional thoughts."
 >
@@ -42,6 +45,10 @@ const message = searchParams.get("message");
 			)
 		}
 	</section>
+	<aside>
+		<SubscribeBlock />
+		<ElsewhereBlock />
+	</aside>
 </Layout>
 
 <style lang="scss">
@@ -52,6 +59,13 @@ const message = searchParams.get("message");
 			font-size: 2rem;
 			margin-bottom: 1rem;
 			color: var(--nord6);
+		}
+
+		h2 {
+			font-size: 1.25rem;
+			font-weight: normal;
+			margin-bottom: 1rem;
+			color: var(--nord4);
 		}
 
 		p {
