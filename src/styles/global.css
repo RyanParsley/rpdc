@@ -249,23 +249,34 @@ blockquote {
 
 .form-inline {
 	display: flex;
+	flex-direction: column;
 	gap: 0.75rem;
-	align-items: flex-start;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .form-inline input[type="email"] {
-	flex: 1;
+	width: 100%;
+	box-sizing: border-box;
 }
 
-@media (width <= 600px) {
+@media (width >= 600px) {
 	.form-inline {
-		flex-direction: column;
+		flex-direction: row;
+		align-items: flex-start;
+	}
+
+	.form-inline input[type="email"] {
+		width: auto;
+		flex: 1;
 	}
 }
 
 .callout input[type="email"] {
-	background-color: var(--nord1);
-	border: 1px solid var(--nord3);
+	background-color: var(--nord0);
+	border: 1px solid var(--nord2);
+	color: var(--nord6);
+	box-sizing: border-box;
 }
 
 .callout input[type="email"]:focus {
@@ -274,12 +285,23 @@ blockquote {
 	outline: none;
 }
 
+.callout input[type="email"]::placeholder {
+	color: var(--nord3);
+}
+
 .callout button[type="submit"] {
 	background-color: var(--nord10);
+	color: var(--nord6);
 }
 
 .callout button[type="submit"]:hover {
 	background-color: var(--nord9);
+	color: var(--nord6);
+}
+
+.callout button[type="submit"]:focus {
+	outline: 2px solid var(--nord8);
+	outline-offset: 2px;
 }
 
 aside .card,
