@@ -255,6 +255,10 @@ blockquote {
 	box-sizing: border-box;
 }
 
+.form-inline button[type="submit"] {
+	width: 100%;
+}
+
 .form-inline input[type="email"] {
 	width: 100%;
 	box-sizing: border-box;
@@ -269,6 +273,10 @@ blockquote {
 	.form-inline input[type="email"] {
 		width: auto;
 		flex: 1;
+	}
+
+	.form-inline button[type="submit"] {
+		width: auto;
 	}
 }
 

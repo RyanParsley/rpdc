@@ -1,0 +1,48 @@
+extends: capitalization
+message: "'%s' should use sentence-style capitalization."
+link: "https://developers.google.com/style/capitalization#capitalization-in-titles-and-headings"
+level: warning
+scope: heading
+match: ".*"
+indicators:
+  - ":"
+exceptions:
+  - Azure
+  - BDD
+  - C4
+  - CLI
+  - Cosmos
+  - cerebro
+  - cerebro-mcp
+  - cerebro-tui
+  - Docker
+  - Emmet
+  - gRPC
+  - I
+  - Kubernetes
+  - Linux
+  - macOS
+  - Marketplace
+  - MCP
+  - MongoDB
+  - OpenCode
+  - REPL
+  - Studio
+  - TOML
+  - TypeScript
+  - TUI
+  - UI
+  - URLs
+  - Visual
+  - VS
+  - Windows
+  - JSON
+  - Ghostty
+  - Ratatui
+  - Codeberg
+  - Forgejo
+  - Woodpecker
+  - SQLite
+  - API
+  - CI
+  - CD
