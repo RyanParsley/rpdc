@@ -46,7 +46,8 @@
     "autoprefixer": "^10.4.21",
     "cssnano": "^7.1.0",
     "photoswipe": "^5.4.4",
-    "sass": "^1.89.2"
+    "sass": "^1.89.2",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@astrojs/partytown": "^2.1.7",
