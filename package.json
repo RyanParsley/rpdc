@@ -62,8 +62,8 @@
     "@types/node": "^22.18.0",
     "@typescript-eslint/eslint-plugin": "^8.60.1",
     "@typescript-eslint/parser": "^8.60.1",
-    "@vitest/coverage-v8": "^2.1.9",
-    "@vitest/ui": "^2.1.9",
+    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/ui": "^4.1.8",
     "astro-pagefind": "^2.0.0",
     "eslint": "^10.4.1",
     "eslint-config-prettier": "^10.1.8",
@@ -85,6 +85,6 @@
     "stylelint-config-standard": "^40.0.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.60.1",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.8"
   }
 }
