@@ -1,5 +1,5 @@
 ---
-import Search from "astro-pagefind/components/Search";
+import PagefindConfig from "astro-pagefind/components/PagefindConfig.astro";
 import BaseHead from "@components/BaseHead.astro";
 import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
@@ -29,11 +29,10 @@ const isSearchVisible = url == "/404.html" || shouldShowSearch;
 			</header>
 			{
 				isSearchVisible && (
-					<Search
-						id="search"
-						className="pagefind-ui"
-						uiOptions={{ showImages: false }}
-					/>
+					<>
+						<PagefindConfig />
+						<pagefind-searchbox id="search" class="pagefind-ui" />
+					</>
 				)
 			}
 			<slot />

@@ -45,12 +45,12 @@ const {
 			{
 				page.data.map(
 					(post: {
-						slug: string;
+						id: string;
 						data: { pubDate: Date; title: string; description: string };
 					}) => (
 						<li>
 							<PostLink
-								href={`/blog/${post.slug}`}
+								href={`/blog/${post.id}`}
 								text={post.data.title}
 								date={post.data.pubDate}
 								description={post.data.description}

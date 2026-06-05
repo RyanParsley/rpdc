@@ -20,8 +20,8 @@ interface ImageData {
 	alt: string;
 }
 interface ContentItem {
-	body: string;
-	slug: string;
+	body?: string;
+	id: string;
 	data: {
 		date: Date;
 		syndication?: Syndication[] | undefined;
@@ -90,11 +90,7 @@ const groupedData: GroupedData[] = datesOnPage.map((date: string) => ({
 						<Fragment key={item.date}>
 							<h2>{item.date}</h2>
 							{item.data.map(
-								({
-									body = "",
-									slug,
-									data: { image, youtube, syndication },
-								}) => (
+								({ body = "", id, data: { image, youtube, syndication } }) => (
 									<div class="h-entry">
 										{image && (
 											<Image class="u-photo" src={image.src} alt={image.alt} />
@@ -102,7 +98,7 @@ const groupedData: GroupedData[] = datesOnPage.map((date: string) => ({
 										{youtube && <YoutubeEmbed src={youtube} />}
 										<div class="p-content" set:html={parser.render(body)} />
 										<SyndicationLinks syndication={syndication ?? []} />
-										<a class="more" href={`/ephemera/${slug}`}>
+										<a class="more" href={`/ephemera/${id}`}>
 											Link to Post
 										</a>
 									</div>

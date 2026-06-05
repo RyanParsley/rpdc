@@ -71,7 +71,7 @@ const {
 				featuredPosts.map((post) => (
 					<li>
 						<h3>
-							<a href={`/note/${post.slug}`}>{post.data.title}</a>
+							<a href={`/note/${post.id}`}>{post.data.title}</a>
 						</h3>
 						<FormattedDate date={post.data.pubDate} />
 					</li>
@@ -85,12 +85,12 @@ const {
 			{
 				page.data.map(
 					(post: {
-						slug: string;
+						id: string;
 						data: { pubDate: Date; title: string; description: string };
 					}) => (
 						<li>
 							<PostLink
-								href={`/note/${post.slug}`}
+								href={`/note/${post.id}`}
 								text={post.data.title}
 								date={post.data.pubDate}
 								description={post.data.description}

@@ -4,14 +4,14 @@ import type {
 	InferGetStaticPropsType,
 	GetStaticPaths,
 } from "astro";
-import { getCollection, type CollectionEntry } from "astro:content";
+import { getCollection, render, type CollectionEntry } from "astro:content";
 import Ephemera from "@layouts/Ephemera.astro";
 import Backlinks from "@components/Backlinks.astro";
 
 export const getStaticPaths = (async () => {
 	const posts: CollectionEntry<"ephemera">[] = await getCollection("ephemera");
 	return posts.map((post) => ({
-		params: { slug: post.slug },
+		params: { slug: post.id },
 		props: {
 			post: post,
 			body: post.body,
@@ -29,7 +29,7 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 const { slug } = Astro.params as Params;
 const { post, body, date, image, syndication, youtube } = Astro.props as Props;
 
-const { Content } = await post.render();
+const { Content } = await render(post);
 
 const canonicalURL = new URL(`ephemera/${slug}`, Astro.site)
 	.toString()
@@ -43,7 +43,7 @@ const canonicalURL = new URL(`ephemera/${slug}`, Astro.site)
 		day: "numeric",
 	})}
 	youtube={youtube}
-	description={body}
+	description={body ?? ""}
 	syndication={syndication ?? []}
 	canonicalURL={canonicalURL}
 	galleryPath={`/ephemera/${slug}`}

@@ -1,10 +1,10 @@
-import { defineCollection, z } from "astro:content";
+import { defineCollection } from "astro:content";
+import { z } from "astro/zod";
+import { glob } from "astro/loaders";
 
-// Reusable date transformer
 const dateTransformer = (val: string | Date | number | undefined) =>
 	val ? new Date(val) : new Date();
 
-// Date fields schema
 const dateFields = {
 	pubDate: z.string().or(z.date()).or(z.number()).transform(dateTransformer),
 	updatedDate: z
@@ -15,7 +15,6 @@ const dateFields = {
 		.transform(dateTransformer),
 };
 
-// Base schema for common fields
 const baseSchema = {
 	title: z.string(),
 	description: z.string(),
@@ -38,6 +37,10 @@ const postSchema = {
 };
 
 const blogCollection = defineCollection({
+	loader: glob({
+		pattern: "**/*.md",
+		base: "./src/content/blog",
+	}),
 	schema: ({ image }) =>
 		z.object({
 			...postSchema,
@@ -47,6 +50,10 @@ const blogCollection = defineCollection({
 });
 
 const noteCollection = defineCollection({
+	loader: glob({
+		pattern: "**/*.md",
+		base: "./src/content/note",
+	}),
 	schema: ({ image }) =>
 		z.object({
 			...postSchema,
@@ -56,6 +63,10 @@ const noteCollection = defineCollection({
 });
 
 const draftCollection = defineCollection({
+	loader: glob({
+		pattern: "**/*.md",
+		base: "./src/content/draft",
+	}),
 	schema: ({ image }) =>
 		z.object({
 			...postSchema,
@@ -79,6 +90,10 @@ const draftCollection = defineCollection({
 });
 
 const ephemeraCollection = defineCollection({
+	loader: glob({
+		pattern: "**/*.md",
+		base: "./src/content/ephemera",
+	}),
 	schema: ({ image }) =>
 		z.object({
 			date: z.string().or(z.date()).or(z.number()).transform(dateTransformer),

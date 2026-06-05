@@ -3,6 +3,7 @@ import mdx from "@astrojs/mdx";
 import partytown from "@astrojs/partytown";
 import sitemap from "@astrojs/sitemap";
 import remarkMermaid from "remark-mermaidjs";
+import { unified } from "@astrojs/markdown-remark";
 import pagefind from "astro-pagefind";
 import posseIntegration from "./src/integrations/posse";
 
@@ -18,7 +19,9 @@ export default defineConfig({
 		},
 	},
 	markdown: {
-		remarkPlugins: [[remarkMermaid, { mermaidConfig: { theme: "dark" } }]],
+		processor: unified({
+			remarkPlugins: [[remarkMermaid, { mermaidConfig: { theme: "dark" } }]],
+		}),
 	},
 	build: {
 		format: "directory",
