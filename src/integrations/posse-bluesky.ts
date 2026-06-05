@@ -132,7 +132,7 @@ async function uploadImageToBluesky(
 					Authorization: `Bearer ${session.accessJwt}`,
 					"Content-Type": imageResult.mimeType,
 				},
-				body: imageBuffer,
+				body: new Uint8Array(imageBuffer),
 			},
 		);
 
