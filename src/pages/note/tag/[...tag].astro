@@ -1,9 +1,10 @@
 ---
 import { getCollection } from "astro:content";
 import Layout from "@layouts/Page.astro";
+import { isPublished } from "../../../content.config";
 
 export async function getStaticPaths() {
-	const notes = await getCollection("note");
+	const notes = (await getCollection("note")).filter(isPublished);
 	const uniqueTags = [
 		...new Set(
 			notes

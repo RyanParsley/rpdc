@@ -4,8 +4,10 @@ import PostLink from "@components/PostLink.astro";
 import Layout from "@layouts/Page.astro";
 import Bio from "@components/Bio.astro";
 import NewsletterSignup from "@components/NewsletterSignup.astro";
+import { isPublished } from "../content.config";
 
 const posts = (await getCollection("blog"))
+	.filter(isPublished)
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
 	.slice(0, 5);
 ---

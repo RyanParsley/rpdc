@@ -3,8 +3,9 @@ import { getCollection } from "astro:content";
 import Layout from "@layouts/Page.astro";
 import Tags from "@components/Tags.astro";
 import PostsByTag from "@components/PostsByTag.astro";
+import { isPublished } from "../../../content.config";
 
-const posts = await getCollection("blog");
+const posts = (await getCollection("blog")).filter(isPublished);
 ---
 
 <Layout

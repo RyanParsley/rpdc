@@ -34,7 +34,12 @@ const postSchema = {
 	categories: z.array(z.string()).optional(),
 	tags: z.array(z.string()).optional(),
 	featured: z.boolean().optional(),
+	published: z.boolean().optional(),
 };
+
+export const isPublished = (entry: {
+	data: { published?: boolean | undefined };
+}): boolean => entry.data.published !== false;
 
 const blogCollection = defineCollection({
 	loader: glob({

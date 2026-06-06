@@ -5,13 +5,14 @@ import FormattedDate from "@components/FormattedDate.astro";
 import { getCollection } from "astro:content";
 
 import PostLink from "@components/PostLink.astro";
+import { isPublished } from "../../content.config";
 
 export async function getStaticPaths({
 	paginate,
 }: {
 	paginate: (data: object, config: object) => void;
 }) {
-	const response = await getCollection("note");
+	const response = (await getCollection("note")).filter(isPublished);
 	const data = response.sort(
 		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 	);
@@ -20,6 +21,7 @@ export async function getStaticPaths({
 }
 
 const featuredPosts = (await getCollection("note"))
+	.filter(isPublished)
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
 	.filter((post) => post.data.featured === true);
 

@@ -1,8 +1,10 @@
 ---
 const { slug, categories = [] } = Astro.props;
 import { getCollection } from "astro:content";
+import { isPublished } from "../content.config";
 
 const posts = (await getCollection("blog"))
+	.filter(isPublished)
 	.filter((post) => post.id !== slug)
 	.filter(({ data }) =>
 		data.categories?.some((category) => categories.includes(category)),
