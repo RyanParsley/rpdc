@@ -1,5 +1,4 @@
 ---
-import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
 
 export type ImageData = {
@@ -26,26 +25,32 @@ const imagePaths = images.map((img) => ({
 
 const imageAssets = import.meta.glob<{ default: ImageMetadata }>(
 	`/src/**/*.{jpeg,jpg,png,gif}`,
+	{ eager: true },
 );
 
-const deriveSrc = async (image: ImageData) => {
-	const source = imageAssets?.[image?.url]?.();
-	if (source === undefined) {
+const deriveSrc = (image: ImageData): string => {
+	const mod = imageAssets?.[image?.url];
+	if (!mod) {
 		throw new Error(
 			`"${image.url}" does not exist in glob: "src/assets/*.{jpeg,jpg,png,gif}"`,
 		);
 	}
-	return source;
+	return mod.default.src;
 };
+
+const resolvedImages = imagePaths.map((image) => ({
+	...image,
+	src: deriveSrc(image),
+}));
 ---
 
 <div class="gallery">
 	{
-		imagePaths.map((image: ImageData, index: number) => (
+		resolvedImages.map((image, index) => (
 			<>
 				<figure>
 					<a href={`#image-${index}`} title={image.alt}>
-						<Image src={deriveSrc(image)} alt={image.alt} />
+						<img src={image.src} alt={image.alt} loading="lazy" />
 					</a>
 				</figure>
 				<a
@@ -55,7 +60,7 @@ const deriveSrc = async (image: ImageData) => {
 					title="Click to return to post"
 				>
 					<div>
-						<Image src={deriveSrc(image)} alt={image.alt} />
+						<img src={image.src} alt={image.alt} loading="lazy" />
 					</div>
 				</a>
 			</>

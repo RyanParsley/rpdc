@@ -9,6 +9,11 @@ import posseIntegration from "./src/integrations/posse";
 
 export default defineConfig({
 	site: "https://ryanparsley.com",
+	image: {
+		service: {
+			entrypoint: "astro/assets/services/noop",
+		},
+	},
 	vite: {
 		css: {
 			preprocessorOptions: {

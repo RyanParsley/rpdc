@@ -46,11 +46,11 @@ const blogCollection = defineCollection({
 		pattern: "**/*.md",
 		base: "./src/content/blog",
 	}),
-	schema: ({ image }) =>
+	schema: () =>
 		z.object({
 			...postSchema,
-			OGImage: image().optional(),
-			heroImage: image().optional(),
+			OGImage: z.string().optional(),
+			heroImage: z.string().optional(),
 		}),
 });
 
@@ -59,11 +59,11 @@ const noteCollection = defineCollection({
 		pattern: "**/*.md",
 		base: "./src/content/note",
 	}),
-	schema: ({ image }) =>
+	schema: () =>
 		z.object({
 			...postSchema,
-			OGImage: image().optional(),
-			heroImage: image().optional(),
+			OGImage: z.string().optional(),
+			heroImage: z.string().optional(),
 		}),
 });
 
@@ -72,11 +72,11 @@ const draftCollection = defineCollection({
 		pattern: "**/*.md",
 		base: "./src/content/draft",
 	}),
-	schema: ({ image }) =>
+	schema: () =>
 		z.object({
 			...postSchema,
-			OGImage: image().optional(),
-			heroImage: image().optional(),
+			OGImage: z.string().optional(),
+			heroImage: z.string().optional(),
 			pubDate: z
 				.string()
 				.or(z.date())
@@ -99,7 +99,7 @@ const ephemeraCollection = defineCollection({
 		pattern: "**/*.md",
 		base: "./src/content/ephemera",
 	}),
-	schema: ({ image }) =>
+	schema: () =>
 		z.object({
 			date: z.string().or(z.date()).or(z.number()).transform(dateTransformer),
 			syndication: z
@@ -108,7 +108,7 @@ const ephemeraCollection = defineCollection({
 			youtube: z.string().optional(),
 			image: z
 				.object({
-					src: image(),
+					src: z.string(),
 					alt: z.string(),
 				})
 				.optional(),

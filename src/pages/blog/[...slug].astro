@@ -29,7 +29,7 @@ const canonicalURL = new URL(`blog/${slug}`, Astro.site)
 	{...post.data}
 	canonicalURL={canonicalURL}
 	galleryPath={`/blog/${slug}`}
-	OGImage={post.data.OGImage?.src}
+	OGImage={post.data.OGImage}
 >
 	<Content />
 	<Backlinks currentSlug=`/blog/${slug}` slot="aside" />
