@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 
 // Mock the entire config module to avoid astro:content import issues
-vi.mock("./config", () => ({
+vi.mock("../content.config", () => ({
 	collections: {
 		blog: {
 			schema: vi.fn(),
@@ -19,7 +19,7 @@ vi.mock("./config", () => ({
 }));
 
 // Import the mocked collections
-import { collections } from "./config";
+import { collections } from "../content.config";
 
 describe("Content Collections Configuration", () => {
 	describe("Schema Validation", () => {

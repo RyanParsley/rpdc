@@ -561,7 +561,9 @@ async function postToMastodon(
 					const mimeType = imageExt === ".png" ? "image/png" : "image/jpeg";
 
 					const formData = new FormData();
-					const blob = new Blob([imageBuffer], { type: mimeType });
+					const blob = new Blob([new Uint8Array(imageBuffer)], {
+						type: mimeType,
+					});
 					formData.append("file", blob, `image${imageExt}`);
 
 					if (post.image.alt) {
@@ -723,7 +725,7 @@ async function postToBluesky(
 								Authorization: `Bearer ${session.accessJwt}`,
 								"Content-Type": "image/jpeg",
 							},
-							body: imageBuffer,
+							body: new Uint8Array(imageBuffer),
 						},
 					);
 

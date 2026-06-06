@@ -1,25 +1,25 @@
 ---
-import type { CollectionEntry } from "astro:content";
-import { getCollection } from "astro:content";
+import { getCollection, render, type CollectionEntry } from "astro:content";
 import Post from "@layouts/Post.astro";
 import RelatedPosts from "@components/RelatedPosts.astro";
 import Backlinks from "@components/Backlinks.astro";
 import Tags from "@components/Tags.astro";
+import { isPublished } from "../../content.config";
 
-const posts = await getCollection("blog");
+const posts = (await getCollection("blog")).filter(isPublished);
 type Props = CollectionEntry<"blog">;
 
 export async function getStaticPaths() {
-	const posts = await getCollection("blog");
+	const posts = (await getCollection("blog")).filter(isPublished);
 	return posts.map((post) => ({
-		params: { slug: post.slug },
+		params: { slug: post.id },
 		props: post,
 	}));
 }
 
 const post = Astro.props;
-const { slug } = Astro.props;
-const { Content } = await post.render();
+const { id: slug } = Astro.props;
+const { Content } = await render(post);
 const canonicalURL = new URL(`blog/${slug}`, Astro.site)
 	.toString()
 	.replace(".html", "");
@@ -29,7 +29,7 @@ const canonicalURL = new URL(`blog/${slug}`, Astro.site)
 	{...post.data}
 	canonicalURL={canonicalURL}
 	galleryPath={`/blog/${slug}`}
-	OGImage={post.data.OGImage?.src}
+	OGImage={post.data.OGImage}
 >
 	<Content />
 	<Backlinks currentSlug=`/blog/${slug}` slot="aside" />
@@ -45,7 +45,7 @@ const canonicalURL = new URL(`blog/${slug}`, Astro.site)
 				slot="aside"
 				categories={post.data.categories}
 				tags={post.data.tags}
-				slug={post.slug}
+				slug={post.id}
 			/>
 		)
 	}

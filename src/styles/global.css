@@ -14,7 +14,6 @@ html {
 body {
 	font-family: "Roboto Mono", monospace;
 	text-align: left;
-	word-wrap: break-word;
 	overflow-wrap: break-word;
 	line-height: 1.5;
 	background-color: var(--nord0);
@@ -190,7 +189,7 @@ code {
 pre {
 	padding: 1rem;
 	white-space: pre-wrap;
-	word-wrap: break-word;
+	overflow-wrap: break-word;
 	overflow: auto;
 }
 
@@ -223,7 +222,7 @@ blockquote {
 	padding: 0;
 	margin: -1px;
 	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
+	clip-path: inset(50%);
 	white-space: nowrap;
 	border-width: 0;
 }

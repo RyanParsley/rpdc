@@ -12,7 +12,7 @@ let API_TOKEN = import.meta.env.WEBMENTION_IO_TOKEN;
 
 if (!API_TOKEN) {
 	const homeEnvPath = process.env.HOME ? join(process.env.HOME, ".env") : null;
-if (homeEnvPath && existsSync(homeEnvPath)) {
+	if (homeEnvPath && existsSync(homeEnvPath)) {
 		const homeEnvContent = readFileSync(homeEnvPath, "utf-8");
 		homeEnvContent.split("\n").forEach((line) => {
 			const match = line.match(/^export\s+WEBMENTION_IO_TOKEN=(.*)$/);

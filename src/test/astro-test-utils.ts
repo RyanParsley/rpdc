@@ -1,13 +1,4 @@
-import { render } from "@testing-library/preact";
 import { vi } from "vitest";
-
-type ComponentFunction = (props: Record<string, unknown>) => unknown;
-
-interface AstroImageProps {
-	src: string;
-	alt: string;
-	[key: string]: unknown;
-}
 
 interface AstroGlobal {
 	url: URL;
@@ -24,22 +15,6 @@ vi.mock("astro:env", () => ({
 vi.mock("astro:components", () => ({
 	default: {},
 }));
-
-export const renderAstroComponent = (
-	component: ComponentFunction,
-	props: Record<string, unknown> = {},
-) => {
-	return render(component(props) as Parameters<typeof render>[0]);
-};
-
-export const mockAstroImage = () => {
-	vi.mock("@astrojs/image/components", () => ({
-		Image: ({ src, alt, ...props }: AstroImageProps) => ({
-			type: "img",
-			props: { src, alt, ...props },
-		}),
-	}));
-};
 
 export const setupAstroMocks = () => {
 	(globalThis as Partial<typeof globalThis> & { Astro: AstroGlobal }).Astro = {

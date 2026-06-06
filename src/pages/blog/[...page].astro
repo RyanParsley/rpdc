@@ -4,13 +4,14 @@ import { Pagination } from "accessible-astro-components";
 import { getCollection } from "astro:content";
 
 import PostLink from "@components/PostLink.astro";
+import { isPublished } from "../../content.config";
 
 export async function getStaticPaths({
 	paginate,
 }: {
 	paginate: (data: object, config: object) => void;
 }) {
-	const response = await getCollection("blog");
+	const response = (await getCollection("blog")).filter(isPublished);
 	const data = response.sort(
 		(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 	);
@@ -45,12 +46,12 @@ const {
 			{
 				page.data.map(
 					(post: {
-						slug: string;
+						id: string;
 						data: { pubDate: Date; title: string; description: string };
 					}) => (
 						<li>
 							<PostLink
-								href={`/blog/${post.slug}`}
+								href={`/blog/${post.id}`}
 								text={post.data.title}
 								date={post.data.pubDate}
 								description={post.data.description}

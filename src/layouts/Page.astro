@@ -1,5 +1,5 @@
 ---
-import Search from "astro-pagefind/components/Search";
+import PagefindConfig from "astro-pagefind/components/PagefindConfig.astro";
 import BaseHead from "@components/BaseHead.astro";
 import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
@@ -29,11 +29,10 @@ const isSearchVisible = url == "/404.html" || shouldShowSearch;
 			</header>
 			{
 				isSearchVisible && (
-					<Search
-						id="search"
-						className="pagefind-ui"
-						uiOptions={{ showImages: false }}
-					/>
+					<>
+						<PagefindConfig />
+						<pagefind-searchbox id="search" class="pagefind-ui" />
+					</>
 				)
 			}
 			<slot />
@@ -43,9 +42,96 @@ const isSearchVisible = url == "/404.html" || shouldShowSearch;
 </html>
 
 <style lang="scss" is:global>
-	.pagefind-ui__drawer {
-		background: var(--nord4);
-		padding: 0 1rem;
-		margin: 0 1rem;
+	:root {
+		--pf-text: var(--nord6);
+		--pf-text-secondary: var(--nord4);
+		--pf-text-muted: var(--nord3);
+		--pf-background: var(--nord0);
+		--pf-border: var(--nord3);
+		--pf-border-focus: var(--nord9);
+		--pf-skeleton: var(--nord1);
+		--pf-skeleton-shine: var(--nord2);
+		--pf-hover: var(--nord1);
+		--pf-mark: var(--nord13);
+		--pf-outline-focus: var(--nord8);
+		--pf-font: "Roboto Mono", monospace;
+		--pf-border-radius: 3px;
+		--pf-input-height: 2.5rem;
+		--pf-error-bg: var(--nord1);
+		--pf-error-border: var(--nord11);
+		--pf-error-text: var(--nord11);
+		--pf-error-text-secondary: var(--nord12);
+	}
+
+	#search {
+		display: block;
+		margin-bottom: 1.5rem;
+		font-family: "Roboto Mono", monospace;
+	}
+
+	.pf-searchbox {
+		max-width: none;
+	}
+
+	.pf-searchbox-input {
+		background: var(--nord1);
+		border-color: var(--nord9);
+		color: var(--nord6);
+		padding-block: 0.5rem;
+		padding-block-end: 0.25rem;
+	}
+
+	.pf-searchbox-input::placeholder {
+		color: var(--nord3);
+	}
+
+	.pf-searchbox-input:focus {
+		border-color: var(--nord8);
+		box-shadow: none;
+	}
+
+	.pf-searchbox-dropdown {
+		background: var(--nord0);
+		border-color: var(--nord9);
+	}
+
+	.pf-searchbox-result {
+		color: var(--nord6);
+	}
+
+	.pf-searchbox-result-title {
+		color: var(--nord4);
+	}
+
+	.pf-searchbox-result:hover {
+		background: var(--nord1);
+	}
+
+	.pf-searchbox-result[data-pf-selected] {
+		background: var(--nord1);
+		outline-color: var(--nord8);
+	}
+
+	.pf-searchbox-result-excerpt {
+		color: var(--nord4);
+	}
+
+	.pf-searchbox-empty,
+	.pf-searchbox-footer {
+		color: var(--nord3);
+	}
+
+	.pf-searchbox-footer-key {
+		background: var(--nord1);
+		border-color: var(--nord3);
+		color: var(--nord4);
+	}
+
+	.pf-error {
+		border-color: var(--nord11);
+	}
+
+	.pf-error small {
+		color: var(--nord12);
 	}
 </style>

@@ -1,8 +1,29 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+const fsMocks = vi.hoisted(() => ({
+	readdirSync: vi.fn(),
+	statSync: vi.fn(),
+	readFileSync: vi.fn(),
+	existsSync: vi.fn(),
+}));
+const matterMock = vi.hoisted(() => vi.fn());
+
 // Mock external dependencies
-vi.mock("fs");
-vi.mock("gray-matter");
+vi.mock("fs", () => ({
+	readdirSync: fsMocks.readdirSync,
+	statSync: fsMocks.statSync,
+	readFileSync: fsMocks.readFileSync,
+	existsSync: fsMocks.existsSync,
+	default: {
+		readdirSync: fsMocks.readdirSync,
+		statSync: fsMocks.statSync,
+		readFileSync: fsMocks.readFileSync,
+		existsSync: fsMocks.existsSync,
+	},
+}));
+vi.mock("gray-matter", () => ({
+	default: matterMock,
+}));
 
 // Import mocked functions
 import { readdirSync, statSync, readFileSync } from "fs";
@@ -718,7 +739,7 @@ Content`;
 			};
 
 			mockFetch = vi.fn();
-			global.fetch = mockFetch;
+			global.fetch = mockFetch as typeof fetch;
 			vi.clearAllMocks();
 		});
 
@@ -829,7 +850,7 @@ Content`;
 			};
 
 			mockFetch = vi.fn();
-			global.fetch = mockFetch;
+			global.fetch = mockFetch as typeof fetch;
 			vi.clearAllMocks();
 		});
 

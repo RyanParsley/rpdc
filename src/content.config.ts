@@ -1,10 +1,10 @@
-import { defineCollection, z } from "astro:content";
+import { defineCollection } from "astro:content";
+import { z } from "astro/zod";
+import { glob } from "astro/loaders";
 
-// Reusable date transformer
 const dateTransformer = (val: string | Date | number | undefined) =>
 	val ? new Date(val) : new Date();
 
-// Date fields schema
 const dateFields = {
 	pubDate: z.string().or(z.date()).or(z.number()).transform(dateTransformer),
 	updatedDate: z
@@ -15,7 +15,6 @@ const dateFields = {
 		.transform(dateTransformer),
 };
 
-// Base schema for common fields
 const baseSchema = {
 	title: z.string(),
 	description: z.string(),
@@ -35,32 +34,49 @@ const postSchema = {
 	categories: z.array(z.string()).optional(),
 	tags: z.array(z.string()).optional(),
 	featured: z.boolean().optional(),
+	published: z.boolean().optional(),
 };
 
+export const isPublished = (entry: {
+	data: { published?: boolean | undefined };
+}): boolean => entry.data.published !== false;
+
 const blogCollection = defineCollection({
-	schema: ({ image }) =>
+	loader: glob({
+		pattern: "**/*.md",
+		base: "./src/content/blog",
+	}),
+	schema: () =>
 		z.object({
 			...postSchema,
-			OGImage: image().optional(),
-			heroImage: image().optional(),
+			OGImage: z.string().optional(),
+			heroImage: z.string().optional(),
 		}),
 });
 
 const noteCollection = defineCollection({
-	schema: ({ image }) =>
+	loader: glob({
+		pattern: "**/*.md",
+		base: "./src/content/note",
+	}),
+	schema: () =>
 		z.object({
 			...postSchema,
-			OGImage: image().optional(),
-			heroImage: image().optional(),
+			OGImage: z.string().optional(),
+			heroImage: z.string().optional(),
 		}),
 });
 
 const draftCollection = defineCollection({
-	schema: ({ image }) =>
+	loader: glob({
+		pattern: "**/*.md",
+		base: "./src/content/draft",
+	}),
+	schema: () =>
 		z.object({
 			...postSchema,
-			OGImage: image().optional(),
-			heroImage: image().optional(),
+			OGImage: z.string().optional(),
+			heroImage: z.string().optional(),
 			pubDate: z
 				.string()
 				.or(z.date())
@@ -79,7 +95,11 @@ const draftCollection = defineCollection({
 });
 
 const ephemeraCollection = defineCollection({
-	schema: ({ image }) =>
+	loader: glob({
+		pattern: "**/*.md",
+		base: "./src/content/ephemera",
+	}),
+	schema: () =>
 		z.object({
 			date: z.string().or(z.date()).or(z.number()).transform(dateTransformer),
 			syndication: z
@@ -88,7 +108,7 @@ const ephemeraCollection = defineCollection({
 			youtube: z.string().optional(),
 			image: z
 				.object({
-					src: image(),
+					src: z.string(),
 					alt: z.string(),
 				})
 				.optional(),

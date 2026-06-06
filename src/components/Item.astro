@@ -1,27 +1,19 @@
 ---
-import type { ImageMetadata } from "astro";
-import { Image } from "astro:assets";
-
 type Props = {
 	name: string;
 	description: string;
 	tags?: { url: string; name: string }[] | undefined;
 	url: string;
-	image?: { asset: ImageMetadata; alt: string } | undefined;
+	image?: { src: string; alt: string } | undefined;
 };
 const { description, name, image, tags = [], url } = Astro.props;
 ---
 
 <div class="item">
 	{
-		image?.asset?.src && (
+		image?.src && (
 			<div class="image">
-				<Image
-					src={image.asset}
-					alt={image.alt ?? name}
-					width={image.asset.width}
-					height={image.asset.width}
-				/>
+				<img src={image.src} alt={image.alt ?? name} loading="lazy" />
 			</div>
 		)
 	}

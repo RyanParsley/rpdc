@@ -6,7 +6,7 @@ interface PostData {
 
 interface Post {
 	slug: PostSlug;
-	body: string;
+	body?: string;
 	data: PostData;
 }
 
@@ -43,7 +43,7 @@ export function collectBacklinks(posts: Post[] = []): BacklinkMap {
 			backlinks: BacklinkMap,
 			{ slug: currentSlug, body, data: { title } }: Post,
 		) =>
-			extractLinksFromContent(body).reduce(
+			(body ? extractLinksFromContent(body) : []).reduce(
 				(acc, linkedSlug) =>
 					addBacklink(acc, linkedSlug, currentSlug, title ?? currentSlug),
 				backlinks,
