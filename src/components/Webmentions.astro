@@ -2,6 +2,12 @@
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { WEBMENTION_IO_TOKEN } from "astro:env/server";
+import {
+	fetchAllVariants,
+	computeCounts,
+	parseTokenFromEnvFile,
+	type WebmentionEntry,
+} from "../utils/webmentions";
 
 interface Props {
 	target: string;
@@ -14,145 +20,14 @@ let API_TOKEN = WEBMENTION_IO_TOKEN;
 if (!API_TOKEN) {
 	const homeEnvPath = process.env.HOME ? join(process.env.HOME, ".env") : null;
 	if (homeEnvPath && existsSync(homeEnvPath)) {
-		const homeEnvContent = readFileSync(homeEnvPath, "utf-8");
-		homeEnvContent.split("\n").forEach((line) => {
-			const match = line.match(/^export\s+WEBMENTION_IO_TOKEN=(.*)$/);
-			if (match && match[1]) {
-				API_TOKEN = match[1].replace(/^["']|["']$/g, "");
-			}
-		});
+		API_TOKEN =
+			parseTokenFromEnvFile(readFileSync(homeEnvPath, "utf-8")) ?? undefined;
 	}
 }
 
-const fetchWebmentions = async (target: string) => {
-	try {
-		if (!API_TOKEN) {
-			console.log("WEBMENTION_IO_TOKEN not set, skipping webmentions");
-			return [];
-		}
-
-		const encodedTarget = encodeURIComponent(target);
-		const apiUrl = `https://webmention.io/api/mentions.jf2?target=${encodedTarget}&token=${API_TOKEN}`;
-
-		// Retry logic with exponential backoff
-		const maxRetries = 3;
-		let lastError: Error | null = null;
-
-		for (let attempt = 0; attempt < maxRetries; attempt++) {
-			try {
-				const controller = new AbortController();
-				const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
-
-				const response = await fetch(apiUrl, {
-					signal: controller.signal,
-					headers: { "User-Agent": "Astro-Build/1.0" },
-				});
-				clearTimeout(timeoutId);
-
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-				}
-
-				const data = await response.json();
-				return data.children || [];
-			} catch (error) {
-				lastError = error instanceof Error ? error : new Error(String(error));
-				console.warn(
-					`Webmention fetch attempt ${attempt + 1}/${maxRetries} failed for ${target}: ${lastError.message}`,
-				);
-
-				// Don't retry on the last attempt
-				if (attempt < maxRetries - 1) {
-					// Exponential backoff: 1s, 2s, 4s
-					const delayMs = Math.pow(2, attempt) * 1000;
-					console.log(`Retrying in ${delayMs}ms...`);
-					await new Promise((resolve) => setTimeout(resolve, delayMs));
-				}
-			}
-		}
-
-		// All retries failed
-		console.warn(
-			`Webmention fetch failed after ${maxRetries} attempts for ${target}: ${lastError?.message || "Unknown error"}`,
-		);
-		return []; // Return empty array as fallback
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		console.warn(
-			`Webmention fetch setup failed for ${target}: ${errorMessage}`,
-		);
-		return []; // Return empty array as fallback
-	}
-};
-
-const isProperty = (item: WebmentionEntry, property: string): boolean => {
-	return item["wm-property"] === property;
-};
-
-const getUrlVariants = (url: string): string[] =>
-	[
-		url,
-		url.endsWith("/") ? url.slice(0, -1) : url + "/",
-		url.endsWith(".html")
-			? null
-			: `${url.endsWith("/") ? url.slice(0, -1) : url}.html`,
-	].filter((variant): variant is string => variant !== null);
-
-const children = (
-	await Promise.all(
-		getUrlVariants(target).map((variant) => fetchWebmentions(variant)),
-	)
-)
-	.flat()
-	.filter(
-		(mention, index, self) =>
-			mention !== null &&
-			mention !== undefined &&
-			self.findIndex((m) => m?.url === mention.url) === index,
-	);
-
-const counts = children.reduce(
-	(
-		{ likesAndRepostsCount, mentionsCount, repliesCount },
-		item: WebmentionEntry,
-	) => ({
-		likesAndRepostsCount:
-			likesAndRepostsCount +
-			(isProperty(item, "like-of") || isProperty(item, "repost-of") ? 1 : 0),
-		mentionsCount: mentionsCount + (isProperty(item, "mention-of") ? 1 : 0),
-		repliesCount: repliesCount + (isProperty(item, "in-reply-to") ? 1 : 0),
-	}),
-	{ likesAndRepostsCount: 0, mentionsCount: 0, repliesCount: 0 },
-);
-
+const children = await fetchAllVariants(target, API_TOKEN ?? "");
+const counts = computeCounts(children);
 const { likesAndRepostsCount, mentionsCount, repliesCount } = counts;
-
-interface WebmentionContent {
-	html: string;
-	text: string;
-}
-
-interface WebmentionCard {
-	type: "card";
-	name: string;
-	photo: string;
-	url: string;
-}
-interface WebmentionEntry {
-	type: "entry";
-	author: WebmentionCard;
-	url: string;
-	published: string;
-	"wm-received": string;
-	"wm-id": number;
-	"wm-source": string;
-	"wm-target": string;
-	"wm-protocol": string;
-	content: WebmentionContent;
-	"in-reply-to": string;
-	"wm-property": string;
-	"wm-private": boolean;
-}
 ---
 
 {
