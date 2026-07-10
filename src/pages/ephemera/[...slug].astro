@@ -4,6 +4,7 @@ import type {
 	InferGetStaticPropsType,
 	GetStaticPaths,
 } from "astro";
+import type { ImageMetadata } from "astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import Ephemera from "@layouts/Ephemera.astro";
 import Backlinks from "@components/Backlinks.astro";
@@ -29,6 +30,27 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 const { slug } = Astro.params as Params;
 const { post, body, date, image, syndication, youtube } = Astro.props as Props;
 
+const assetImages = import.meta.glob<{ default: ImageMetadata }>(
+	`/src/**/*.{jpeg,jpg,png,gif}`,
+	{ eager: true },
+);
+
+const resolveImage = (src: string | undefined): string | undefined => {
+	if (!src || !src.startsWith("./")) return src;
+	const dir = post.id.includes("/")
+		? post.id.substring(0, post.id.lastIndexOf("/"))
+		: "";
+	const filename = src.replace("./", "");
+	const sourcePath = dir
+		? `/src/content/ephemera/${dir}/${filename}`
+		: `/src/content/ephemera/${filename}`;
+	const mod = assetImages[sourcePath];
+	return mod?.default?.src ?? src;
+};
+
+const resolvedHeroImage = resolveImage(image?.src);
+const resolvedOGImage = resolveImage(image?.src);
+
 const { Content } = await render(post);
 
 const canonicalURL = new URL(`ephemera/${slug}`, Astro.site)
@@ -47,8 +69,8 @@ const canonicalURL = new URL(`ephemera/${slug}`, Astro.site)
 	syndication={syndication ?? []}
 	canonicalURL={canonicalURL}
 	galleryPath={`/ephemera/${slug}`}
-	OGImage={image?.src}
-	heroImage={image?.src}
+	OGImage={resolvedOGImage}
+	heroImage={resolvedHeroImage}
 >
 	<Content />
 	<Backlinks currentSlug={`/ephemera/${slug}`} slot="aside" />
