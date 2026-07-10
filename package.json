@@ -32,7 +32,7 @@
       "eslint --fix"
     ],
     "*.{css,scss,astro}": "stylelint --fix",
-    "*.{css,astro,js,ts,yml,json}": "prettier --write --ignore-unknown"
+    "*.{css,astro,js,mjs,ts,yml,json}": "prettier --write --ignore-unknown"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",
