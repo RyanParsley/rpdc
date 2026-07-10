@@ -1,14 +1,22 @@
-import { defineConfig, passthroughImageService } from "astro/config";
+import { defineConfig, passthroughImageService, envField } from "astro/config";
 import mdx from "@astrojs/mdx";
+import mermaid from "astro-mermaid";
 import partytown from "@astrojs/partytown";
 import sitemap from "@astrojs/sitemap";
-import remarkMermaid from "remark-mermaidjs";
-import { unified } from "@astrojs/markdown-remark";
 import pagefind from "astro-pagefind";
 import posseIntegration from "./src/integrations/posse";
 
 export default defineConfig({
 	site: "https://ryanparsley.com",
+	env: {
+		schema: {
+			WEBMENTION_IO_TOKEN: envField.string({
+				context: "server",
+				access: "secret",
+				optional: true,
+			}),
+		},
+	},
 	image: {
 		service: passthroughImageService(),
 	},
@@ -21,15 +29,11 @@ export default defineConfig({
 			},
 		},
 	},
-	markdown: {
-		processor: unified({
-			remarkPlugins: [[remarkMermaid, { mermaidConfig: { theme: "dark" } }]],
-		}),
-	},
 	build: {
 		format: "directory",
 	},
 	integrations: [
+		mermaid({ theme: "dark" }),
 		mdx(),
 		sitemap(),
 		partytown({

@@ -1,14 +1,15 @@
 ---
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
+import { WEBMENTION_IO_TOKEN } from "astro:env/server";
 
 interface Props {
 	target: string;
 }
 const { target } = Astro.props;
 
-// Load from project .env first, then fallback to ~/.env
-let API_TOKEN = import.meta.env.WEBMENTION_IO_TOKEN;
+// Load from astro:env first, then fallback to ~/.env
+let API_TOKEN = WEBMENTION_IO_TOKEN;
 
 if (!API_TOKEN) {
 	const homeEnvPath = process.env.HOME ? join(process.env.HOME, ".env") : null;
