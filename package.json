@@ -10,7 +10,7 @@
     "astro": "astro",
     "lint": "npx eslint ./src",
     "lint:style": "npx stylelint '**/*.{css,astro}' --fix",
-    "format": "prettier **/*.{css,astro,js,ts,yml,json} --write",
+    "format": "prettier **/*.{css,astro,js,mjs,ts,yml,json} --write",
     "postinstall": "npx playwright install chromium",
     "prepare": "husky",
     "postbuild": "pagefind --site dist",
