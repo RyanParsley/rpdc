@@ -1,7 +1,7 @@
 ---
 date: 2024-09-22T22:09:00-04:00
 image:
-  src: ./CGB-Arcade-Stick-1.jpg
+  src: ./cgb-arcade-stick-1.jpg
   alt: A Raspberry pi pico wired up to a joystick and some buttons on the inside of a cigar box.
 syndication:
   - href: https://mastodon.social/@RyanParsley/
