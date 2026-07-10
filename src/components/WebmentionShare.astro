@@ -1,4 +1,9 @@
 ---
+import {
+	buildBlueskyShareUrl,
+	buildMastodonShareUrl,
+} from "../utils/webmentions";
+
 interface Props {
 	postUrl: string;
 	postTitle: string;
@@ -6,14 +11,8 @@ interface Props {
 
 const { postUrl, postTitle } = Astro.props;
 
-const encodedTitle = encodeURIComponent(postTitle);
-const encodedUrl = encodeURIComponent(postUrl);
-
-const blueskyShareText = `${postTitle} ${postUrl}`;
-const encodedBlueskyShareText = encodeURIComponent(blueskyShareText);
-
-const blueskyShareUrl = `https://bsky.app/intent/compose?text=${encodedBlueskyShareText}`;
-const mastodonShareUrl = `https://mastodon.social/share?text=${encodedTitle}&url=${encodedUrl}`;
+const blueskyShareUrl = buildBlueskyShareUrl(postTitle, postUrl);
+const mastodonShareUrl = buildMastodonShareUrl(postTitle, postUrl);
 ---
 
 <div class="callout webmention-share-prompt">

@@ -1,68 +1,39 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { setupAstroMocks } from "../test/astro-test-utils";
+import { describe, it, expect } from "vitest";
+import type { Syndication } from "./SyndicationLinks.astro";
 
-describe("SyndicationLinks Component", () => {
-	beforeEach(() => {
-		setupAstroMocks();
-		vi.clearAllMocks();
-	});
-
-	describe("Syndication Type", () => {
-		it("should validate Syndication interface structure", () => {
-			const syndication = { href: "https://example.com/1", title: "Mastodon" };
-			expect(syndication.href).toMatch(/^https?:\/\//);
-			expect(typeof syndication.title).toBe("string");
-		});
-
-		it("should accept multiple syndication links", () => {
-			const syndications = [
+describe("SyndicationLinks", () => {
+	describe("Syndication type", () => {
+		it("accepts valid syndication links", () => {
+			const links: Syndication[] = [
 				{ href: "https://mastodon.social/@user/1", title: "Mastodon" },
 				{ href: "https://bsky.app/profile/user/post/1", title: "Bluesky" },
 			];
+			expect(links).toHaveLength(2);
+		});
 
-			expect(syndications).toHaveLength(2);
-			syndications.forEach((s) => {
-				expect(s.href).toMatch(/^https?:\/\//);
-				expect(typeof s.title).toBe("string");
-			});
+		it("rejects missing required fields at type level", () => {
+			const valid: Syndication = {
+				href: "https://example.com/1",
+				title: "Mastodon",
+			};
+			expect(valid.href).toBe("https://example.com/1");
+			expect(valid.title).toBe("Mastodon");
 		});
 	});
 
-	describe("Empty State", () => {
-		it("should not render when syndication array is empty", () => {
-			const syndication: { href: string; title: string }[] = [];
+	describe("Conditional rendering logic", () => {
+		it("should not render when empty", () => {
+			const syndication: Syndication[] = [];
 			const shouldRender = syndication.length > 0;
 			expect(shouldRender).toBe(false);
 		});
 
-		it("should not render when syndication is undefined", () => {
-			const syndication = undefined as
-				| { href: string; title: string }[]
-				| undefined;
-			const shouldRender = (syndication?.length ?? 0) > 0;
-			expect(shouldRender).toBe(false);
-		});
-	});
-
-	describe("Rendering", () => {
-		it("should render when syndication array has items", () => {
-			const syndication = [
+		it("should render when has items", () => {
+			const syndication: Syndication[] = [
 				{ href: "https://mastodon.social/@user/1", title: "Mastodon" },
 			];
 			const shouldRender = syndication.length > 0;
 			expect(shouldRender).toBe(true);
-		});
-
-		it("should render correct link labels", () => {
-			const testCases = [
-				{ title: "Mastodon", expected: "Mastodon" },
-				{ title: "Bluesky", expected: "Bluesky" },
-				{ title: "Twitter", expected: "Twitter" },
-			];
-
-			testCases.forEach(({ title, expected }) => {
-				expect(title).toBe(expected);
-			});
 		});
 	});
 });

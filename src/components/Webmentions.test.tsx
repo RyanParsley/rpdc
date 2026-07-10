@@ -1,435 +1,479 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { setupAstroMocks } from "../test/astro-test-utils";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+	getUrlVariants,
+	isProperty,
+	fetchWebmentionsForUrl,
+	fetchAllVariants,
+	deduplicateMentions,
+	computeCounts,
+	parseTokenFromEnvFile,
+	type WebmentionEntry,
+} from "../utils/webmentions";
 
-describe("Webmentions Component", () => {
+const makeEntry = (
+	overrides: Partial<WebmentionEntry> = {},
+): WebmentionEntry => ({
+	type: "entry",
+	author: { type: "card", name: "Tester", url: "https://example.com" },
+	url: "https://example.com/comment",
+	published: "2025-01-01T10:00:00Z",
+	"wm-received": "2025-01-01T10:05:00Z",
+	"wm-id": 1,
+	"wm-source": "https://example.com/comment",
+	"wm-target": "https://target.com/post",
+	"wm-protocol": "webmention",
+	content: { html: "<p>hi</p>", text: "hi" },
+	"in-reply-to": "https://target.com/post",
+	"wm-property": "mention-of",
+	"wm-private": false,
+	...overrides,
+});
+
+describe("getUrlVariants", () => {
+	it("generates variants for plain URL", () => {
+		const url = "https://example.com/blog/my-post";
+		const variants = getUrlVariants(url);
+
+		expect(variants).toContain(url);
+		expect(variants).toContain(url + "/");
+		expect(variants).toContain(url + ".html");
+		expect(variants).toHaveLength(3);
+	});
+
+	it("generates variants for URL with trailing slash", () => {
+		const url = "https://example.com/blog/my-post/";
+		const variants = getUrlVariants(url);
+
+		expect(variants).toContain(url);
+		expect(variants).toContain("https://example.com/blog/my-post");
+		expect(variants).toContain("https://example.com/blog/my-post.html");
+		expect(variants).toHaveLength(3);
+	});
+
+	it("generates variants for URL with .html extension", () => {
+		const url = "https://example.com/blog/my-post.html";
+		const variants = getUrlVariants(url);
+
+		expect(variants).toContain(url);
+		expect(variants).toContain(url + "/");
+		expect(variants).toHaveLength(2);
+	});
+
+	it("does not return duplicates", () => {
+		const url = "https://example.com/blog/my-post.html";
+		const variants = getUrlVariants(url);
+
+		expect(new Set(variants).size).toBe(variants.length);
+	});
+});
+
+describe("isProperty", () => {
+	it("returns true for matching property", () => {
+		const entry = makeEntry({ "wm-property": "like-of" });
+		expect(isProperty(entry, "like-of")).toBe(true);
+	});
+
+	it("returns false for non-matching property", () => {
+		const entry = makeEntry({ "wm-property": "like-of" });
+		expect(isProperty(entry, "repost-of")).toBe(false);
+	});
+});
+
+describe("computeCounts", () => {
+	it("counts likes, reposts, mentions, and replies", () => {
+		const children = [
+			makeEntry({ "wm-property": "like-of" }),
+			makeEntry({ "wm-property": "repost-of" }),
+			makeEntry({ "wm-property": "like-of" }),
+			makeEntry({ "wm-property": "mention-of" }),
+			makeEntry({ "wm-property": "in-reply-to" }),
+			makeEntry({ "wm-property": "in-reply-to" }),
+			makeEntry({ "wm-property": "in-reply-to" }),
+		];
+
+		const counts = computeCounts(children);
+
+		expect(counts.likesAndRepostsCount).toBe(3);
+		expect(counts.mentionsCount).toBe(1);
+		expect(counts.repliesCount).toBe(3);
+	});
+
+	it("returns zero for empty array", () => {
+		const counts = computeCounts([]);
+		expect(counts).toEqual({
+			likesAndRepostsCount: 0,
+			mentionsCount: 0,
+			repliesCount: 0,
+		});
+	});
+});
+
+describe("deduplicateMentions", () => {
+	it("removes duplicates by url", () => {
+		const mentions = [
+			makeEntry({ url: "https://example.com/1", "wm-property": "like-of" }),
+			makeEntry({ url: "https://example.com/2", "wm-property": "repost-of" }),
+			makeEntry({ url: "https://example.com/1", "wm-property": "like-of" }),
+		];
+
+		const result = deduplicateMentions(mentions);
+
+		expect(result).toHaveLength(2);
+		expect(result.map((m) => m.url)).toEqual([
+			"https://example.com/1",
+			"https://example.com/2",
+		]);
+	});
+
+	it("filters out null and undefined entries", () => {
+		const mentions = [
+			makeEntry({ url: "https://example.com/1", "wm-id": 1 }),
+			null as unknown as WebmentionEntry,
+			undefined as unknown as WebmentionEntry,
+			makeEntry({ url: "https://example.com/2", "wm-id": 2 }),
+		];
+
+		const result = deduplicateMentions(mentions);
+
+		expect(result).toHaveLength(2);
+	});
+
+	it("returns empty array when given empty array", () => {
+		expect(deduplicateMentions([])).toEqual([]);
+	});
+});
+
+describe("fetchWebmentionsForUrl", () => {
 	beforeEach(() => {
-		setupAstroMocks();
-		vi.clearAllMocks();
+		vi.useFakeTimers();
 	});
 
-	describe("Props Validation", () => {
-		it("should accept valid target prop", () => {
-			const testTargets = [
-				"https://example.com/blog/post-1",
-				"https://example.com/note/idea-1",
-				"https://example.com/ephemera/thought-1",
-			];
-
-			testTargets.forEach((target) => {
-				expect(target).toMatch(/^https?:\/\//);
-				expect(typeof target).toBe("string");
-			});
-		});
-
-		it("should handle various URL formats", () => {
-			const urls = [
-				"https://example.com/blog/my-post",
-				"https://example.com/note/interesting-idea",
-				"https://example.com/ephemera/quick-thought",
-			];
-
-			urls.forEach((url) => {
-				expect(url).toMatch(/^https?:\/\/.+\/(blog|note|ephemera)\/.+/);
-			});
-		});
+	afterEach(() => {
+		vi.useRealTimers();
+		if ("fetch" in globalThis) {
+			delete (globalThis as Record<string, unknown>).fetch;
+		}
 	});
 
-	describe("API Integration", () => {
-		it("should construct correct API URLs", () => {
-			const testCases = [
-				{
-					target: "https://example.com/blog/post-1",
-					expected:
-						"https://webmention.io/api/mentions.jf2?target=https%3A%2F%2Fexample.com%2Fblog%2Fpost-1&token=test-token",
-				},
-				{
-					target: "https://example.com/note/idea-1",
-					expected:
-						"https://webmention.io/api/mentions.jf2?target=https%3A%2F%2Fexample.com%2Fnote%2Fidea-1&token=test-token",
-				},
-			];
-
-			testCases.forEach(({ target, expected }) => {
-				const API_TOKEN = "test-token";
-				const encodedTarget = encodeURIComponent(target);
-				const apiUrl = `https://webmention.io/api/mentions.jf2?target=${encodedTarget}&token=${API_TOKEN}`;
-
-				expect(apiUrl).toBe(expected);
-			});
+	it("returns empty array when no token provided", async () => {
+		const result = await fetchWebmentionsForUrl("https://example.com/post", {
+			apiToken: "",
 		});
 
-		it("should handle URL encoding correctly", () => {
-			const target = "https://example.com/blog/post with spaces";
-			const encoded = encodeURIComponent(target);
-
-			expect(encoded).toContain("%20");
-			expect(encoded).toBe(
-				"https%3A%2F%2Fexample.com%2Fblog%2Fpost%20with%20spaces",
-			);
-		});
+		expect(result).toEqual([]);
 	});
 
-	describe("Data Processing", () => {
-		it("should correctly identify webmention properties", () => {
-			const isProperty = (
-				item: { "wm-property": string },
-				property: string,
-			): boolean => {
-				return item["wm-property"] === property;
-			};
+	it("fetches from webmention.io and returns children", async () => {
+		const mockChildren = [
+			makeEntry({ url: "https://other.com/comment", "wm-property": "like-of" }),
+		];
 
-			const testItems = [
-				{ "wm-property": "like-of", expected: true },
-				{ "wm-property": "repost-of", expected: true },
-				{ "wm-property": "mention-of", expected: true },
-				{ "wm-property": "in-reply-to", expected: true },
-				{ "wm-property": "unknown", expected: false },
-			];
-
-			testItems.forEach(({ "wm-property": wmProperty, expected }) => {
-				expect(isProperty({ "wm-property": wmProperty }, wmProperty)).toBe(
-					true,
-				);
-				expect(isProperty({ "wm-property": wmProperty }, "different")).toBe(
-					expected ? false : false,
-				);
-			});
+		globalThis.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({ children: mockChildren }),
 		});
 
-		it("should count different webmention types correctly", () => {
-			const mockWebmentions = [
-				{ "wm-property": "like-of" },
-				{ "wm-property": "repost-of" },
-				{ "wm-property": "like-of" },
-				{ "wm-property": "mention-of" },
-				{ "wm-property": "in-reply-to" },
-				{ "wm-property": "in-reply-to" },
-				{ "wm-property": "in-reply-to" },
-				{ "wm-property": "unknown" },
-			];
-
-			const counts = mockWebmentions.reduce(
-				({ likesAndRepostsCount, mentionsCount, repliesCount }, item) => ({
-					likesAndRepostsCount:
-						likesAndRepostsCount +
-						(item["wm-property"] === "like-of" ||
-						item["wm-property"] === "repost-of"
-							? 1
-							: 0),
-					mentionsCount:
-						mentionsCount + (item["wm-property"] === "mention-of" ? 1 : 0),
-					repliesCount:
-						repliesCount + (item["wm-property"] === "in-reply-to" ? 1 : 0),
-				}),
-				{ likesAndRepostsCount: 0, mentionsCount: 0, repliesCount: 0 },
-			);
-
-			expect(counts.likesAndRepostsCount).toBe(3); // 2 likes + 1 repost
-			expect(counts.mentionsCount).toBe(1);
-			expect(counts.repliesCount).toBe(3);
+		const result = await fetchWebmentionsForUrl("https://example.com/post", {
+			apiToken: "test-token",
 		});
 
-		it("should handle empty webmentions array", () => {
-			const emptyWebmentions: Array<{ "wm-property": string }> = [];
-
-			const counts = emptyWebmentions.reduce(
-				({ likesAndRepostsCount, mentionsCount, repliesCount }, item) => ({
-					likesAndRepostsCount:
-						likesAndRepostsCount +
-						(item["wm-property"] === "like-of" ||
-						item["wm-property"] === "repost-of"
-							? 1
-							: 0),
-					mentionsCount:
-						mentionsCount + (item["wm-property"] === "mention-of" ? 1 : 0),
-					repliesCount:
-						repliesCount + (item["wm-property"] === "in-reply-to" ? 1 : 0),
-				}),
-				{ likesAndRepostsCount: 0, mentionsCount: 0, repliesCount: 0 },
-			);
-
-			expect(counts.likesAndRepostsCount).toBe(0);
-			expect(counts.mentionsCount).toBe(0);
-			expect(counts.repliesCount).toBe(0);
-		});
+		expect(result).toEqual(mockChildren);
+		expect(globalThis.fetch).toHaveBeenCalledWith(
+			expect.stringContaining("webmention.io/api/mentions.jf2"),
+			expect.objectContaining({
+				headers: { "User-Agent": "Astro-Build/1.0" },
+			}),
+		);
 	});
 
-	describe("Webmention Types", () => {
-		it("should validate WebmentionEntry interface structure", () => {
-			const mockEntry = {
-				type: "entry" as const,
-				author: {
-					type: "card" as const,
-					name: "Test Author",
-					photo: "https://example.com/photo.jpg",
-					url: "https://example.com",
-				},
-				url: "https://example.com/comment",
-				published: "2025-01-01T10:00:00Z",
-				"wm-received": "2025-01-01T10:05:00Z",
-				"wm-id": 123,
-				"wm-source": "https://example.com/comment",
-				"wm-target": "https://target.com/post",
-				"wm-protocol": "webmention",
-				content: {
-					html: "<p>Test comment</p>",
-					text: "Test comment",
-				},
-				"in-reply-to": "https://target.com/post",
-				"wm-property": "in-reply-to",
-				"wm-private": false,
-			};
+	it("retries on failure with exponential backoff", async () => {
+		globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-			expect(mockEntry.type).toBe("entry");
-			expect(mockEntry.author.name).toBe("Test Author");
-			expect(mockEntry["wm-property"]).toBe("in-reply-to");
-			expect(mockEntry.content.text).toBe("Test comment");
+		const promise = fetchWebmentionsForUrl("https://example.com/post", {
+			apiToken: "test-token",
+			maxRetries: 3,
 		});
 
-		it("should handle optional author photo", () => {
-			const withPhoto = {
-				type: "card" as const,
-				name: "Author With Photo",
-				photo: "https://example.com/photo.jpg",
-				url: "https://example.com",
-			};
+		// After attempt 1: backoff 1s (2^0 * 1000)
+		await vi.advanceTimersByTimeAsync(1000);
+		// After attempt 2: backoff 2s (2^1 * 1000)
+		await vi.advanceTimersByTimeAsync(2000);
+		// After attempt 3: no retry, returns empty
+		await vi.advanceTimersByTimeAsync(0);
 
-			const withoutPhoto = {
-				type: "card" as const,
-				name: "Author Without Photo",
-				url: "https://example.com",
-			} as { type: "card"; name: string; url: string; photo?: string };
+		const result = await promise;
 
-			expect(withPhoto.photo).toBeDefined();
-			expect(withoutPhoto.photo).toBeUndefined();
-		});
+		expect(result).toEqual([]);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(3);
+		expect(warnSpy).toHaveBeenCalled();
+		warnSpy.mockRestore();
 	});
 
-	describe("Rendering Logic", () => {
-		it("should determine correct action text based on wm-property", () => {
-			const testCases = [
-				{ property: "in-reply-to", expected: "replied" },
-				{ property: "like-of", expected: "liked" },
-				{ property: "repost-of", expected: "reposted" },
-				{ property: "mention-of", expected: "mentioned" },
-				{ property: "unknown", expected: "mentioned" }, // default case
-			];
-
-			testCases.forEach(({ property, expected }) => {
-				const actionText =
-					property === "in-reply-to"
-						? "replied"
-						: property === "like-of"
-							? "liked"
-							: property === "repost-of"
-								? "reposted"
-								: "mentioned";
-
-				expect(actionText).toBe(expected);
-			});
+	it("returns empty on HTTP error", async () => {
+		globalThis.fetch = vi.fn().mockResolvedValue({
+			ok: false,
+			status: 500,
+			statusText: "Internal Server Error",
 		});
 
-		it("should conditionally render webmentions section", () => {
-			const testCases = [
-				{ children: [], shouldRender: false },
-				{ children: [{}], shouldRender: true },
-				{ children: [{}, {}, {}], shouldRender: true },
-			];
-
-			testCases.forEach(({ children, shouldRender }) => {
-				const shouldShowSection = children.length > 0;
-				expect(shouldShowSection).toBe(shouldRender);
-			});
+		// resolve all retries and backoffs
+		const promise = fetchWebmentionsForUrl("https://example.com/post", {
+			apiToken: "test-token",
+			maxRetries: 1,
 		});
 
-		it("should handle missing content gracefully", () => {
-			const mentionWithoutContent = {
-				author: { name: "Test Author" },
-				content: undefined as { text: string } | undefined,
-			};
+		await vi.advanceTimersByTimeAsync(0);
 
-			const mentionWithContent = {
-				author: { name: "Test Author" },
-				content: { text: "This is a comment" },
-			};
+		const result = await promise;
 
-			expect(mentionWithoutContent.content?.text).toBeUndefined();
-			expect(mentionWithContent.content?.text).toBe("This is a comment");
-		});
+		expect(result).toEqual([]);
 	});
 
-	describe("Error Handling", () => {
-		it("should handle API failures gracefully", async () => {
-			const mockFetch = vi.fn(() => Promise.reject(new Error("API Error")));
-			(global.fetch as typeof fetch) = mockFetch;
+	it("encodes the target URL in the API request", async () => {
+		globalThis.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({ children: [] }),
+		});
 
-			try {
-				await fetch(
-					"https://webmention.io/api/mentions.jf2?target=test&token=test",
-				);
-			} catch (error) {
-				expect(error).toBeInstanceOf(Error);
-				expect((error as Error).message).toBe("API Error");
+		await fetchWebmentionsForUrl("https://example.com/post with spaces", {
+			apiToken: "tok",
+			maxRetries: 1,
+		});
+
+		const mockFetch = globalThis.fetch as ReturnType<typeof vi.fn>;
+		const calledUrl = mockFetch.mock.calls[0]![0] as string;
+		expect(calledUrl).toContain(
+			encodeURIComponent("https://example.com/post with spaces"),
+		);
+		expect(calledUrl).not.toContain("post with spaces");
+	});
+});
+
+describe("fetchAllVariants", () => {
+	it("fetches all URL variants and deduplicates", async () => {
+		const like = makeEntry({
+			url: "https://other.com/like",
+			"wm-property": "like-of",
+		});
+
+		globalThis.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({ children: [like] }),
+		});
+
+		const result = await fetchAllVariants(
+			"https://example.com/post",
+			"test-token",
+		);
+
+		expect(result).toHaveLength(1);
+		expect(result[0]!["wm-property"]).toBe("like-of");
+	});
+
+	it("returns empty array on all failures", async () => {
+		vi.useFakeTimers();
+		globalThis.fetch = vi.fn().mockRejectedValue(new Error("fail"));
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		const promise = fetchAllVariants("https://example.com/post", "tok");
+		await vi.advanceTimersByTimeAsync(100_000);
+		const result = await promise;
+
+		expect(result).toEqual([]);
+	});
+
+	it("returns entries only from successful variants", async () => {
+		const likeEntry = makeEntry({
+			url: "https://other.com/like",
+			"wm-property": "like-of",
+		});
+
+		let callCount = 0;
+		globalThis.fetch = vi.fn().mockImplementation(async () => {
+			callCount++;
+			if (callCount === 1) {
+				return {
+					ok: true,
+					json: () => Promise.resolve({ children: [likeEntry] }),
+				};
 			}
-
-			expect(mockFetch).toHaveBeenCalledTimes(1);
+			return {
+				ok: true,
+				json: () => Promise.resolve({ children: [] }),
+			};
 		});
 
-		it("should handle malformed API responses", () => {
-			const malformedResponse = { invalid: "data" };
+		const result = await fetchAllVariants(
+			"https://example.com/post",
+			"test-token",
+		);
 
-			expect(malformedResponse).not.toHaveProperty("children");
-			expect(
-				Array.isArray((malformedResponse as { children?: unknown }).children),
-			).toBe(false);
-		});
+		expect(result).toHaveLength(1);
+		expect(result[0]!["wm-property"]).toBe("like-of");
+	});
+});
 
-		it("should validate retry configuration", () => {
-			const maxRetries = 3;
-			expect(maxRetries).toBeGreaterThan(0);
-			expect(maxRetries).toBeLessThan(10);
-		});
+describe("fetchWebmentionsForUrl - malformed responses", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
 	});
 
-	describe("URL Variants", () => {
-		const getUrlVariants = (url: string): string[] => {
-			const variants: string[] = [];
-			const hasTrailingSlash = url.endsWith("/");
-			const hasHtmlExtension = url.endsWith(".html");
-
-			variants.push(url);
-
-			if (hasTrailingSlash) {
-				variants.push(url.slice(0, -1));
-			} else {
-				variants.push(url + "/");
-			}
-
-			if (!hasHtmlExtension) {
-				const baseUrl = hasTrailingSlash ? url.slice(0, -1) : url;
-				variants.push(`${baseUrl}.html`);
-			}
-
-			return [...new Set(variants)];
-		};
-
-		it("should generate variants for URL without trailing slash or .html", () => {
-			const url = "https://example.com/blog/my-post";
-			const variants = getUrlVariants(url);
-
-			expect(variants).toContain("https://example.com/blog/my-post");
-			expect(variants).toContain("https://example.com/blog/my-post/");
-			expect(variants).toContain("https://example.com/blog/my-post.html");
-			expect(variants).toHaveLength(3);
-		});
-
-		it("should generate variants for URL with trailing slash", () => {
-			const url = "https://example.com/blog/my-post/";
-			const variants = getUrlVariants(url);
-
-			expect(variants).toContain("https://example.com/blog/my-post/");
-			expect(variants).toContain("https://example.com/blog/my-post");
-			expect(variants).toContain("https://example.com/blog/my-post.html");
-			expect(variants).toHaveLength(3);
-		});
-
-		it("should generate variants for URL with .html extension", () => {
-			const url = "https://example.com/blog/my-post.html";
-			const variants = getUrlVariants(url);
-
-			expect(variants).toContain("https://example.com/blog/my-post.html");
-			expect(variants).toContain("https://example.com/blog/my-post.html/");
-			expect(variants).toHaveLength(2);
-		});
-
-		it("should not add duplicate variants", () => {
-			const url = "https://example.com/blog/my-post.html";
-			const variants = getUrlVariants(url);
-
-			const uniqueVariants = new Set(variants);
-			expect(variants.length).toBe(uniqueVariants.size);
-		});
+	afterEach(() => {
+		vi.useRealTimers();
+		if ("fetch" in globalThis) {
+			delete (globalThis as Record<string, unknown>).fetch;
+		}
 	});
 
-	describe("Deduplication", () => {
-		it("should deduplicate webmentions by url", () => {
-			const mentions = [
-				{
-					url: "https://example.com/1",
-					author: { name: "User 1" },
-					"wm-property": "like-of",
-				},
-				{
-					url: "https://example.com/2",
-					author: { name: "User 2" },
-					"wm-property": "repost-of",
-				},
-				{
-					url: "https://example.com/1",
-					author: { name: "User 1" },
-					"wm-property": "like-of",
-				},
-				{
-					url: "https://example.com/3",
-					author: { name: "User 3" },
-					"wm-property": "mention-of",
-				},
-			];
-
-			const deduplicated = mentions.filter(
-				(mention, index, self) =>
-					self.findIndex((m) => m?.url === mention.url) === index,
-			);
-
-			expect(deduplicated).toHaveLength(3);
-			expect(deduplicated.map((m) => m.url)).toEqual([
-				"https://example.com/1",
-				"https://example.com/2",
-				"https://example.com/3",
-			]);
+	it("returns empty array when children is null", async () => {
+		globalThis.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({ children: null }),
 		});
 
-		it("should deduplicate mentions with same missing url", () => {
-			const mentions = [
-				{
-					url: "https://example.com/1",
-					author: { name: "User 1" },
-					"wm-property": "like-of",
-				},
-				{
-					url: "https://example.com/2",
-					author: { name: "User 2" },
-					"wm-property": "repost-of",
-				},
-				{
-					url: "https://example.com/1",
-					author: { name: "User 1" },
-					"wm-property": "like-of",
-				},
-			];
-
-			const deduplicated = mentions.filter(
-				(mention, index, self) =>
-					self.findIndex((m) => m?.url === mention.url) === index,
-			);
-
-			expect(deduplicated).toHaveLength(2);
+		const result = await fetchWebmentionsForUrl("https://example.com/post", {
+			apiToken: "test-token",
 		});
 
-		it("should filter out null and undefined mentions", () => {
-			const mentions = [
-				{ "wm-id": 1, author: { name: "User 1" } },
-				null,
-				undefined,
-				{ "wm-id": 2, author: { name: "User 2" } },
-			];
+		expect(result).toEqual([]);
+	});
 
-			const filtered = mentions.filter(
-				(mention): mention is NonNullable<typeof mention> =>
-					mention !== null && mention !== undefined,
-			);
-
-			expect(filtered).toHaveLength(2);
+	it("returns empty array when children key is missing", async () => {
+		globalThis.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({}),
 		});
+
+		const result = await fetchWebmentionsForUrl("https://example.com/post", {
+			apiToken: "test-token",
+		});
+
+		expect(result).toEqual([]);
+	});
+
+	it("returns empty array when response body is not valid JSON", async () => {
+		globalThis.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.reject(new Error("Unexpected token")),
+		});
+
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		const result = await fetchWebmentionsForUrl("https://example.com/post", {
+			apiToken: "test-token",
+			maxRetries: 1,
+		});
+
+		expect(result).toEqual([]);
+		warnSpy.mockRestore();
+	});
+
+	it("handles entries with missing optional fields", async () => {
+		const sparseEntry = {
+			type: "entry" as const,
+			url: "https://example.com/comment",
+			"wm-property": "mention-of",
+			"wm-source": "https://source.com",
+			"wm-target": "https://target.com",
+			"wm-id": 1,
+			"wm-received": "2025-01-01T00:00:00Z",
+			"wm-protocol": "webmention",
+			"wm-private": false,
+			published: "2025-01-01T00:00:00Z",
+		} as unknown as WebmentionEntry;
+
+		globalThis.fetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({ children: [sparseEntry] }),
+		});
+
+		const result = await fetchWebmentionsForUrl("https://example.com/post", {
+			apiToken: "test-token",
+		});
+
+		expect(result).toHaveLength(1);
+		expect(result[0]!["wm-property"]).toBe("mention-of");
+	});
+});
+
+describe("fetchWebmentionsForUrl - timeout", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+		if ("fetch" in globalThis) {
+			delete (globalThis as Record<string, unknown>).fetch;
+		}
+	});
+
+	it("aborts fetch after timeout and returns empty", async () => {
+		globalThis.fetch = vi.fn().mockImplementation((_url, opts) => {
+			return new Promise((_, reject) => {
+				opts?.signal?.addEventListener("abort", () => {
+					reject(new DOMException("The operation was aborted.", "AbortError"));
+				});
+			});
+		});
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+		const promise = fetchWebmentionsForUrl("https://example.com/post", {
+			apiToken: "test-token",
+			maxRetries: 1,
+			timeoutMs: 100,
+		});
+
+		await vi.advanceTimersByTimeAsync(100);
+		const result = await promise;
+
+		expect(result).toEqual([]);
+		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+		warnSpy.mockRestore();
+	});
+});
+
+describe("parseTokenFromEnvFile", () => {
+	it("parses unquoted token", () => {
+		expect(parseTokenFromEnvFile("export WEBMENTION_IO_TOKEN=abc123")).toBe(
+			"abc123",
+		);
+	});
+
+	it("parses single-quoted token", () => {
+		expect(parseTokenFromEnvFile("export WEBMENTION_IO_TOKEN='abc123'")).toBe(
+			"abc123",
+		);
+	});
+
+	it("parses double-quoted token", () => {
+		expect(parseTokenFromEnvFile('export WEBMENTION_IO_TOKEN="abc123"')).toBe(
+			"abc123",
+		);
+	});
+
+	it("parses token from multiline file", () => {
+		const content = [
+			"OTHER_VAR=foo",
+			"export WEBMENTION_IO_TOKEN=secret123",
+			"ANOTHER_VAR=bar",
+		].join("\n");
+
+		expect(parseTokenFromEnvFile(content)).toBe("secret123");
+	});
+
+	it("returns null when no token found", () => {
+		expect(parseTokenFromEnvFile("OTHER_VAR=foo\nANOTHER_VAR=bar")).toBeNull();
+	});
+
+	it("returns null for empty string", () => {
+		expect(parseTokenFromEnvFile("")).toBeNull();
+	});
+
+	it("ignores lines without export prefix", () => {
+		expect(
+			parseTokenFromEnvFile("WEBMENTION_IO_TOKEN=should-not-match"),
+		).toBeNull();
 	});
 });
