@@ -2,6 +2,7 @@ import rss from "@astrojs/rss";
 import { getCollection } from "astro:content";
 import { SITE_TITLE, SITE_DESCRIPTION } from "../../consts.ts";
 import { isPublished } from "../../content.config";
+import { marked } from "marked";
 
 export async function GET(context) {
 	const posts = (await getCollection("note")).filter(isPublished);
@@ -15,7 +16,8 @@ export async function GET(context) {
 			.sort((a, b) => b.data.pubDate - a.data.pubDate)
 			.map((post) => ({
 				...post.data,
-				link: `/note/${post.slug}`,
+				link: `/note/${post.id}`,
+				content: post.body ? marked.parse(post.body) : "",
 			})),
 	});
 }
