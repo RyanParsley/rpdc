@@ -342,8 +342,6 @@ ${dateRange}
  * Send email via Buttondown API
  */
 async function sendEmail(subject, body) {
-	const publishDate = new Date().toISOString();
-
 	const response = await fetch(`${BUTTONDOWN_API_URL}/emails`, {
 		method: "POST",
 		headers: {
@@ -356,7 +354,6 @@ async function sendEmail(subject, body) {
 			body,
 			email_type: "public",
 			status: "sent",
-			publish_date: publishDate,
 		}),
 	});
 
