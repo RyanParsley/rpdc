@@ -353,7 +353,7 @@ async function sendEmail(subject, body) {
 			subject,
 			body,
 			email_type: "public",
-			status: "sent",
+			status: "about_to_send",
 		}),
 	});
 
