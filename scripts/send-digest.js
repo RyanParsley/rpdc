@@ -187,7 +187,7 @@ function formatDate(date) {
  * Collect content from past week
  */
 async function collectWeeklyContent() {
-	const oneWeekAgo = new Date("2026-01-07");
+	const oneWeekAgo = new Date();
 	oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
 	const content = {
@@ -348,7 +348,6 @@ async function sendEmail(subject, body) {
 			Authorization: `Token ${BUTTONDOWN_API_KEY}`,
 			"Content-Type": "application/json",
 			"User-Agent": "RyanParsleyDotCom/1.0",
-			"X-Buttondown-Live-Dangerously": "true",
 		},
 		body: JSON.stringify({
 			subject,
