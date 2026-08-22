@@ -348,6 +348,7 @@ async function sendEmail(subject, body) {
 			Authorization: `Token ${BUTTONDOWN_API_KEY}`,
 			"Content-Type": "application/json",
 			"User-Agent": "RyanParsleyDotCom/1.0",
+			"X-Buttondown-Live-Dangerously": "1",
 		},
 		body: JSON.stringify({
 			subject,
