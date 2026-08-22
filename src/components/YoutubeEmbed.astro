@@ -1,12 +1,17 @@
 ---
-const src = "https://www.youtube.com/embed/I1QiFIaE0ik?si=NDdnSAYf0H8t9zfh";
+interface Props {
+	src: string;
+}
+
+const { src } = Astro.props as Props;
+const embedSrc = `https://www.youtube.com/embed/${src}`;
 ---
 
 <div class="youtube-content u-video">
 	<iframe
 		width="560"
 		height="315"
-		src={src}
+		src={embedSrc}
 		title="YouTube video player"
 		allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
 		referrerpolicy="strict-origin-when-cross-origin"
