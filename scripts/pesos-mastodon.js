@@ -13,9 +13,6 @@
  *   node scripts/pesos-mastodon.js
  */
 
-/* eslint-env node */
-/* global console, process, fetch, URL */
-
 import {
 	readFileSync,
 	existsSync,
@@ -70,6 +67,18 @@ function prompt(question) {
 			resolve(answer.trim());
 		});
 	});
+}
+
+const YOUTUBE_PATTERNS = [
+	/(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+	/(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+	/(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+	/(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+];
+
+function extractYouTubeId(text) {
+	const match = YOUTUBE_PATTERNS.find((pattern) => pattern.test(text));
+	return match ? (match.exec(text)?.[1] ?? null) : null;
 }
 
 async function fetchMastodonPosts() {
@@ -287,11 +296,19 @@ function createEphemeraFile(post) {
 	const filepath = join(dirPath, filename);
 
 	// Convert HTML content to markdown-like plain text
-	let content = post.content || "";
-	// Strip HTML but preserve line breaks
-	content = content.replace(/<br\s*\/?>/gi, "\n");
-	content = content.replace(/<[^>]*>/g, "");
-	content = content.trim();
+	const htmlEntities = {
+		"&amp;": "&",
+		"&quot;": '"',
+		"&#39;": "'",
+		"&lt;": "<",
+		"&gt;": ">",
+	};
+	let content = (post.content || "")
+		.replace(/<\/p>/gi, "\n\n")
+		.replace(/<br\s*\/?>/gi, "\n")
+		.replace(/<[^>]*>/g, "")
+		.replace(/&(#39|quot|amp|lt|gt);/g, (m) => htmlEntities[m] || m)
+		.trim();
 
 	// Handle media attachments - include as note in content
 	const mediaAttachments = post.media_attachments || [];
@@ -308,11 +325,14 @@ function createEphemeraFile(post) {
 		content += `\n\n[Link: ${post.card.title} - ${post.card.url}]`;
 	}
 
+	const youtubeId = extractYouTubeId(content);
+
 	const fileContent = `---
 date: '${post.created_at}'
 syndication:
   - href: '${post.url || post.uri}'
     title: Mastodon
+${youtubeId && `youtube: ${youtubeId}`}
 ---
 
 ${content}
