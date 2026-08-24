@@ -645,115 +645,13 @@ export function cleanContentForSocial(
 // IMAGE PROCESSING UTILITIES
 // ============================================================================
 
-/**
- * Resolves image path based on source format
- */
-export function resolveImagePath(src: string): string {
-	return src.startsWith("./")
-		? join(process.cwd(), "src", "content", "ephemera", src.slice(2))
-		: src.startsWith("/")
-			? join(process.cwd(), "public", src.slice(1))
-			: join(process.cwd(), "src", "content", "ephemera", src);
-}
-
-/**
- * Selects the best available image source
- */
-export function selectImageSource(
-	processedPath: string | null,
-	originalPath: string,
-	platform: "mastodon" | "bluesky",
-	logger: { debug: (msg: string) => void; warn: (msg: string) => void },
-): { path: string; buffer: Buffer } | null {
-	if (processedPath && checkImageSize(processedPath, platform, logger)) {
-		logger.debug(
-			`POSSE: Using Astro-optimized image for ${platform}: ${processedPath}`,
-		);
-		return { path: processedPath, buffer: readFileSync(processedPath) };
-	}
-
-	if (checkImageSize(originalPath, platform, logger)) {
-		logger.debug(
-			`POSSE: Using original image for ${platform}: ${originalPath}`,
-		);
-		return { path: originalPath, buffer: readFileSync(originalPath) };
-	}
-
-	return null;
-}
-
-/**
- * Creates the final image result object
- */
-export function createImageResult(imageResult: {
-	path: string;
-	buffer: Buffer;
-}): {
-	path: string;
-	size: number;
-	mimeType: string;
-} {
-	return {
-		path: imageResult.path,
-		size: imageResult.buffer.length,
-		mimeType: getMimeType(imageResult.path),
-	};
-}
-
-/**
- * Checks if an image meets platform size limits
- */
-export function checkImageSize(
-	imagePath: string,
-	platform: "mastodon" | "bluesky",
-	logger?: { debug: (msg: string) => void; warn: (msg: string) => void },
-): boolean {
-	try {
-		const stats = statSync(imagePath);
-		const sizeMB = stats.size / (1024 * 1024);
-		const sizeKB = stats.size / 1024;
-
-		const limits = {
-			mastodon: 8, // 8MB (Mastodon allows up to 8MB)
-			bluesky: 0.8, // 800KB (Conservative limit well under Bluesky's 1MB = 1,000,000 bytes)
-		};
-
-		const withinLimit = sizeMB <= limits[platform];
-		if (logger) {
-			const limitBytes = Math.floor(limits[platform] * 1024 * 1024);
-			logger.debug(
-				`POSSE: Image size check - ${imagePath}: ${sizeMB.toFixed(2)}MB (${sizeKB.toFixed(1)}KB, ${stats.size} bytes), limit: ${limits[platform]}MB (${limitBytes} bytes), within limit: ${withinLimit}`,
-			);
-		}
-
-		return withinLimit;
-	} catch (error) {
-		if (logger) {
-			logger.warn(
-				`POSSE: Could not check image size for ${imagePath}: ${error}`,
-			);
-		}
-		return false;
-	}
-}
-
-/**
- * Gets MIME type for a given filename
- */
-export function getMimeType(filename: string): string {
-	const ext = filename.toLowerCase().split(".").pop() || "";
-
-	switch (ext) {
-		case "jpg":
-		case "jpeg":
-			return "image/jpeg";
-		case "png":
-			return "image/png";
-		case "gif":
-			return "image/gif";
-		case "webp":
-			return "image/webp";
-		default:
-			return "image/jpeg"; // fallback
-	}
-}
+// The image helpers live in ./image — the single source of truth shared by
+// every POSSE module. They are re-exported here to preserve posse.ts's public
+// surface, including the imports consumed by posse.test.ts.
+export {
+	selectImageSource,
+	resolveImagePath,
+	createImageResult,
+	checkImageSize,
+	getMimeType,
+} from "./image";
