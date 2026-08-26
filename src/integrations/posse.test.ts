@@ -775,6 +775,199 @@ Content`;
 			expect(result.platform).toBe("mastodon");
 		});
 
+		// The tests below encode the Mastodon API contract as documented
+		// (https://docs.joinmastodon.org/api/): a media upload to
+		// `POST /api/v1/media` returns a MediaAttachment with an `id`, and that
+		// id is threaded into the status via `media_ids` on
+		// `POST /api/v1/statuses`. Asserting the request shape (endpoint, auth,
+		// multipart fields, id linkage) protects the path that the image-helper
+		// consolidation rewired: uploadImageToMastodon now consumes the shared
+		// processImageForPlatform() result instead of an inline copy.
+
+		it("uploads an image to /api/v1/media and links it to the status via media_ids", async () => {
+			const post: EphemeraPost = {
+				file: "image-post.md",
+				data: { title: "Test Post With Image" },
+				body: "Body text for a post that carries an image.",
+				image: { src: "./diagram.png", alt: "A diagram" },
+			};
+
+			// Original file exists on disk and is well under Mastodon's 8MB limit.
+			fsMocks.statSync.mockReturnValue({ size: 1024 });
+			fsMocks.readdirSync.mockReturnValue([]); // no Astro-processed variant
+			fsMocks.readFileSync.mockReturnValue(
+				Buffer.from("\x89PNG\r\n\x1a\n fake-image-bytes"),
+			);
+
+			// 1) connectivity probe, 2) media upload, 3) status creation with media
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({}),
+			});
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () =>
+					Promise.resolve({
+						id: "mock-media-id-123",
+						type: "image",
+						url: "https://mastodon.social/media/mock-image.png",
+					}),
+			});
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () =>
+					Promise.resolve({
+						url: "https://mastodon.social/@user/987654321",
+					}),
+			});
+
+			const result = await postToMastodon(
+				post,
+				"https://example.com/image-post",
+				{ token: "mock-mastodon-token-abc123", instance: "mastodon.social" },
+				mockLogger,
+			);
+
+			expect(result.success).toBe(true);
+			expect(result.url).toBe("https://mastodon.social/@user/987654321");
+			expect(result.platform).toBe("mastodon");
+
+			// Endpoint sequence: instance probe, media upload, status creation.
+			const calledUrls = mockFetch.mock.calls.map((c) => String(c[0]));
+			expect(calledUrls).toContain("https://mastodon.social/api/v1/media");
+			expect(calledUrls).toContain("https://mastodon.social/api/v1/statuses");
+
+			// The media request is multipart with an authenticated `file` part.
+			const mediaCall = mockFetch.mock.calls.find((c) =>
+				String(c[0]).endsWith("/api/v1/media"),
+			) as [
+				string,
+				{ headers: { Authorization: string }; body: FormData; method: string },
+			];
+			expect(mediaCall[1].method).toBe("POST");
+			expect(mediaCall[1].headers.Authorization).toBe(
+				"Bearer mock-mastodon-token-abc123",
+			);
+			expect(mediaCall[1].body).toBeInstanceOf(FormData);
+			const file = mediaCall[1].body.get("file") as File | null;
+			expect(file).not.toBeNull();
+			expect(file!.name).toBe("image.png");
+			expect(file!.type).toBe("image/png");
+
+			// The alt text is sent as the media `description` part.
+			expect(mediaCall[1].body.get("description")).toBe("A diagram");
+
+			// The id returned by the media upload is threaded into the status.
+			const statusCall = mockFetch.mock.calls.find((c) =>
+				String(c[0]).endsWith("/api/v1/statuses"),
+			) as [string, { body: string }];
+			const statusBody = JSON.parse(statusCall[1].body) as {
+				status: string;
+				visibility: string;
+				media_ids?: string[];
+			};
+			expect(statusBody.visibility).toBe("public");
+			expect(statusBody.media_ids).toEqual(["mock-media-id-123"]);
+		});
+
+		it("omits the media description part when the image has no alt text", async () => {
+			const post: EphemeraPost = {
+				file: "image-post-noalt.md",
+				data: { title: "Post Without Alt" },
+				body: "A post with an image that is missing alt text.",
+				image: { src: "./photo.jpg", alt: "" },
+			};
+
+			fsMocks.statSync.mockReturnValue({ size: 1024 });
+			fsMocks.readdirSync.mockReturnValue([]);
+			fsMocks.readFileSync.mockReturnValue(Buffer.from("jpeg-bytes"));
+
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({}),
+			});
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () =>
+					Promise.resolve({
+						id: "mock-media-id-noalt",
+						type: "image",
+						url: "https://mastodon.social/media/mock.jpg",
+					}),
+			});
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () =>
+					Promise.resolve({
+						url: "https://mastodon.social/@user/111",
+					}),
+			});
+
+			const result = await postToMastodon(
+				post,
+				"https://example.com/image-post-noalt",
+				{ token: "mock-mastodon-token-abc123", instance: "mastodon.social" },
+				mockLogger,
+			);
+
+			expect(result.success).toBe(true);
+
+			const mediaCall = mockFetch.mock.calls.find((c) =>
+				String(c[0]).endsWith("/api/v1/media"),
+			) as [string, { body: FormData; headers: { Authorization: string } }];
+			expect(mediaCall[1].body.get("description")).toBeNull();
+			expect(mediaCall[1].body.get("file")).not.toBeNull();
+		});
+
+		it("skips an image over Mastodon's 8MB limit and posts text only", async () => {
+			const post: EphemeraPost = {
+				file: "oversized-image.md",
+				data: { title: "Post With Oversized Image" },
+				body: "The image is far too large to upload.",
+				image: { src: "./enormous.png", alt: "something huge" },
+			};
+
+			// 9MB exceeds Mastodon's 8MB media limit.
+			fsMocks.statSync.mockReturnValue({ size: 9 * 1024 * 1024 });
+			fsMocks.readdirSync.mockReturnValue([]);
+
+			// No media upload happens: connectivity probe, then status only.
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({}),
+			});
+			mockFetch.mockResolvedValueOnce({
+				ok: true,
+				json: () =>
+					Promise.resolve({
+						url: "https://mastodon.social/@user/999",
+					}),
+			});
+
+			const result = await postToMastodon(
+				post,
+				"https://example.com/oversized-image",
+				{ token: "mock-mastodon-token-abc123", instance: "mastodon.social" },
+				mockLogger,
+			);
+
+			expect(result.success).toBe(true);
+
+			// The media endpoint is never hit and the status carries no media_ids.
+			expect(
+				mockFetch.mock.calls.some((c) =>
+					String(c[0]).endsWith("/api/v1/media"),
+				),
+			).toBe(false);
+			const statusCall = mockFetch.mock.calls.find((c) =>
+				String(c[0]).endsWith("/api/v1/statuses"),
+			) as [string, { body: string }];
+			const statusBody = JSON.parse(statusCall[1].body) as {
+				media_ids?: string[];
+			};
+			expect(statusBody.media_ids).toBeUndefined();
+		});
+
 		it("should handle API errors gracefully", async () => {
 			const post: EphemeraPost = {
 				file: "test.md",
