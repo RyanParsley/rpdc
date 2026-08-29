@@ -148,7 +148,7 @@ export function getMimeType(filename: string): string {
 		case "webp":
 			return "image/webp";
 		default:
-			return "image/jpeg"; // fallback
+			return "image/jpeg";
 	}
 }
 
@@ -184,7 +184,6 @@ export function findProcessedImage(
 		const filename = basename(originalPath, extname(originalPath));
 		const astroDir = join(process.cwd(), "dist", "_astro");
 
-		// Look for processed files that start with the original filename
 		const files = readdirSync(astroDir);
 		const processedFiles = files.filter(
 			(file) =>
@@ -199,7 +198,6 @@ export function findProcessedImage(
 			return null;
 		}
 
-		// Find best file using functional approach
 		const extensionPriority = { ".webp": 3, ".jpg": 2, ".jpeg": 2, ".png": 1 };
 
 		const bestFile = processedFiles.reduce(
@@ -211,20 +209,19 @@ export function findProcessedImage(
 					extensionPriority[fileExt as keyof typeof extensionPriority] || 0;
 
 				if (preferSmaller) {
-					// Find smallest file
 					return fileSize < best.size
 						? { file, size: fileSize, priority }
 						: best;
-				} else {
-					// Find highest priority (WebP > JPG > PNG), then smallest size
-					if (
-						priority > best.priority ||
-						(priority === best.priority && fileSize < best.size)
-					) {
-						return { file, size: fileSize, priority };
-					}
-					return best;
 				}
+
+				if (
+					priority > best.priority ||
+					(priority === best.priority && fileSize < best.size)
+				) {
+					return { file, size: fileSize, priority };
+				}
+
+				return best;
 			},
 			{
 				file: null as string | null,
@@ -235,7 +232,7 @@ export function findProcessedImage(
 
 		return bestFile.file ? join(astroDir, bestFile.file) : null;
 	} catch (error) {
-		// Directory doesn't exist or can't be read - this is expected during first build
+		// dist/_astro doesn't exist on the first build; treat as "no matches", not an error
 		if (logger) {
 			logger.debug(
 				`POSSE: Could not find processed images for ${basename(originalPath)}: ${error}`,
