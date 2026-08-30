@@ -15,6 +15,10 @@ const dateFields = {
 		.transform(dateTransformer),
 };
 
+const syndicationField = z
+	.array(z.object({ href: z.string(), title: z.string() }))
+	.optional();
+
 const baseSchema = {
 	title: z.string(),
 	description: z.string(),
@@ -35,6 +39,7 @@ const postSchema = {
 	tags: z.array(z.string()).optional(),
 	featured: z.boolean().optional(),
 	published: z.boolean().optional(),
+	syndication: syndicationField,
 };
 
 export const isPublished = (entry: {
@@ -102,9 +107,7 @@ const ephemeraCollection = defineCollection({
 	schema: () =>
 		z.object({
 			date: z.string().or(z.date()).or(z.number()).transform(dateTransformer),
-			syndication: z
-				.array(z.object({ href: z.string(), title: z.string() }))
-				.optional(),
+			syndication: syndicationField,
 			youtube: z.string().optional(),
 			image: z
 				.object({
