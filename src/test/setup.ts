@@ -58,8 +58,16 @@ global.testUtils = {
 		debug: vi.fn(),
 	}),
 
-	createMockEphemeraPost: (overrides: Record<string, unknown> = {}) => ({
+	createMockSyndicatablePost: (overrides: Record<string, unknown> = {}) => ({
 		file: "test-post.md",
+		collection: {
+			name: "ephemera",
+			contentDir: "src/content/ephemera",
+			urlSegment: "ephemera",
+			dateField: "date" as const,
+			contentMode: "body" as const,
+			requirePublished: false,
+		},
 		data: {
 			title: "Test Post",
 			date: new Date("2024-01-01"),
