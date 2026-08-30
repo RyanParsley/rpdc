@@ -37,18 +37,53 @@ export interface SyndicationContext {
 	logger: Logger;
 }
 
-export interface EphemeraData {
+export interface CollectionDescriptor {
+	name: string;
+	contentDir: string;
+	urlSegment: string;
+	dateField: "date" | "pubDate";
+	contentMode: "body" | "title";
+	requirePublished: boolean;
+}
+
+export const EPHEMERA_COLLECTION: CollectionDescriptor = {
+	name: "ephemera",
+	contentDir: join("src", "content", "ephemera"),
+	urlSegment: "ephemera",
+	dateField: "date",
+	contentMode: "body",
+	requirePublished: false,
+};
+
+export const BLOG_COLLECTION: CollectionDescriptor = {
+	name: "blog",
+	contentDir: join("src", "content", "blog"),
+	urlSegment: "blog",
+	dateField: "pubDate",
+	contentMode: "title",
+	requirePublished: true,
+};
+
+export const SYNDICATABLE_COLLECTIONS: CollectionDescriptor[] = [
+	EPHEMERA_COLLECTION,
+	BLOG_COLLECTION,
+];
+
+export interface SyndicatableData {
 	title?: string;
 	date?: Date | string;
+	pubDate?: Date | string;
+	published?: boolean;
 	syndication?: Array<{ href: string; title: string }>;
 	image?: { src: string; alt: string };
 }
 
-export interface EphemeraPost {
+export interface SyndicatablePost {
 	file: string;
-	data: EphemeraData;
+	collection: CollectionDescriptor;
+	data: SyndicatableData;
 	body: string;
-	image?: EphemeraData["image"];
+	image?: SyndicatableData["image"];
 }
 
 export interface SyndicationResult {
@@ -67,7 +102,9 @@ export interface MockLogger {
 
 export interface TestUtils {
 	createMockLogger: () => MockLogger;
-	createMockEphemeraPost: (overrides?: Record<string, unknown>) => EphemeraPost;
+	createMockSyndicatablePost: (
+		overrides?: Record<string, unknown>,
+	) => SyndicatablePost;
 	createMockConfig: () => {
 		mastodon: { token: string; instance: string };
 		bluesky: { username: string; password: string };
@@ -176,35 +213,44 @@ export function getPlatformConfig(): {
 // ============================================================================
 
 /**
- * Scans ephemera directory and returns recent posts that need syndication
+ * Scans a content collection and returns recent posts that need syndication
  */
-export function scanEphemeraPosts(
+export function scanCollectionPosts(
+	collection: CollectionDescriptor,
 	maxPosts: number,
 	logger: Logger,
-): EphemeraPost[] {
+): SyndicatablePost[] {
 	try {
-		const ephemeraDir = join(process.cwd(), "src", "content", "ephemera");
+		const collectionDir = join(process.cwd(), collection.contentDir);
 		// Legacy cutoff: only process posts from 2025-08-30 or newer
 		const legacyCutoff = new Date("2025-08-30T00:00:00.000Z");
 
 		logger.info(`POSSE: Legacy cutoff date: ${legacyCutoff.toISOString()}`);
 
 		// Find all markdown files
-		const markdownFiles = findMarkdownFiles(ephemeraDir, legacyCutoff, logger);
+		const markdownFiles = findMarkdownFiles(
+			collectionDir,
+			legacyCutoff,
+			logger,
+		);
 
 		const recentPosts = markdownFiles
-			.map((filePath) => parseEphemeraFile(filePath, legacyCutoff, logger))
-			.filter((post): post is EphemeraPost => post !== null)
+			.map((filePath) =>
+				parsePostFile(filePath, collection, legacyCutoff, logger),
+			)
+			.filter((post): post is SyndicatablePost => post !== null)
 			.slice(0, maxPosts);
 
 		logger.info(
-			`POSSE: Found ${recentPosts.length} recent ephemera posts to process`,
+			`POSSE: Found ${recentPosts.length} recent ${collection.name} posts to process`,
 		);
 
 		return recentPosts;
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		logger.error(`POSSE: Failed to scan ephemera posts: ${errorMessage}`);
+		logger.error(
+			`POSSE: Failed to scan ${collection.name} posts: ${errorMessage}`,
+		);
 		return [];
 	}
 }
@@ -259,29 +305,37 @@ export function findMarkdownFiles(
 }
 
 /**
- * Parses a single ephemera file and determines if it needs syndication
+ * Parses a single content file and determines if it needs syndication
  */
-export function parseEphemeraFile(
+export function parsePostFile(
 	filePath: string,
+	collection: CollectionDescriptor,
 	legacyCutoff: Date,
 	logger: Logger,
-): EphemeraPost | null {
+): SyndicatablePost | null {
 	try {
 		const fileContent = readFileSync(filePath, "utf-8");
 		const { data, content } = matter(fileContent);
 
 		// Get relative path for logging
 		const relativePath = filePath.replace(
-			join(process.cwd(), "src", "content", "ephemera") + "/",
+			join(process.cwd(), collection.contentDir) + "/",
 			"",
 		);
 
-		// Check if post is from cutoff date or newer
-		const postDate = data.date ? new Date(data.date) : new Date(0);
+		// Check if post is from cutoff date or newer (using collection's date field)
+		const postDateValue = data[collection.dateField];
+		const postDate = postDateValue ? new Date(postDateValue) : new Date(0);
 		const isFromCutoffOrNewer = postDate >= legacyCutoff;
 
 		if (!isFromCutoffOrNewer) {
 			logger.debug(`POSSE: Skipping ${relativePath} - before legacy cutoff`);
+			return null;
+		}
+
+		// Skip unpublished posts in collections that track a published flag
+		if (collection.requirePublished && data.published === false) {
+			logger.debug(`POSSE: Skipping ${relativePath} - not published`);
 			return null;
 		}
 
@@ -315,13 +369,14 @@ export function parseEphemeraFile(
 
 		return {
 			file: relativePath,
+			collection,
 			data,
 			body: content || "",
 			image: data.image,
 		};
 	} catch (error) {
 		const relativePath = filePath.replace(
-			join(process.cwd(), "src", "content", "ephemera") + "/",
+			join(process.cwd(), collection.contentDir) + "/",
 			"",
 		);
 		logger.warn(`POSSE: Could not read ${relativePath}: ${error}`);
@@ -384,15 +439,17 @@ async function executeSyndication(context: SyndicationContext): Promise<void> {
 		logger.info("POSSE: Running in DRY RUN mode - no actual posting");
 	}
 
-	// Get recent posts
-	const recentPosts = scanEphemeraPosts(maxPosts, logger);
+	// Get recent posts across all syndicable collections
+	const recentPosts = SYNDICATABLE_COLLECTIONS.flatMap((collection) =>
+		scanCollectionPosts(collection, maxPosts, logger),
+	);
 
 	if (recentPosts.length === 0) {
-		logger.info("POSSE: No recent ephemera posts to syndicate");
+		logger.info("POSSE: No recent posts to syndicate");
 		return;
 	}
 
-	logger.info(`POSSE: Processing ${recentPosts.length} ephemera posts`);
+	logger.info(`POSSE: Processing ${recentPosts.length} posts`);
 
 	// Process each post
 	await Promise.all(
@@ -403,15 +460,15 @@ async function executeSyndication(context: SyndicationContext): Promise<void> {
 }
 
 /**
- * Process a single ephemera post
+ * Process a single post from any syndicable collection
  */
 async function processSinglePost(
-	post: EphemeraPost,
+	post: SyndicatablePost,
 	context: SyndicationContext,
 ): Promise<void> {
 	const { mastodon, bluesky, dryRun, logger } = context;
 
-	const canonicalUrl = `https://ryanparsley.com/ephemera/${post.file.replace(".md", "")}`;
+	const canonicalUrl = `https://ryanparsley.com/${post.collection.urlSegment}/${post.file.replace(".md", "")}`;
 	const existingSyndication = post.data.syndication || [];
 
 	// Check which platforms are already syndicated
@@ -444,12 +501,19 @@ async function processSinglePost(
 		`POSSE: Syndicating ${post.data.title || post.file} to: ${platformsToSyndicate.join(", ")}`,
 	);
 
+	// Compute syndication body based on collection's content mode
+	const syndicationBody =
+		post.collection.contentMode === "title"
+			? (post.data.title ?? "")
+			: post.body;
+
 	// Perform syndication
 	const syndicationResults = await syndicateToPlatforms(
 		post,
 		canonicalUrl,
 		{ mastodon: needsMastodon, bluesky: needsBluesky },
 		context,
+		syndicationBody,
 	);
 
 	// Update post with syndication links
@@ -462,10 +526,11 @@ async function processSinglePost(
  * Syndicate to configured platforms
  */
 async function syndicateToPlatforms(
-	post: EphemeraPost,
+	post: SyndicatablePost,
 	canonicalUrl: string,
 	platforms: { mastodon: boolean; bluesky: boolean },
 	context: SyndicationContext,
+	syndicationBody: string,
 ): Promise<SyndicationResult[]> {
 	const { logger } = context;
 	const results: SyndicationResult[] = [];
@@ -482,6 +547,7 @@ async function syndicateToPlatforms(
 				canonicalUrl,
 				platformConfigs.mastodon as MastodonConfig,
 				logger,
+				syndicationBody,
 			);
 			if (result.success && result.url) {
 				results.push(result);
@@ -503,6 +569,7 @@ async function syndicateToPlatforms(
 				canonicalUrl,
 				platformConfigs.bluesky as BlueskyConfig,
 				logger,
+				syndicationBody,
 			);
 			if (result.success && result.url) {
 				results.push(result);
@@ -522,16 +589,14 @@ async function syndicateToPlatforms(
  * Update the post file with syndication links
  */
 async function updatePostWithSyndication(
-	post: EphemeraPost,
+	post: SyndicatablePost,
 	syndicationResults: SyndicationResult[],
 	logger: Logger,
 ): Promise<void> {
 	try {
 		const sourcePath = join(
 			process.cwd(),
-			"src",
-			"content",
-			"ephemera",
+			post.collection.contentDir,
 			post.file,
 		);
 
@@ -581,7 +646,7 @@ async function updatePostWithSyndication(
  * Generates platform-specific content for syndication
  */
 export function generatePostContent(
-	data: EphemeraData,
+	data: SyndicatableData,
 	canonicalUrl: string,
 	body: string,
 	platform: "mastodon" | "bluesky",

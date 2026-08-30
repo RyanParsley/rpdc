@@ -6,7 +6,7 @@ import { join, extname, basename } from "path";
 import { statSync, readdirSync } from "fs";
 import {
 	generatePostContent,
-	type EphemeraPost,
+	type SyndicatablePost,
 	type Logger,
 	type SyndicationResult,
 } from "./posse";
@@ -20,10 +20,11 @@ export interface MastodonConfig {
  * Posts content to Mastodon
  */
 export async function postToMastodon(
-	post: EphemeraPost,
+	post: SyndicatablePost,
 	canonicalUrl: string,
 	config: MastodonConfig,
 	logger: Logger,
+	syndicationBody?: string,
 ): Promise<SyndicationResult> {
 	try {
 		// Validate configuration
@@ -46,7 +47,7 @@ export async function postToMastodon(
 		const content = generatePostContent(
 			post.data,
 			canonicalUrl,
-			post.body,
+			syndicationBody ?? post.body,
 			"mastodon",
 		);
 
@@ -103,7 +104,7 @@ async function testMastodonConnectivity(
  * Uploads an image to Mastodon
  */
 async function uploadImageToMastodon(
-	post: EphemeraPost,
+	post: SyndicatablePost,
 	config: MastodonConfig,
 	logger: Logger,
 ): Promise<string | null> {
