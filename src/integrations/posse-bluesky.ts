@@ -5,7 +5,7 @@ import { readFileSync, statSync, readdirSync } from "fs";
 import { join, extname, basename } from "path";
 import {
 	generatePostContent,
-	type EphemeraPost,
+	type SyndicatablePost,
 	type Logger,
 	type SyndicationResult,
 } from "./posse";
@@ -19,16 +19,17 @@ export interface BlueskyConfig {
  * Posts content to Bluesky
  */
 export async function postToBluesky(
-	post: EphemeraPost,
+	post: SyndicatablePost,
 	canonicalUrl: string,
 	config: BlueskyConfig,
 	logger: Logger,
+	syndicationBody?: string,
 ): Promise<SyndicationResult> {
 	try {
 		const content = generatePostContent(
 			post.data,
 			canonicalUrl,
-			post.body,
+			syndicationBody ?? post.body,
 			"bluesky",
 		);
 
@@ -113,7 +114,7 @@ async function authenticateWithBluesky(
  */
 async function uploadImageToBluesky(
 	session: BlueskySession,
-	post: EphemeraPost,
+	post: SyndicatablePost,
 	logger: Logger,
 ): Promise<BlueskyBlob | null> {
 	if (!post.image) return null;

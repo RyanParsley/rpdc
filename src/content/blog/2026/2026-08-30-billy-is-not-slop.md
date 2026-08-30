@@ -4,6 +4,9 @@ description: "A comparison of Ikea furniture and agentic coding. My apologies to
 pubDate: "2026-08-29T20:10:00-05:00"
 tags: ["ai", "code"]
 categrories: ["code", "architecture", "LLM"]
+syndication:
+  - href: "https://mastodon.social/@RyanParsley/117181659440672391"
+    title: "Mastodon"
 ---
 
 Some woodworkers really dislike Ikea furniture. You assemble it, but you don't

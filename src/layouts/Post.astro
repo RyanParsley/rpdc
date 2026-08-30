@@ -4,6 +4,7 @@ import Gallery from "@components/ImageGallery.astro";
 import FormattedDate from "@components/FormattedDate.astro";
 import WebmentionShare from "@components/WebmentionShare.astro";
 import NewsletterSignup from "@components/NewsletterSignup.astro";
+import SyndicationLinks from "@components/SyndicationLinks.astro";
 
 const {
 	title,
@@ -15,6 +16,7 @@ const {
 	gallery,
 	galleryPath,
 	OGImage,
+	syndication,
 } = Astro.props;
 import Webmentions from "@components/Webmentions.astro";
 ---
@@ -38,6 +40,11 @@ import Webmentions from "@components/Webmentions.astro";
 		<section class="e-content">
 			{gallery && <Gallery images={gallery} path={galleryPath} />}
 			<slot />
+			{
+				(syndication ?? []).length > 0 && (
+					<SyndicationLinks syndication={syndication ?? []} />
+				)
+			}
 		</section>
 
 		<NewsletterSignup
@@ -47,7 +54,7 @@ import Webmentions from "@components/Webmentions.astro";
 			formClass="form-inline"
 		/>
 
-		<WebmentionShare postUrl={Astro.url.href} postTitle={title} />
+		<WebmentionShare postUrl={canonicalURL} postTitle={title} />
 		<Webmentions target={canonicalURL} />
 		<p>
 			Published by <a

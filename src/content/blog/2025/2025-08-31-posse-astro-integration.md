@@ -1,9 +1,17 @@
 ---
-title: "I Finally Got POSSE Automated"
-description: "My journey from manual syndication to fully automated POSSE."
-pubDate: "2025-08-31"
-categories: [code]
-tags: [posse, indieWeb, typeScript, astro]
+title: I Finally Got POSSE Automated
+description: My journey from manual syndication to fully automated POSSE.
+pubDate: '2025-08-31'
+categories:
+  - code
+tags:
+  - posse
+  - indieWeb
+  - typeScript
+  - astro
+syndication:
+  - href: 'https://mastodon.social/@RyanParsley/117182045889728785'
+    title: Mastodon
 ---
 
 Almost a year ago, I wrote about my [game plan for POSSE](/blog/posse). Like

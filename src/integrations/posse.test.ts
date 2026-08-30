@@ -51,16 +51,18 @@ import {
 	validateMastodonConfig,
 	validateBlueskyConfig,
 	getPlatformConfig,
-	scanEphemeraPosts,
+	scanCollectionPosts,
 	findMarkdownFiles,
-	parseEphemeraFile,
+	parsePostFile,
 	resolveImagePath,
 	selectImageSource,
 	createImageResult,
+	EPHEMERA_COLLECTION,
+	BLOG_COLLECTION,
 } from "./posse";
 import { postToMastodon } from "./posse-mastodon";
 import { postToBluesky, parseUrlFacets } from "./posse-bluesky";
-import type { EphemeraPost, EphemeraData, Logger } from "./posse";
+import type { SyndicatablePost, SyndicatableData, Logger } from "./posse";
 
 describe("POSSE Integration", () => {
 	beforeEach(() => {
@@ -69,7 +71,7 @@ describe("POSSE Integration", () => {
 
 	describe("generatePostContent", () => {
 		it("should generate content from post body when available", () => {
-			const data: EphemeraData = {
+			const data: SyndicatableData = {
 				title: "Test Post",
 				date: new Date(),
 			};
@@ -85,7 +87,7 @@ describe("POSSE Integration", () => {
 		});
 
 		it("should fall back to title when body is empty", () => {
-			const data: EphemeraData = {
+			const data: SyndicatableData = {
 				title: "Test Post Title",
 				date: new Date(),
 			};
@@ -98,7 +100,7 @@ describe("POSSE Integration", () => {
 		});
 
 		it("should truncate content for Bluesky's grapheme limit (300)", () => {
-			const data: EphemeraData = {
+			const data: SyndicatableData = {
 				title: "Test Post",
 				date: new Date(),
 			};
@@ -117,7 +119,7 @@ describe("POSSE Integration", () => {
 		});
 
 		it("should handle Mastodon character limit (500 chars)", () => {
-			const data: EphemeraData = {
+			const data: SyndicatableData = {
 				title: "Test Post",
 				date: new Date(),
 			};
@@ -224,9 +226,10 @@ describe("POSSE Integration", () => {
 	});
 
 	describe("Type Safety", () => {
-		it("should properly type EphemeraPost interface", () => {
-			const post: EphemeraPost = {
+		it("should properly type SyndicatablePost interface", () => {
+			const post: SyndicatablePost = {
 				file: "test-post.md",
+				collection: EPHEMERA_COLLECTION,
 				data: {
 					title: "Test Post",
 					date: new Date(),
@@ -246,8 +249,9 @@ describe("POSSE Integration", () => {
 		});
 
 		it("should handle optional properties correctly", () => {
-			const postWithoutImage: EphemeraPost = {
+			const postWithoutImage: SyndicatablePost = {
 				file: "test-post.md",
+				collection: EPHEMERA_COLLECTION,
 				data: {
 					title: "Test Post",
 					date: new Date(),
@@ -546,7 +550,7 @@ describe("POSSE Integration", () => {
 			});
 		});
 
-		describe("parseEphemeraFile", () => {
+		describe("parsePostFile", () => {
 			it("should parse valid markdown file", () => {
 				const mockFileContent = `---
 title: Test Post
@@ -561,14 +565,16 @@ This is the content.`;
 					content: "This is the content.",
 				} as never);
 
-				const result = parseEphemeraFile(
+				const result = parsePostFile(
 					"/path/test.md",
+					EPHEMERA_COLLECTION,
 					new Date("2025-08-30"),
 					mockLogger,
 				);
 
 				expect(result).toEqual({
 					file: "/path/test.md",
+					collection: EPHEMERA_COLLECTION,
 					data: { title: "Test Post", date: new Date("2025-08-31") },
 					body: "This is the content.",
 					image: undefined,
@@ -588,8 +594,9 @@ This is the content.`;
 					stringify: vi.fn(),
 				});
 
-				const result = parseEphemeraFile(
+				const result = parsePostFile(
 					"/path/old.md",
+					EPHEMERA_COLLECTION,
 					new Date("2025-08-30"),
 					mockLogger,
 				);
@@ -634,8 +641,9 @@ Content`;
 				process.env.BLUESKY_USERNAME = "user.bsky.social";
 				process.env.BLUESKY_PASSWORD = "password";
 
-				const result = parseEphemeraFile(
+				const result = parsePostFile(
 					"/path/test.md",
+					EPHEMERA_COLLECTION,
 					new Date("2025-08-30"),
 					mockLogger,
 				);
@@ -651,8 +659,9 @@ Content`;
 					throw new Error("File not found");
 				});
 
-				const result = parseEphemeraFile(
+				const result = parsePostFile(
 					"/path/missing.md",
+					EPHEMERA_COLLECTION,
 					new Date("2025-08-30"),
 					mockLogger,
 				);
@@ -662,7 +671,7 @@ Content`;
 			});
 		});
 
-		describe("scanEphemeraPosts", () => {
+		describe("scanCollectionPosts", () => {
 			it("should scan and return recent posts", () => {
 				// Mock the file system functions
 				vi.mocked(readdirSync).mockReturnValue(["test.md"] as never);
@@ -681,7 +690,7 @@ Content`;
 					stringify: vi.fn(),
 				});
 
-				const result = scanEphemeraPosts(5, mockLogger);
+				const result = scanCollectionPosts(EPHEMERA_COLLECTION, 5, mockLogger);
 
 				expect(result).toHaveLength(1);
 				expect(result[0]?.data.title).toBe("Test");
@@ -708,7 +717,7 @@ Content`;
 					stringify: vi.fn(),
 				});
 
-				const result = scanEphemeraPosts(2, mockLogger);
+				const result = scanCollectionPosts(EPHEMERA_COLLECTION, 2, mockLogger);
 
 				expect(result).toHaveLength(2);
 			});
@@ -718,7 +727,7 @@ Content`;
 					throw new Error("Directory not found");
 				});
 
-				const result = scanEphemeraPosts(5, mockLogger);
+				const result = scanCollectionPosts(EPHEMERA_COLLECTION, 5, mockLogger);
 
 				expect(result).toEqual([]);
 				expect(mockLogger.warn).toHaveBeenCalled();
@@ -744,7 +753,8 @@ Content`;
 		});
 
 		it("should post text content successfully", async () => {
-			const post: EphemeraPost = {
+			const post: SyndicatablePost = {
+				collection: EPHEMERA_COLLECTION,
 				file: "test.md",
 				data: { title: "Test Post" },
 				body: "This is test content for Mastodon posting.",
@@ -776,7 +786,8 @@ Content`;
 		});
 
 		it("should handle API errors gracefully", async () => {
-			const post: EphemeraPost = {
+			const post: SyndicatablePost = {
+				collection: EPHEMERA_COLLECTION,
 				file: "test.md",
 				data: { title: "Test" },
 				body: "Test content",
@@ -805,7 +816,8 @@ Content`;
 		});
 
 		it("should handle rate limit errors", async () => {
-			const post: EphemeraPost = {
+			const post: SyndicatablePost = {
+				collection: EPHEMERA_COLLECTION,
 				file: "test.md",
 				data: { title: "Test" },
 				body: "Test content",
@@ -1219,7 +1231,8 @@ Content`;
 
 		describe("postToBluesky", () => {
 			it("should post text content successfully", async () => {
-				const post: EphemeraPost = {
+				const post: SyndicatablePost = {
+					collection: EPHEMERA_COLLECTION,
 					file: "test.md",
 					data: { title: "Test Post" },
 					body: "This is test content with https://example.com link.",
@@ -1260,7 +1273,8 @@ Content`;
 			});
 
 			it("should handle URLs in content and create facets", async () => {
-				const post: EphemeraPost = {
+				const post: SyndicatablePost = {
+					collection: EPHEMERA_COLLECTION,
 					file: "test.md",
 					data: { title: "Test Post" },
 					body: "Check this link: https://example.com",
@@ -1303,7 +1317,8 @@ Content`;
 			});
 
 			it("should handle authentication failure", async () => {
-				const post: EphemeraPost = {
+				const post: SyndicatablePost = {
+					collection: EPHEMERA_COLLECTION,
 					file: "test.md",
 					data: { title: "Test" },
 					body: "Test content",
@@ -1326,7 +1341,8 @@ Content`;
 			});
 
 			it("should handle post creation failure", async () => {
-				const post: EphemeraPost = {
+				const post: SyndicatablePost = {
+					collection: EPHEMERA_COLLECTION,
 					file: "test.md",
 					data: { title: "Test" },
 					body: "Test content",
@@ -1360,7 +1376,8 @@ Content`;
 			});
 
 			it("should handle rate limiting errors", async () => {
-				const post: EphemeraPost = {
+				const post: SyndicatablePost = {
+					collection: EPHEMERA_COLLECTION,
 					file: "test.md",
 					data: { title: "Test" },
 					body: "Test content",
@@ -1398,7 +1415,8 @@ Content`;
 
 			it("should truncate content for Bluesky's character limit", async () => {
 				const longBody = "A".repeat(300);
-				const post: EphemeraPost = {
+				const post: SyndicatablePost = {
+					collection: EPHEMERA_COLLECTION,
 					file: "test.md",
 					data: { title: "Test Post" },
 					body: longBody,
@@ -1437,6 +1455,106 @@ Content`;
 				expect(postData.record.text.length).toBeLessThanOrEqual(280);
 				expect(postData.record.text).toContain("..."); // Should be truncated
 			});
+		});
+	});
+
+	describe("Blog collection parsing (pubDate, published filter)", () => {
+		const blogMockLogger: Logger = {
+			info: vi.fn(),
+			warn: vi.fn(),
+			error: vi.fn(),
+			debug: vi.fn(),
+		};
+
+		it("should parse blog post using pubDate field", () => {
+			vi.mocked(readFileSync).mockReturnValue(
+				"---\ntitle: Blog Post\npubDate: 2025-09-01\n---\ncontent",
+			);
+			vi.mocked(matter).mockReturnValue({
+				data: { title: "Blog Post", pubDate: new Date("2025-09-01") },
+				content: "content",
+				orig: "",
+				language: "",
+				matter: "",
+				stringify: vi.fn(),
+			});
+
+			const result = parsePostFile(
+				"/path/blog.md",
+				BLOG_COLLECTION,
+				new Date("2025-08-30"),
+				blogMockLogger,
+			);
+
+			expect(result).not.toBeNull();
+			expect(result?.data.title).toBe("Blog Post");
+			expect(result?.collection.contentMode).toBe("title");
+		});
+
+		it("should skip blog posts with published: false", () => {
+			vi.mocked(readFileSync).mockReturnValue(
+				"---\ntitle: Draft\npubDate: 2025-09-01\npublished: false\n---\ncontent",
+			);
+			vi.mocked(matter).mockReturnValue({
+				data: {
+					title: "Draft",
+					pubDate: new Date("2025-09-01"),
+					published: false,
+				},
+				content: "content",
+				orig: "",
+				language: "",
+				matter: "",
+				stringify: vi.fn(),
+			});
+
+			const result = parsePostFile(
+				"/path/draft.md",
+				BLOG_COLLECTION,
+				new Date("2025-08-30"),
+				blogMockLogger,
+			);
+
+			expect(result).toBeNull();
+		});
+
+		it("should include blog posts without published flag", () => {
+			vi.mocked(readFileSync).mockReturnValue(
+				"---\ntitle: Blog Post\npubDate: 2025-09-01\n---\ncontent",
+			);
+			vi.mocked(matter).mockReturnValue({
+				data: { title: "Blog Post", pubDate: new Date("2025-09-01") },
+				content: "content",
+				orig: "",
+				language: "",
+				matter: "",
+				stringify: vi.fn(),
+			});
+
+			const result = parsePostFile(
+				"/path/post.md",
+				BLOG_COLLECTION,
+				new Date("2025-08-30"),
+				blogMockLogger,
+			);
+
+			expect(result).not.toBeNull();
+		});
+	});
+
+	describe("Collection descriptors", () => {
+		it("should have correct ephemera config", () => {
+			expect(EPHEMERA_COLLECTION.contentMode).toBe("body");
+			expect(EPHEMERA_COLLECTION.dateField).toBe("date");
+			expect(EPHEMERA_COLLECTION.requirePublished).toBe(false);
+			expect(EPHEMERA_COLLECTION.urlSegment).toBe("ephemera");
+		});
+
+		it("should have correct blog config", () => {
+			expect(BLOG_COLLECTION.contentMode).toBe("title");
+			expect(BLOG_COLLECTION.dateField).toBe("pubDate");
+			expect(BLOG_COLLECTION.requirePublished).toBe(true);
+			expect(BLOG_COLLECTION.urlSegment).toBe("blog");
 		});
 	});
 });
