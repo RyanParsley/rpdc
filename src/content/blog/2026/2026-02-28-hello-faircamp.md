@@ -3,6 +3,9 @@ title: "Hello Faircamp"
 description: "I want to share the story of wiring up a selfhosted music portfolio using Faircamp."
 pubDate: "2026-02-28T23:53:00-05:00"
 tags: ["music", "ssg", "homelab"]
+syndication:
+  - href: "https://mastodon.social/@ryanparsley/116152164172294144"
+    title: "Mastodon"
 ---
 
 This is the story of self-hosting a [music portfolio](https://music.ryanparsley.com/) in my homelab using [Faircamp](https://simonrepp.com/faircamp/). I doubt you are looking to set up exactly this project with exactly this tech stack, but I suspect sharing my journey will be useful in one way or another. All in all, the process is straightforward. Perhaps, seeing that will encourage you to try for yourself.
