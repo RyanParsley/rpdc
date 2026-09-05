@@ -18,9 +18,6 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { createInterface } from "readline";
 
-/* eslint-env node */
-/* global console, process */
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, "..");
@@ -242,21 +239,34 @@ async function main() {
 			`${colors.green}📝 Creating new ${contentType} content${colors.reset}\n`,
 		);
 
-		// Get current date
 		const now = new Date();
-		const dateString = now.toISOString().split("T")[0]; // YYYY-MM-DD format
+		// One source of truth: a local-time (Eastern) timestamp, reused for every
+		// frontmatter date so all 3 content types share the same mechanism.
+		const parts = Object.fromEntries(
+			new Intl.DateTimeFormat("en-US", {
+				timeZone: "America/New_York",
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
+				hour: "2-digit",
+				minute: "2-digit",
+				second: "2-digit",
+				hourCycle: "h23",
+				timeZoneName: "longOffset",
+			})
+				.formatToParts(now)
+				.filter((part) => part.type !== "literal")
+				.map((part) => [part.type, part.value]),
+		);
+		// Full local timestamp, e.g. "2026-09-04T21:03:26-04:00"
+		const date = `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}${parts.timeZoneName.replace("GMT", "")}`;
+		// Date portion for blog/note filenames, e.g. "2026-09-04"
+		const dateString = date.slice(0, 10);
 
 		// Prompt for content details based on type
-		const data = { pubDate: dateString, date: dateString };
+		const data = { pubDate: date, date };
 
 		if (contentType === "ephemera") {
-			// Use full timestamp for ephemera date
-			const timestamp = now
-				.toISOString()
-				.replace("T", "-")
-				.replace(/:\d{2}\.\d{3}Z$/, "")
-				.replace(":", "");
-			data.date = timestamp;
 			data.content = await prompt(
 				"Content",
 				"Add your ephemera content here...",
@@ -270,7 +280,7 @@ async function main() {
 				const altText = await prompt("Alt text");
 
 				data.image = {
-					src: imageName,
+					src: imageName.startsWith("./") ? imageName : `./${imageName}`,
 					alt: altText,
 				};
 			}
@@ -306,18 +316,18 @@ async function main() {
 		let filename, filepath;
 
 		if (contentType === "ephemera") {
-			// Create year/month/day directory structure for ephemera (enforces consistent organization)
-			const year = now.getFullYear();
-			const month = String(now.getMonth() + 1).padStart(2, "0");
-			const day = String(now.getDate()).padStart(2, "0");
-			const hours = String(now.getHours()).padStart(2, "0");
-			const minutes = String(now.getMinutes()).padStart(2, "0");
-			const seconds = String(now.getSeconds()).padStart(2, "0");
-
-			const dirPath = join(projectRoot, config.path, String(year), month, day);
+			// Year/month/day folder + per-second filename, from the same
+			// timestamp source as the frontmatter (the "2-digit" options pad it).
+			const dirPath = join(
+				projectRoot,
+				config.path,
+				parts.year,
+				parts.month,
+				parts.day,
+			);
 			mkdirSync(dirPath, { recursive: true });
 
-			filename = `${year}-${month}-${day}-${hours}-${minutes}-${seconds}.md`;
+			filename = `${parts.year}-${parts.month}-${parts.day}-${parts.hour}-${parts.minute}-${parts.second}.md`;
 			filepath = join(dirPath, filename);
 		} else {
 			// Generate path based on content type

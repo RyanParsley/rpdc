@@ -149,7 +149,7 @@ function getTags(frontmatter) {
 		return frontmatter.tags.map((t) => t.replace(/"/g, "").trim());
 	if (typeof frontmatter.tags === "string") {
 		return frontmatter.tags
-			.replace(/[\[\]"]/g, "")
+			.replace(/[\]"[]/g, "")
 			.split(",")
 			.map((t) => t.trim().replace(/^#/, ""));
 	}
