@@ -8,7 +8,7 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "lint": "npx eslint ./src",
+    "lint": "npx eslint ./src ./scripts",
     "lint:style": "npx stylelint '**/*.{css,astro}' --fix",
     "format": "prettier **/*.{css,astro,js,mjs,ts,yml,json} --write",
     "postinstall": "npx playwright install chromium",
