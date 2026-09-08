@@ -334,11 +334,8 @@ async function main() {
 			const basePath =
 				contentType === "blog" ? config.getPath(data) : config.path;
 
-			// Create year directory for blog posts
-			if (contentType === "blog") {
-				const yearPath = join(projectRoot, basePath);
-				mkdirSync(yearPath, { recursive: true });
-			}
+			const dirPath = join(projectRoot, basePath);
+			mkdirSync(dirPath, { recursive: true });
 
 			// Generate slug-based filename
 			const slug = generateSlug(data.title);
@@ -370,9 +367,11 @@ async function main() {
 			console.log(
 				`${colors.blue}🏷️  Tags: ${data.tags?.join(", ")}${colors.reset}`,
 			);
-			console.log(
-				`${colors.blue}🔗 URL: /${contentType}/${dateString}-${generateSlug(data.title)}.html${colors.reset}`,
-			);
+			const urlPath =
+				contentType === "blog"
+					? `/${contentType}/${parts.year}/${dateString}-${generateSlug(data.title)}`
+					: `/${contentType}/${dateString}-${generateSlug(data.title)}`;
+			console.log(`${colors.blue}🔗 URL: ${urlPath}/${colors.reset}`);
 		} else {
 			console.log(`${colors.blue}📅 Date: ${data.date}${colors.reset}`);
 
