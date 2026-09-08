@@ -4,13 +4,14 @@
  * Astro Content Generator
  *
  * Generates new content following Astro content collection conventions.
- * Supports blog posts, notes, and ephemera.
+ * Supports blog posts, notes, ephemera, and drafts.
  *
  * Usage:
  *   npm run new-content
  *   npm run new-content -- --type blog
  *   npm run new-content -- --type note
  *   npm run new-content -- --type ephemera
+ *   npm run new-content -- --type draft
  */
 
 import { writeFileSync, existsSync, mkdirSync } from "fs";
@@ -120,6 +121,24 @@ Add your detailed notes here...
 `,
 	},
 
+	draft: {
+		path: "src/content/draft",
+		schema: {
+			required: ["title"],
+			optional: ["description", "pubDate", "tags", "OGImage", "heroImage"],
+		},
+		template: (data) => `---
+title: "${data.title}"
+description: "${data.description}"
+tags: ${formatTags(data.tags)}
+---
+
+${data.description}
+
+<!-- Add your draft content here -->
+`,
+	},
+
 	ephemera: {
 		path: "src/content/ephemera",
 		schema: {
@@ -221,7 +240,10 @@ async function main() {
 			});
 			console.log();
 
-			contentType = await prompt("Content type (blog/note/ephemera)", "blog");
+			contentType = await prompt(
+				"Content type (blog/note/ephemera/draft)",
+				"blog",
+			);
 		}
 
 		if (!contentTypes[contentType]) {
@@ -362,7 +384,15 @@ async function main() {
 		);
 		console.log(`${colors.blue}📁 File: ${filepath}${colors.reset}`);
 
-		if (contentType !== "ephemera") {
+		if (contentType === "draft") {
+			console.log(`${colors.blue}📝 Title: ${data.title}${colors.reset}`);
+			console.log(
+				`${colors.blue}🏷️  Tags: ${data.tags?.join(", ")}${colors.reset}`,
+			);
+			console.log(
+				`${colors.blue}🚧 Draft — promote with: npm run promote-draft -- "${filepath}"${colors.reset}`,
+			);
+		} else if (contentType !== "ephemera") {
 			console.log(`${colors.blue}📝 Title: ${data.title}${colors.reset}`);
 			console.log(
 				`${colors.blue}🏷️  Tags: ${data.tags?.join(", ")}${colors.reset}`,

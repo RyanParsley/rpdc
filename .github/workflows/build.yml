@@ -28,5 +28,6 @@ jobs:
           key: astro-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             astro-${{ runner.os }}-
+      - run: npm run lint
       - run: npm run build
       - run: npm run test:run

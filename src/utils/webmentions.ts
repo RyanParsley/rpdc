@@ -99,9 +99,7 @@ export const deduplicateMentions = (
 ): WebmentionEntry[] =>
 	mentions.filter(
 		(mention, index, self) =>
-			mention !== null &&
-			mention !== undefined &&
-			self.findIndex((m) => m?.url === mention.url) === index,
+			self.findIndex((m) => m.url === mention.url) === index,
 	);
 
 export const fetchAllVariants = async (
