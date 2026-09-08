@@ -16,6 +16,8 @@
     "postbuild": "pagefind --site dist",
     "new-content": "node scripts/new-content.js",
     "new:ephemera": "npm run new-content -- --type ephemera",
+    "new:draft": "npm run new-content -- --type draft",
+    "promote-draft": "node scripts/promote-draft.js",
     "new:blog": "npm run new-content -- --type blog",
     "new:note": "npm run new-content -- --type note",
     "pesos": "node scripts/pesos-mastodon.js",
