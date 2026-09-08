@@ -5,8 +5,13 @@ const fsMocks = vi.hoisted(() => ({
 	statSync: vi.fn(),
 	readFileSync: vi.fn(),
 	existsSync: vi.fn(),
+	writeFileSync: vi.fn(),
 }));
-const matterMock = vi.hoisted(() => vi.fn());
+// gray-matter's default export carries `stringify` alongside the parse call,
+// so the mock models both — updatePostWithSyndication reads the former.
+const matterMock = vi.hoisted(() =>
+	Object.assign(vi.fn(), { stringify: vi.fn() }),
+);
 
 // Mock external dependencies
 vi.mock("fs", () => ({
@@ -14,11 +19,13 @@ vi.mock("fs", () => ({
 	statSync: fsMocks.statSync,
 	readFileSync: fsMocks.readFileSync,
 	existsSync: fsMocks.existsSync,
+	writeFileSync: fsMocks.writeFileSync,
 	default: {
 		readdirSync: fsMocks.readdirSync,
 		statSync: fsMocks.statSync,
 		readFileSync: fsMocks.readFileSync,
 		existsSync: fsMocks.existsSync,
+		writeFileSync: fsMocks.writeFileSync,
 	},
 }));
 vi.mock("gray-matter", () => ({
@@ -57,9 +64,17 @@ import {
 	resolveImagePath,
 	selectImageSource,
 	createImageResult,
+	runSyndication,
+	executeSyndication,
+	processSinglePost,
+	syndicateToPlatforms,
+	updatePostWithSyndication,
+	type SyndicationContext,
 } from "./posse";
 import { postToMastodon } from "./posse-mastodon";
 import { postToBluesky, parseUrlFacets } from "./posse-bluesky";
+import { findProcessedImage, processImageForPlatform } from "./image";
+import posseIntegration from "./posse";
 import type { EphemeraPost, EphemeraData, Logger } from "./posse";
 
 describe("POSSE Integration", () => {
@@ -1630,6 +1645,823 @@ Content`;
 				expect(postData.record.text.length).toBeLessThanOrEqual(280);
 				expect(postData.record.text).toContain("..."); // Should be truncated
 			});
+		});
+	});
+});
+
+// ============================================================================
+// SYNDICATION WORKFLOW
+//
+// These exercise the orchestration layer in posse.ts end to end: the build
+// hook runs the same path a real syndication pass takes, down through the
+// platform modules and back into the post file that gets rewritten with
+// syndication links. `fetch` stands in for the platform APIs, so each test
+// covers both the happy path and the failure path the build relies on.
+// ============================================================================
+
+describe("Syndication Workflow", () => {
+	let logger: Logger;
+	let mockFetch: ReturnType<typeof vi.fn>;
+
+	const validOptions = {
+		mastodon: { token: "valid-mastodon-token", instance: "mastodon.social" },
+	};
+
+	const makeContext = (
+		overrides: Partial<SyndicationContext> = {},
+	): SyndicationContext => ({
+		mastodon: true,
+		bluesky: false,
+		dryRun: false,
+		maxPosts: 3,
+		logger,
+		...overrides,
+	});
+
+	const workflowPost = (
+		overrides: Partial<EphemeraPost> = {},
+	): EphemeraPost => ({
+		file: "workflow.md",
+		data: { title: "Workflow Post", date: new Date("2025-08-31") },
+		body: "Body text that the workflow syndicates to the platforms.",
+		...overrides,
+	});
+
+	/** Frontmatter shape parseEphemeraFile and updatePostWithSyndication expect. */
+	const mockEphemeraFile = (post: EphemeraPost) => {
+		matterMock.mockReturnValue({
+			data: { ...post.data },
+			content: post.body,
+			orig: "",
+			language: "",
+			matter: "",
+			stringify: vi.fn(),
+		});
+		fsMocks.readFileSync.mockReturnValue(
+			"---\ntitle: Workflow Post\n---\nbody",
+		);
+	};
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		logger = {
+			info: vi.fn(),
+			warn: vi.fn(),
+			error: vi.fn(),
+			debug: vi.fn(),
+		};
+		mockFetch = vi.fn();
+		global.fetch = mockFetch as typeof fetch;
+
+		// Credentials getPlatformConfig() reads inside syndicateToPlatforms.
+		vi.stubEnv("MASTODON_ACCESS_TOKEN", "valid-mastodon-token");
+		vi.stubEnv("MASTODON_INSTANCE", "mastodon.social");
+		vi.stubEnv("BLUESKY_USERNAME", "test.bsky.social");
+		vi.stubEnv("BLUESKY_PASSWORD", "valid-app-password");
+
+		// Every file is a plain file of a modest size.
+		fsMocks.statSync.mockImplementation(() => ({
+			isDirectory: () => false,
+			size: 1024,
+		}));
+		fsMocks.readdirSync.mockReturnValue(["workflow.md"] as never);
+		matterMock.stringify.mockReturnValue("stringified");
+	});
+
+	afterEach(() => {
+		vi.unstubAllEnvs();
+	});
+
+	describe("runSyndication", () => {
+		it("completes without posting when the scan finds nothing", async () => {
+			fsMocks.readdirSync.mockImplementation(() => {
+				throw new Error("Directory not found");
+			});
+
+			await runSyndication({ ...validOptions, dryRun: true }, logger);
+
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("Starting syndication process"),
+			);
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("No recent ephemera posts"),
+			);
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("completed successfully"),
+			);
+			expect(mockFetch).not.toHaveBeenCalled();
+		});
+
+		it("captures a workflow failure as an error log instead of throwing", async () => {
+			mockEphemeraFile(workflowPost());
+			logger.info = vi.fn((message: string) => {
+				if (message.includes("Configuration")) {
+					throw new Error("workflow exploded");
+				}
+			}) as Logger["info"];
+
+			await runSyndication(validOptions, logger);
+
+			expect(logger.error).toHaveBeenCalledWith(
+				expect.stringContaining("workflow exploded"),
+			);
+			expect(logger.info).not.toHaveBeenCalledWith(
+				expect.stringContaining("completed successfully"),
+			);
+		});
+
+		it("stringifies a non-Error rejection in the failure log", async () => {
+			mockEphemeraFile(workflowPost());
+			logger.info = vi.fn((message: string) => {
+				if (message.includes("Configuration")) {
+					throw "raw string failure";
+				}
+			}) as Logger["info"];
+
+			await runSyndication(validOptions, logger);
+
+			expect(logger.error).toHaveBeenCalledWith(
+				expect.stringContaining("raw string failure"),
+			);
+		});
+	});
+
+	describe("posseIntegration", () => {
+		it("registers the syndication pass on astro:build:done", () => {
+			const integration = posseIntegration({ dryRun: true });
+
+			expect(integration.name).toBe("posse-syndication");
+			expect(
+				Object.keys(integration.hooks).filter((h) => h.startsWith("astro:")),
+			).toEqual(["astro:build:done"]);
+		});
+	});
+
+	describe("executeSyndication", () => {
+		it("syndicates an unseen post and writes the link back to its file", async () => {
+			mockEphemeraFile(workflowPost());
+			// instance probe, then status creation
+			mockFetch
+				.mockResolvedValueOnce({ ok: true, json: () => ({}) })
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => ({
+						url: "https://mastodon.social/@ryanparsley/109",
+					}),
+				});
+
+			await executeSyndication(makeContext());
+
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("Successfully posted to Mastodon"),
+			);
+			expect(matterMock.stringify).toHaveBeenCalledWith(
+				expect.any(String),
+				expect.objectContaining({
+					syndication: [
+						{
+							href: "https://mastodon.social/@ryanparsley/109",
+							title: "Mastodon",
+						},
+					],
+				}),
+			);
+			expect(fsMocks.writeFileSync).toHaveBeenCalledWith(
+				expect.stringContaining("workflow.md"),
+				"stringified",
+			);
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("Post processing complete"),
+			);
+		});
+
+		it("announces the enabled platforms and the dry-run flag", async () => {
+			mockEphemeraFile(workflowPost());
+
+			await executeSyndication(makeContext({ dryRun: true }));
+
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("Mastodon: enabled"),
+			);
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("Bluesky: disabled"),
+			);
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("DRY RUN mode"),
+			);
+			expect(mockFetch).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("processSinglePost", () => {
+		it("skips a post already syndicated to every enabled platform", async () => {
+			const post = workflowPost({
+				data: {
+					title: "Already Shared",
+					syndication: [{ href: "https://m.example/1", title: "Mastodon" }],
+				},
+			});
+
+			await processSinglePost(post, makeContext());
+
+			expect(logger.debug).toHaveBeenCalledWith(
+				expect.stringContaining("Skipping fully syndicated"),
+			);
+			expect(mockFetch).not.toHaveBeenCalled();
+			expect(fsMocks.writeFileSync).not.toHaveBeenCalled();
+		});
+
+		it("names the platforms a dry run would post to", async () => {
+			const post = workflowPost({
+				data: { title: "Dry Run" },
+			});
+
+			await processSinglePost(post, makeContext({ dryRun: true }));
+
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining(
+					"DRY RUN - Would syndicate Dry Run to: Mastodon",
+				),
+			);
+			expect(mockFetch).not.toHaveBeenCalled();
+		});
+
+		it("falls back to the filename when the post has no title", async () => {
+			const post = workflowPost({ data: {} });
+
+			await processSinglePost(post, makeContext({ dryRun: true }));
+
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("Would syndicate workflow.md"),
+			);
+		});
+
+		it("syndicates to both platforms when both still need it", async () => {
+			const post = workflowPost();
+			mockEphemeraFile(post);
+			mockFetch
+				.mockResolvedValueOnce({ ok: true, json: () => ({}) }) // probe
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => ({ url: "https://mastodon.social/@r/1" }),
+				}) // status
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => ({ accessJwt: "jwt", did: "did:plc:test" }),
+				}) // session
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => ({
+						uri: "at://did:plc/test/app.bsky.feed.post/abc123",
+					}),
+				}); // createRecord
+
+			await processSinglePost(post, makeContext({ bluesky: true }));
+
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("to: Mastodon, Bluesky"),
+			);
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("Successfully posted to Mastodon"),
+			);
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("Successfully posted to Bluesky"),
+			);
+			// One rewrite carrying both links, in platform order.
+			expect(matterMock.stringify).toHaveBeenCalledWith(
+				expect.any(String),
+				expect.objectContaining({
+					syndication: [
+						{ href: "https://mastodon.social/@r/1", title: "Mastodon" },
+						{
+							href: "https://bsky.app/profile/test.bsky.social/post/abc123",
+							title: "Bluesky",
+						},
+					],
+				}),
+			);
+		});
+
+		it("still records the platform that succeeded when the other fails", async () => {
+			const post = workflowPost();
+			mockEphemeraFile(post);
+			mockFetch
+				.mockResolvedValueOnce({ ok: true, json: () => ({}) }) // probe
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => ({ url: "https://mastodon.social/@r/2" }),
+				}) // status
+				.mockResolvedValueOnce({ ok: false, status: 401 }); // session rejected
+
+			await processSinglePost(post, makeContext({ bluesky: true }));
+
+			expect(logger.warn).toHaveBeenCalledWith(
+				expect.stringContaining("Bluesky syndication failed"),
+			);
+			expect(matterMock.stringify).toHaveBeenCalledWith(
+				expect.any(String),
+				expect.objectContaining({
+					syndication: [
+						{ href: "https://mastodon.social/@r/2", title: "Mastodon" },
+					],
+				}),
+			);
+			expect(fsMocks.writeFileSync).toHaveBeenCalledTimes(1);
+		});
+
+		it("leaves the post untouched when nothing syndicated", async () => {
+			const post = workflowPost();
+			vi.stubEnv("MASTODON_ACCESS_TOKEN", "");
+			vi.stubEnv("MASTODON_INSTANCE", "");
+
+			await processSinglePost(post, makeContext());
+
+			expect(mockFetch).not.toHaveBeenCalled();
+			expect(fsMocks.writeFileSync).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("syndicateToPlatforms", () => {
+		it("catches an unexpected platform failure and reports nothing syndicated", async () => {
+			const explodingDebug = vi.fn(() => {
+				throw new Error("debug sink exploded");
+			});
+			const context = makeContext({
+				logger: { ...logger, debug: explodingDebug } as Logger,
+			});
+
+			const results = await syndicateToPlatforms(
+				workflowPost(),
+				"https://ryanparsley.com/ephemera/workflow",
+				{ mastodon: true, bluesky: true },
+				context,
+			);
+
+			expect(results).toEqual([]);
+			expect(logger.error).toHaveBeenCalledWith(
+				expect.stringContaining("Mastodon syndication failed"),
+			);
+			expect(logger.error).toHaveBeenCalledWith(
+				expect.stringContaining("Bluesky syndication failed"),
+			);
+		});
+	});
+
+	describe("updatePostWithSyndication", () => {
+		const results = [
+			{
+				url: "https://mastodon.social/@r/7",
+				success: true,
+				platform: "mastodon" as const,
+			},
+		];
+
+		it("appends links to any already recorded in the frontmatter", async () => {
+			const post = workflowPost({
+				data: {
+					title: "Existing",
+					syndication: [{ href: "https://old.example/1", title: "Bluesky" }],
+				},
+			});
+			mockEphemeraFile(post);
+
+			await updatePostWithSyndication(post, results, logger);
+
+			expect(matterMock.stringify).toHaveBeenCalledWith(
+				expect.any(String),
+				expect.objectContaining({
+					syndication: [
+						{ href: "https://old.example/1", title: "Bluesky" },
+						{ href: "https://mastodon.social/@r/7", title: "Mastodon" },
+					],
+				}),
+			);
+			expect(logger.info).toHaveBeenCalledWith(
+				expect.stringContaining("with syndication links: Mastodon"),
+			);
+		});
+
+		it("ignores results that carry no url", async () => {
+			const post = workflowPost();
+			mockEphemeraFile(post);
+
+			await updatePostWithSyndication(
+				post,
+				[{ success: false, platform: "mastodon", error: "nope" }],
+				logger,
+			);
+
+			expect(matterMock.stringify).toHaveBeenCalledWith(
+				expect.any(String),
+				expect.objectContaining({ syndication: [] }),
+			);
+		});
+
+		it("refuses to rewrite a file that is not markdown", async () => {
+			const post = workflowPost({ file: "notes.txt" });
+
+			await updatePostWithSyndication(post, results, logger);
+
+			expect(logger.warn).toHaveBeenCalledWith(
+				expect.stringContaining("Skipping non-markdown file"),
+			);
+			expect(fsMocks.writeFileSync).not.toHaveBeenCalled();
+		});
+
+		it("reports when the source file has vanished mid-run", async () => {
+			const post = workflowPost();
+			fsMocks.statSync.mockImplementation(() => {
+				throw new Error("ENOENT");
+			});
+
+			await updatePostWithSyndication(post, results, logger);
+
+			expect(logger.error).toHaveBeenCalledWith(
+				expect.stringContaining("File does not exist"),
+			);
+			expect(logger.error).toHaveBeenCalledWith(
+				expect.stringContaining("Failed to update post workflow.md"),
+			);
+			expect(fsMocks.writeFileSync).not.toHaveBeenCalled();
+		});
+
+		it("swallows a write failure instead of breaking the build", async () => {
+			const post = workflowPost();
+			mockEphemeraFile(post);
+			fsMocks.writeFileSync.mockImplementation(() => {
+				throw new Error("EACCES");
+			});
+
+			await updatePostWithSyndication(post, results, logger);
+
+			expect(logger.error).toHaveBeenCalledWith(
+				expect.stringContaining("EACCES"),
+			);
+		});
+	});
+});
+
+// ============================================================================
+// PLATFORM ERROR PATHS
+//
+// The failure modes a real syndication run hits against the live APIs: bad
+// credentials, an unreachable instance, media uploads the token is not scoped
+// for, and the Astro image-variant lookup that decides which file to send.
+// ============================================================================
+
+describe("Platform Error Paths", () => {
+	let logger: Logger;
+	let mockFetch: ReturnType<typeof vi.fn>;
+
+	const mastodonConfig = {
+		token: "valid-mastodon-token",
+		instance: "mastodon.social",
+	};
+	const blueskyConfig = {
+		username: "test.bsky.social",
+		password: "valid-app-password",
+	};
+
+	const imagePost = (src = "./diagram.png"): EphemeraPost => ({
+		file: "imaged.md",
+		data: { title: "Post With Image" },
+		body: "Text that still goes out when the image cannot.",
+		image: { src, alt: "A diagram" },
+	});
+
+	const textPost: EphemeraPost = {
+		file: "plain.md",
+		data: { title: "Plain Post" },
+		body: "Plain text body for a post without any media.",
+	};
+
+	/** Size keyed off the extension so variant-selection tests stay readable. */
+	const sizeByExtension = (path: string): number => {
+		if (path.endsWith(".webp")) return 500;
+		if (path.endsWith(".jpg")) return 100;
+		return 1024;
+	};
+
+	const jsonFetch = (payload: unknown) => ({
+		ok: true,
+		json: () => Promise.resolve(payload),
+	});
+
+	const statusCall = () =>
+		mockFetch.mock.calls.find((c) =>
+			String(c[0]).endsWith("/api/v1/statuses"),
+		) as [string, { body: string }];
+
+	const createRecordCall = () =>
+		mockFetch.mock.calls.find((c) =>
+			String(c[0]).includes("com.atproto.repo.createRecord"),
+		) as [string, { body: string }];
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		logger = {
+			info: vi.fn(),
+			warn: vi.fn(),
+			error: vi.fn(),
+			debug: vi.fn(),
+		};
+		mockFetch = vi.fn();
+		global.fetch = mockFetch as typeof fetch;
+
+		fsMocks.statSync.mockImplementation((path) => ({
+			isDirectory: () => false,
+			size: sizeByExtension(String(path)),
+		}));
+		// No Astro-processed variants on disk by default.
+		fsMocks.readdirSync.mockReturnValue([] as never);
+		fsMocks.readFileSync.mockReturnValue(
+			Buffer.from("\x89PNG\r\n\x1a\n fake-image-bytes"),
+		);
+	});
+
+	afterEach(() => {
+		vi.unstubAllEnvs();
+	});
+
+	describe("postToMastodon credential validation", () => {
+		it("rejects a token that is too short before touching the API", async () => {
+			const result = await postToMastodon(
+				textPost,
+				"https://example.com/plain",
+				{ ...mastodonConfig, token: "short" },
+				logger,
+			);
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain(
+				"Invalid Mastodon token: token is missing or too short",
+			);
+			expect(mockFetch).not.toHaveBeenCalled();
+		});
+
+		it("rejects an instance that does not look like a domain", async () => {
+			const result = await postToMastodon(
+				textPost,
+				"https://example.com/plain",
+				{ ...mastodonConfig, instance: "not-a-domain" },
+				logger,
+			);
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain("Invalid Mastodon instance: not-a-domain");
+			expect(mockFetch).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("Mastodon connectivity probe", () => {
+		it("warns but still posts when the instance probe returns an error", async () => {
+			mockFetch
+				.mockResolvedValueOnce({ ok: false, status: 500 })
+				.mockResolvedValueOnce(jsonFetch({ url: "https://m/1" }));
+
+			const result = await postToMastodon(
+				textPost,
+				"https://example.com/plain",
+				mastodonConfig,
+				logger,
+			);
+
+			expect(result.success).toBe(true);
+			expect(logger.warn).toHaveBeenCalledWith(
+				expect.stringContaining("Mastodon instance test failed: 500"),
+			);
+		});
+
+		it("warns but still posts when the probe throws outright", async () => {
+			mockFetch
+				.mockRejectedValueOnce(new Error("connect ECONNREFUSED"))
+				.mockResolvedValueOnce(jsonFetch({ url: "https://m/2" }));
+
+			const result = await postToMastodon(
+				textPost,
+				"https://example.com/plain",
+				mastodonConfig,
+				logger,
+			);
+
+			expect(result.success).toBe(true);
+			expect(logger.warn).toHaveBeenCalledWith(
+				expect.stringContaining(
+					"Could not test Mastodon instance connectivity",
+				),
+			);
+		});
+	});
+
+	describe("Mastodon media upload failure", () => {
+		it("explains a missing write:media scope and posts text only", async () => {
+			mockFetch
+				.mockResolvedValueOnce(jsonFetch({})) // probe
+				.mockResolvedValueOnce({
+					ok: false,
+					status: 403,
+					text: () => Promise.resolve("Forbidden"),
+				}) // media upload rejected
+				.mockResolvedValueOnce(jsonFetch({ url: "https://m/3" })); // status
+
+			const result = await postToMastodon(
+				imagePost(),
+				"https://example.com/imaged",
+				mastodonConfig,
+				logger,
+			);
+
+			expect(result.success).toBe(true);
+			expect(logger.error).toHaveBeenCalledWith(
+				expect.stringContaining("media upload failed with status 403"),
+			);
+			expect(logger.warn).toHaveBeenCalledWith(
+				expect.stringContaining("write:media"),
+			);
+			expect(logger.warn).toHaveBeenCalledWith(
+				expect.stringContaining("posting text only"),
+			);
+
+			// The status went out without any media attached.
+			const body = JSON.parse(statusCall()[1].body) as {
+				media_ids?: string[];
+			};
+			expect(body.media_ids).toBeUndefined();
+		});
+	});
+
+	describe("Bluesky media embed", () => {
+		const blobPayload = {
+			$type: "blob",
+			ref: { $link: "bafkreibmvlck4rqaj" },
+			mimeType: "image/png",
+			size: 32,
+		};
+
+		it("uploads a blob and embeds it in the record", async () => {
+			mockFetch
+				.mockResolvedValueOnce(
+					jsonFetch({ accessJwt: "jwt", did: "did:plc:test" }),
+				) // session
+				.mockResolvedValueOnce(jsonFetch({ blob: blobPayload })) // blob
+				.mockResolvedValueOnce(
+					jsonFetch({
+						uri: "at://did:plc:test/app.bsky.feed.post/blobrkey",
+					}),
+				); // createRecord
+
+			const result = await postToBluesky(
+				imagePost("./diagram.png"),
+				"https://example.com/imaged",
+				blueskyConfig,
+				logger,
+			);
+
+			expect(result.success).toBe(true);
+			expect(result.url).toBe(
+				"https://bsky.app/profile/test.bsky.social/post/blobrkey",
+			);
+
+			const parsed = JSON.parse(createRecordCall()[1].body) as {
+				record: { embed: { images: Array<{ image: unknown; alt: string }> } };
+			};
+			expect(parsed.record.embed.images).toHaveLength(1);
+			expect(parsed.record.embed.images[0]?.image).toEqual(blobPayload);
+			expect(parsed.record.embed.images[0]?.alt).toBe("A diagram");
+		});
+
+		it("falls back to text when the blob upload is rejected", async () => {
+			mockFetch
+				.mockResolvedValueOnce(
+					jsonFetch({ accessJwt: "jwt", did: "did:plc:test" }),
+				)
+				.mockResolvedValueOnce({ ok: false, status: 400 }) // blob rejected
+				.mockResolvedValueOnce(
+					jsonFetch({
+						uri: "at://did:plc:test/app.bsky.feed.post/textonly",
+					}),
+				);
+
+			const result = await postToBluesky(
+				imagePost("./diagram.png"),
+				"https://example.com/imaged",
+				blueskyConfig,
+				logger,
+			);
+
+			expect(result.success).toBe(true);
+			expect(logger.warn).toHaveBeenCalledWith(
+				expect.stringContaining("Bluesky image upload failed"),
+			);
+
+			const parsed = JSON.parse(createRecordCall()[1].body) as {
+				record: { embed?: unknown };
+			};
+			expect(parsed.record.embed).toBeUndefined();
+		});
+	});
+
+	describe("findProcessedImage", () => {
+		const original = "/project/src/content/ephemera/diagram.png";
+
+		it("prefers the WebP variant even when a smaller JPG exists", () => {
+			fsMocks.readdirSync.mockReturnValue([
+				"diagram.aaa.webp",
+				"diagram.bbb.jpg",
+			] as never);
+
+			const found = findProcessedImage(original, false, logger);
+
+			expect(found).toContain("diagram.aaa.webp");
+		});
+
+		it("picks the smallest variant when preferSmaller is set", () => {
+			fsMocks.readdirSync.mockReturnValue([
+				"diagram.aaa.webp",
+				"diagram.bbb.jpg",
+			] as never);
+
+			const found = findProcessedImage(original, true, logger);
+
+			expect(found).toContain("diagram.bbb.jpg");
+		});
+
+		it("breaks priority ties in favour of the smaller file", () => {
+			fsMocks.readdirSync.mockReturnValue([
+				"diagram.big.jpg",
+				"diagram.small.jpg",
+			] as never);
+			fsMocks.statSync.mockImplementation((path) => ({
+				isDirectory: () => false,
+				size: String(path).includes("big") ? 900 : 200,
+			}));
+
+			const found = findProcessedImage(original, false, logger);
+
+			expect(found).toContain("diagram.small.jpg");
+		});
+
+		it("returns null when no variant matches the original filename", () => {
+			fsMocks.readdirSync.mockReturnValue([
+				"unrelated.aaa.webp",
+				"diagram.aaa.tiff",
+			] as never);
+
+			expect(findProcessedImage(original, false, logger)).toBeNull();
+		});
+
+		it("treats a missing dist directory as no matches", () => {
+			fsMocks.readdirSync.mockImplementation(() => {
+				throw new Error("ENOENT: no such file or directory");
+			});
+
+			expect(findProcessedImage(original, false, logger)).toBeNull();
+			expect(logger.debug).toHaveBeenCalledWith(
+				expect.stringContaining("Could not find processed images"),
+			);
+		});
+	});
+
+	describe("processImageForPlatform", () => {
+		it("uploads the Astro-optimized variant when it is within the limit", () => {
+			fsMocks.readdirSync.mockReturnValue(["diagram.aaa.webp"] as never);
+
+			const processed = processImageForPlatform(
+				{ src: "./diagram.png", alt: "A diagram" },
+				"mastodon",
+				logger,
+			);
+
+			expect(processed).not.toBeNull();
+			expect(processed?.path).toContain("diagram.aaa.webp");
+			expect(processed?.mimeType).toBe("image/webp");
+			expect(logger.debug).toHaveBeenCalledWith(
+				expect.stringContaining("Using Astro-optimized image"),
+			);
+		});
+
+		it("warns and returns null when the image cannot be read", () => {
+			fsMocks.readdirSync.mockReturnValue(["diagram.aaa.webp"] as never);
+			fsMocks.readFileSync.mockImplementation(() => {
+				throw new Error("EIO: read failed");
+			});
+
+			const processed = processImageForPlatform(
+				{ src: "./diagram.png", alt: "A diagram" },
+				"mastodon",
+				logger,
+			);
+
+			expect(processed).toBeNull();
+			expect(logger.warn).toHaveBeenCalledWith(
+				expect.stringContaining("Image processing failed"),
+			);
+		});
+	});
+
+	describe("parseUrlFacets", () => {
+		it("skips a match that is not a parseable URL", () => {
+			expect(parseUrlFacets("look at http:// for the details")).toBeUndefined();
 		});
 	});
 });

@@ -348,7 +348,7 @@ export default function posseIntegration(
 /**
  * Main syndication workflow
  */
-async function runSyndication(
+export async function runSyndication(
 	options: PosseOptions,
 	astroLogger: Logger,
 ): Promise<void> {
@@ -373,7 +373,9 @@ async function runSyndication(
 /**
  * Execute the syndication process
  */
-async function executeSyndication(context: SyndicationContext): Promise<void> {
+export async function executeSyndication(
+	context: SyndicationContext,
+): Promise<void> {
 	const { mastodon, bluesky, dryRun, maxPosts, logger } = context;
 
 	logger.info(
@@ -405,7 +407,7 @@ async function executeSyndication(context: SyndicationContext): Promise<void> {
 /**
  * Process a single ephemera post
  */
-async function processSinglePost(
+export async function processSinglePost(
 	post: EphemeraPost,
 	context: SyndicationContext,
 ): Promise<void> {
@@ -461,7 +463,7 @@ async function processSinglePost(
 /**
  * Syndicate to configured platforms
  */
-async function syndicateToPlatforms(
+export async function syndicateToPlatforms(
 	post: EphemeraPost,
 	canonicalUrl: string,
 	platforms: { mastodon: boolean; bluesky: boolean },
@@ -521,7 +523,7 @@ async function syndicateToPlatforms(
 /**
  * Update the post file with syndication links
  */
-async function updatePostWithSyndication(
+export async function updatePostWithSyndication(
 	post: EphemeraPost,
 	syndicationResults: SyndicationResult[],
 	logger: Logger,
