@@ -5,6 +5,7 @@ import partytown from "@astrojs/partytown";
 import sitemap from "@astrojs/sitemap";
 import pagefind from "astro-pagefind";
 import posseIntegration from "./src/integrations/posse";
+import gnuplotCharts from "./src/integrations/gnuplot-charts";
 
 export default defineConfig({
 	site: "https://ryanparsley.com",
@@ -33,6 +34,7 @@ export default defineConfig({
 		format: "directory",
 	},
 	integrations: [
+		gnuplotCharts(),
 		mermaid({ theme: "dark" }),
 		mdx(),
 		sitemap(),
