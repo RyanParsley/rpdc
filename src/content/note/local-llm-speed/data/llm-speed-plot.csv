@@ -1,0 +1,4 @@
+model,cold_tok_s,warm_tok_s,cold_ttft_ms,warm_ttft_ms
+qwen3.8:27b-mlx,24.0,23.6,35711.0,647.0
+gemma4:31b-mxfp8,11.8,12.2,59544.0,1743.0
+devstral:latest,16.4,16.9,46962.0,8243.0

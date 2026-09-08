@@ -1,0 +1,7 @@
+model,prompt_type,avg_tok_s,avg_ttft_ms,samples
+qwen3.8:27b-mlx,cold,24.0,35711.0,1
+qwen3.8:27b-mlx,warm,23.6,647.0,1
+gemma4:31b-mxfp8,cold,11.8,59544.0,1
+gemma4:31b-mxfp8,warm,12.2,1743.0,1
+devstral:latest,cold,16.4,46962.0,1
+devstral:latest,warm,16.9,8243.0,1
