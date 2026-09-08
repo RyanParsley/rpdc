@@ -203,6 +203,7 @@ describe("fetchWebmentionsForUrl", () => {
 			status: 500,
 			statusText: "Internal Server Error",
 		});
+		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		// resolve all retries and backoffs
 		const promise = fetchWebmentionsForUrl("https://example.com/post", {
@@ -215,6 +216,8 @@ describe("fetchWebmentionsForUrl", () => {
 		const result = await promise;
 
 		expect(result).toEqual([]);
+		expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("HTTP 500"));
+		warnSpy.mockRestore();
 	});
 
 	it("encodes the target URL in the API request", async () => {
