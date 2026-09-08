@@ -1,0 +1,7 @@
+source_image,model,prompt_type,tok_s,ttft_ms,input_tokens,cache_read_tokens,output_tokens,wall_time_s
+qwen3_8-27b-mlx.png,qwen3.8:27b-mlx,cold,24.0,35711,4400,,113,4.7
+qwen3_8-27b-mlx-2.png,qwen3.8:27b-mlx,warm,23.6,647,4400,4500,115,4.9
+gemma4-31b-mxfp8.png,gemma4:31b-mxfp8,cold,11.8,59544,4200,,186,15.8
+gemma4-31b-mxfp8-2.png,gemma4:31b-mxfp8,warm,12.2,1743,4300,4200,534,43.9
+devstral.png,devstral:latest,cold,16.4,46962,4000,,43,2.6
+devstral-2.png,devstral:latest,warm,16.9,8243,5100,2900,24,1.4
