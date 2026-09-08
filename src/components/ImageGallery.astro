@@ -32,7 +32,8 @@ const deriveSrc = (image: ImageData): string => {
 	const mod = imageAssets?.[image?.url];
 	if (!mod) {
 		throw new Error(
-			`"${image.url}" does not exist in glob: "src/assets/*.{jpeg,jpg,png,gif}"`,
+			`[ImageGallery] Image not found: "${image.url}" (gallery in "${path}"). ` +
+				`Verify the file exists under /src and uses a supported extension (jpeg, jpg, png, gif).`,
 		);
 	}
 	return mod.default.src;

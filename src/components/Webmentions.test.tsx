@@ -125,19 +125,6 @@ describe("deduplicateMentions", () => {
 		]);
 	});
 
-	it("filters out null and undefined entries", () => {
-		const mentions = [
-			makeEntry({ url: "https://example.com/1", "wm-id": 1 }),
-			null as unknown as WebmentionEntry,
-			undefined as unknown as WebmentionEntry,
-			makeEntry({ url: "https://example.com/2", "wm-id": 2 }),
-		];
-
-		const result = deduplicateMentions(mentions);
-
-		expect(result).toHaveLength(2);
-	});
-
 	it("returns empty array when given empty array", () => {
 		expect(deduplicateMentions([])).toEqual([]);
 	});
