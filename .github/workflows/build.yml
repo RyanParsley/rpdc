@@ -30,4 +30,4 @@ jobs:
             astro-${{ runner.os }}-
       - run: npm run lint
       - run: npm run build
-      - run: npm run test:run
+      - run: npm run test:coverage
