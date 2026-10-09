@@ -3,6 +3,7 @@ import { setupServer } from "msw/node";
 import { mastodonHandlers } from "./mocks/mastodon";
 import { blueskyHandlers } from "./mocks/bluesky";
 import { webmentionHandlers } from "./mocks/webmention";
+import { requestLog } from "./request-log";
 import "@testing-library/jest-dom";
 
 // Setup MSW server for API mocking
@@ -15,9 +16,23 @@ export const server = setupServer(
 // Establish API mocking before all tests
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 
+// Capture every intercepted request so tests can assert on endpoint, auth
+// headers, and bodies (clone leaves the original body intact for handlers).
+server.events.on("request:start", ({ request }) => {
+	requestLog.push({
+		method: request.method,
+		url: request.url,
+		headers: request.headers,
+		request: request.clone(),
+	});
+});
+
 // Reset any request handlers that we may add during the tests,
 // so they don't affect other tests
-afterEach(() => server.resetHandlers());
+afterEach(() => {
+	server.resetHandlers();
+	requestLog.length = 0;
+});
 
 // Clean up after all tests are done
 afterAll(() => server.close());
