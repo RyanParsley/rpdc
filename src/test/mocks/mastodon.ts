@@ -6,6 +6,16 @@ import type {
 } from "../../types/api";
 
 export const mastodonHandlers = [
+	// Instance connectivity probe
+	http.get("https://mastodon.social/api/v1/instance", ({ request }) => {
+		const authHeader = request.headers.get("Authorization");
+		if (!authHeader?.startsWith("Bearer ")) {
+			return HttpResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
+		return HttpResponse.json({});
+	}),
+
 	// Media upload endpoint
 	http.post("https://mastodon.social/api/v1/media", async ({ request }) => {
 		const authHeader = request.headers.get("Authorization");

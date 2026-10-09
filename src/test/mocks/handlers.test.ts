@@ -13,6 +13,13 @@ import { describe, it, expect } from "vitest";
  */
 
 describe("shared MSW mocks return happy-path defaults", () => {
+	it("mastodon: instance probe succeeds with auth", async () => {
+		const res = await fetch("https://mastodon.social/api/v1/instance", {
+			headers: { Authorization: "Bearer test-token" },
+		});
+		expect(res.status).toBe(200);
+	});
+
 	it("mastodon: media upload succeeds with auth", async () => {
 		const res = await fetch("https://mastodon.social/api/v1/media", {
 			method: "POST",
