@@ -29,6 +29,7 @@ export async function postToBluesky(
 			canonicalUrl,
 			post.body,
 			"bluesky",
+			logger,
 		);
 
 		// Authenticate with Bluesky

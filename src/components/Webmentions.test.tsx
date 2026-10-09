@@ -175,11 +175,17 @@ describe("fetchWebmentionsForUrl", () => {
 
 	it("retries on failure with exponential backoff", async () => {
 		globalThis.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const logger = {
+			info: vi.fn(),
+			warn: vi.fn(),
+			error: vi.fn(),
+			debug: vi.fn(),
+		};
 
 		const promise = fetchWebmentionsForUrl("https://example.com/post", {
 			apiToken: "test-token",
 			maxRetries: 3,
+			logger,
 		});
 
 		// After attempt 1: backoff 1s (2^0 * 1000)
@@ -193,8 +199,7 @@ describe("fetchWebmentionsForUrl", () => {
 
 		expect(result).toEqual([]);
 		expect(globalThis.fetch).toHaveBeenCalledTimes(3);
-		expect(warnSpy).toHaveBeenCalled();
-		warnSpy.mockRestore();
+		expect(logger.warn).toHaveBeenCalledTimes(3);
 	});
 
 	it("returns empty on HTTP error", async () => {
@@ -203,12 +208,18 @@ describe("fetchWebmentionsForUrl", () => {
 			status: 500,
 			statusText: "Internal Server Error",
 		});
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const logger = {
+			info: vi.fn(),
+			warn: vi.fn(),
+			error: vi.fn(),
+			debug: vi.fn(),
+		};
 
 		// resolve all retries and backoffs
 		const promise = fetchWebmentionsForUrl("https://example.com/post", {
 			apiToken: "test-token",
 			maxRetries: 1,
+			logger,
 		});
 
 		await vi.advanceTimersByTimeAsync(0);
@@ -216,8 +227,7 @@ describe("fetchWebmentionsForUrl", () => {
 		const result = await promise;
 
 		expect(result).toEqual([]);
-		expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("HTTP 500"));
-		warnSpy.mockRestore();
+		expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining("HTTP 500"));
 	});
 
 	it("encodes the target URL in the API request", async () => {
@@ -264,7 +274,6 @@ describe("fetchAllVariants", () => {
 	it("returns empty array on all failures", async () => {
 		vi.useFakeTimers();
 		globalThis.fetch = vi.fn().mockRejectedValue(new Error("fail"));
-		vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		const promise = fetchAllVariants("https://example.com/post", "tok");
 		await vi.advanceTimersByTimeAsync(100_000);
@@ -348,7 +357,6 @@ describe("fetchWebmentionsForUrl - malformed responses", () => {
 			json: () => Promise.reject(new Error("Unexpected token")),
 		});
 
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		const result = await fetchWebmentionsForUrl("https://example.com/post", {
 			apiToken: "test-token",
@@ -356,7 +364,6 @@ describe("fetchWebmentionsForUrl - malformed responses", () => {
 		});
 
 		expect(result).toEqual([]);
-		warnSpy.mockRestore();
 	});
 
 	it("handles entries with missing optional fields", async () => {
@@ -407,7 +414,6 @@ describe("fetchWebmentionsForUrl - timeout", () => {
 				});
 			});
 		});
-		const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
 		const promise = fetchWebmentionsForUrl("https://example.com/post", {
 			apiToken: "test-token",
@@ -420,7 +426,6 @@ describe("fetchWebmentionsForUrl - timeout", () => {
 
 		expect(result).toEqual([]);
 		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
-		warnSpy.mockRestore();
 	});
 });
 

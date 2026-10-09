@@ -1,3 +1,5 @@
+import type { Logger } from "../types/logger";
+
 export interface WebmentionContent {
 	html: string;
 	text: string;
@@ -46,13 +48,14 @@ interface FetchOptions {
 	apiToken: string;
 	maxRetries?: number;
 	timeoutMs?: number;
+	logger?: Logger | undefined;
 }
 
 export const fetchWebmentionsForUrl = async (
 	target: string,
 	options: FetchOptions,
 ): Promise<WebmentionEntry[]> => {
-	const { apiToken, maxRetries = 3, timeoutMs = 3000 } = options;
+	const { apiToken, maxRetries = 3, timeoutMs = 3000, logger } = options;
 
 	if (!apiToken) {
 		return [];
@@ -80,7 +83,7 @@ export const fetchWebmentionsForUrl = async (
 			return data.children || [];
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
-			console.warn(
+			logger?.warn(
 				`Webmention fetch attempt ${attempt + 1} failed: ${message}`,
 			);
 
@@ -105,10 +108,11 @@ export const deduplicateMentions = (
 export const fetchAllVariants = async (
 	target: string,
 	apiToken: string,
+	logger?: Logger,
 ): Promise<WebmentionEntry[]> => {
 	const results = await Promise.all(
 		getUrlVariants(target).map((variant) =>
-			fetchWebmentionsForUrl(variant, { apiToken }),
+			fetchWebmentionsForUrl(variant, { apiToken, logger }),
 		),
 	);
 	return deduplicateMentions(results.flat());

@@ -120,6 +120,46 @@ describe("POSSE Integration", () => {
 			expect(result).toContain(canonicalUrl);
 		});
 
+		describe("dev logging", () => {
+			afterEach(() => vi.unstubAllEnvs());
+
+			it("routes the dev content-length log through the injected logger", () => {
+				vi.stubEnv("NODE_ENV", "development");
+				const logger: Logger = {
+					info: vi.fn(),
+					warn: vi.fn(),
+					error: vi.fn(),
+					debug: vi.fn(),
+				};
+
+				const result = generatePostContent(
+					{ date: new Date("2024-01-01"), title: "Test Post" },
+					"https://example.com/post",
+					"Some body content that is long enough to pass the fallback threshold.",
+					"bluesky",
+					logger,
+				);
+
+				expect(result).toContain("https://example.com/post");
+				expect(logger.debug).toHaveBeenCalledWith(
+					expect.stringContaining("Bluesky content lengths"),
+				);
+			});
+
+			it("stays silent in the dev log path when no logger is provided", () => {
+				vi.stubEnv("NODE_ENV", "development");
+
+				expect(() =>
+					generatePostContent(
+						{ date: new Date("2024-01-01"), title: "Test Post" },
+						"https://example.com/post",
+						"Some body content that is long enough to pass the fallback threshold.",
+						"bluesky",
+					),
+				).not.toThrow();
+			});
+		});
+
 		it("should truncate content for Bluesky's grapheme limit (300)", () => {
 			const data: EphemeraData = {
 				title: "Test Post",
