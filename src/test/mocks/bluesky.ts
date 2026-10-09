@@ -86,18 +86,4 @@ export const blueskyHandlers = [
 			return HttpResponse.json(response);
 		},
 	),
-
-	// Error simulation
-	http.post(
-		"https://bsky.social/xrpc/com.atproto.server.createSession",
-		async ({ request }) => {
-			if (request.headers.get("X-Mock-Error") === "auth-failed") {
-				return HttpResponse.json(
-					{ error: "Authentication failed" },
-					{ status: 401 },
-				);
-			}
-			return HttpResponse.json({ error: "Network error" }, { status: 500 });
-		},
-	),
 ];

@@ -57,12 +57,4 @@ export const mastodonHandlers = [
 
 		return HttpResponse.json(response);
 	}),
-
-	// Error simulation
-	http.post("https://mastodon.social/api/v1/media", async ({ request }) => {
-		if (request.headers.get("X-Mock-Error") === "upload-failed") {
-			return HttpResponse.json({ error: "Upload failed" }, { status: 500 });
-		}
-		return HttpResponse.json({ error: "Network error" }, { status: 500 });
-	}),
 ];
