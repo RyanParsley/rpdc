@@ -19,6 +19,7 @@ any observable build output.
 
 ## Done
 
+- ✅ **[TQ-003 / #249](https://github.com/RyanParsley/rpdc/issues/249)** MSW mock shadowing removed — PR: `fix/msw-handler-shadowing`. Finding: the shadowed handlers were never actually exercised (posse suites stub `global.fetch`; nothing sent `X-Mock-Error`), so this was preventive hygiene.
 - ✅ **[TQ-001 / #247](https://github.com/RyanParsley/rpdc/issues/247)** Image helpers consolidated into `src/integrations/image.ts` — merged via PR #255.
 - ✅ **[TQ-006 / #252](https://github.com/RyanParsley/rpdc/issues/252)** Coverage thresholds enforced + integration backfill — closed via PR #262.
 - ✅ **[TQ-007 / #253](https://github.com/RyanParsley/rpdc/issues/253)** + **[TQ-008 / #254](https://github.com/RyanParsley/rpdc/issues/254)** Scripts lint/typecheck + cleanup pass — closed via PR #261.
@@ -26,7 +27,6 @@ any observable build output.
 
 ## Ready to execute (no open decision)
 
-- [ ] **[TQ-003 / #249](https://github.com/RyanParsley/rpdc/issues/249)** Fix MSW handler shadowing in shared mock arrays
 - [ ] **[TQ-004 / #250](https://github.com/RyanParsley/rpdc/issues/250)** Route `console.*` through the logger; drop build-time `~/.env` read; `getMimeType` + `canonicalUrl` fail loudly
   - Note post-#248: `Logger` is `Pick<AstroIntegrationLogger, ...>` living in `posse.ts`. If `utils/webmentions.ts` needs it, extract it to a neutral home rather than importing utils → integrations.
 
