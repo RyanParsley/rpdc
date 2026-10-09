@@ -30,20 +30,6 @@ const projectRoot = join(__dirname, "..");
 
 const SITE_URL = process.env.SITE_URL || "https://ryanparsley.com";
 
-// Load env from ~/.env if not already set
-(function loadEnv() {
-	const envPath = join(process.env.HOME, ".env");
-	if (!existsSync(envPath)) return;
-
-	const envContent = readFileSync(envPath, "utf-8");
-	envContent.split("\n").forEach((line) => {
-		const match = line.match(/^export\s+([A-Z_]+)=(.*)$/);
-		if (match && !process.env[match[1]]) {
-			process.env[match[1]] = match[2].replace(/^["']|["']$/g, "");
-		}
-	});
-})();
-
 const colors = {
 	reset: "\x1b[0m",
 	bright: "\x1b[1m",
