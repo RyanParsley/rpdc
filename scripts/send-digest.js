@@ -7,6 +7,10 @@
  * Usage:
  *   node scripts/send-digest.js            # send the digest
  *   node scripts/send-digest.js --dry-run  # print subject + body, send nothing
+ *
+ * Env:
+ *   BUTTONDOWN_API_KEY   required unless --dry-run
+ *   DIGEST_CONTENT_ROOT  override the content directory (used by tests)
  */
 
 import fs from "fs";
@@ -20,6 +24,8 @@ const SITE_URL = "https://ryanparsley.com";
 // Configuration
 const BUTTONDOWN_API_KEY = process.env.BUTTONDOWN_API_KEY;
 const BUTTONDOWN_API_URL = "https://api.buttondown.com/v1";
+
+const DEFAULT_CONTENT_ROOT = path.join(__dirname, "../src/content");
 
 /**
  * Get all markdown files from a directory recursively
@@ -135,11 +141,8 @@ export function getTags(frontmatter) {
 /**
  * Build URL from file path
  */
-export function filePathToUrl(filePath) {
-	const relative = path.relative(
-		path.join(__dirname, "../src/content"),
-		filePath,
-	);
+export function filePathToUrl(filePath, contentRoot = DEFAULT_CONTENT_ROOT) {
+	const relative = path.relative(contentRoot, filePath);
 
 	// Remove extension and convert to URL path
 	// e.g., "blog/2025/2025-08-31-posse-astro-integration.md" → "/blog/2025/2025-08-31-posse-astro-integration"
@@ -162,7 +165,7 @@ export function formatDate(date) {
 /**
  * Collect content from past week
  */
-export async function collectWeeklyContent() {
+export async function collectWeeklyContent(contentRoot = DEFAULT_CONTENT_ROOT) {
 	const oneWeekAgo = new Date();
 	oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
@@ -173,9 +176,7 @@ export async function collectWeeklyContent() {
 	};
 
 	// Collect blog posts
-	const blogFiles = getMarkdownFiles(
-		path.join(__dirname, "../src/content/blog"),
-	);
+	const blogFiles = getMarkdownFiles(path.join(contentRoot, "blog"));
 	for (const file of blogFiles) {
 		const fileContent = fs.readFileSync(file, "utf-8");
 		const { data: frontmatter } = matter(fileContent);
@@ -185,7 +186,7 @@ export async function collectWeeklyContent() {
 		if (date >= oneWeekAgo) {
 			content.blog.push({
 				title: getTitleFromContent(fileContent, file),
-				url: filePathToUrl(file),
+				url: filePathToUrl(file, contentRoot),
 				date,
 				description: getDescription(fileContent),
 				tags: getTags(frontmatter),
@@ -195,15 +196,10 @@ export async function collectWeeklyContent() {
 	}
 
 	// Collect notes
-	const noteFiles = getMarkdownFiles(
-		path.join(__dirname, "../src/content/note"),
-	);
+	const noteFiles = getMarkdownFiles(path.join(contentRoot, "note"));
 	for (const file of noteFiles) {
 		// Skip subdirectories that are treated as collections (violin, mpcnc, etc.)
-		const relative = path.relative(
-			path.join(__dirname, "../src/content/note"),
-			file,
-		);
+		const relative = path.relative(path.join(contentRoot, "note"), file);
 		if (relative.includes("/")) continue;
 
 		const fileContent = fs.readFileSync(file, "utf-8");
@@ -214,7 +210,7 @@ export async function collectWeeklyContent() {
 		if (date >= oneWeekAgo) {
 			content.note.push({
 				title: getTitleFromContent(fileContent, file),
-				url: filePathToUrl(file),
+				url: filePathToUrl(file, contentRoot),
 				date,
 				description: getDescription(fileContent),
 				tags: getTags(frontmatter),
@@ -224,9 +220,7 @@ export async function collectWeeklyContent() {
 	}
 
 	// Collect ephemera
-	const ephemeraFiles = getMarkdownFiles(
-		path.join(__dirname, "../src/content/ephemera"),
-	);
+	const ephemeraFiles = getMarkdownFiles(path.join(contentRoot, "ephemera"));
 	for (const file of ephemeraFiles) {
 		const fileContent = fs.readFileSync(file, "utf-8");
 		const { data: frontmatter } = matter(fileContent);
@@ -237,7 +231,7 @@ export async function collectWeeklyContent() {
 			const slug = path.basename(file, path.extname(file));
 			content.ephemera.push({
 				title: frontmatter.title || slug,
-				url: filePathToUrl(file),
+				url: filePathToUrl(file, contentRoot),
 				date,
 				description: getDescription(fileContent),
 				tags: getTags(frontmatter),
@@ -319,11 +313,11 @@ ${dateRange}
 /**
  * Send email via Buttondown API
  */
-async function sendEmail(subject, body) {
+export async function sendEmail(subject, body, apiKey = BUTTONDOWN_API_KEY) {
 	const response = await fetch(`${BUTTONDOWN_API_URL}/emails`, {
 		method: "POST",
 		headers: {
-			Authorization: `Token ${BUTTONDOWN_API_KEY}`,
+			Authorization: `Token ${apiKey}`,
 			"Content-Type": "application/json",
 			"User-Agent": "RyanParsleyDotCom/1.0",
 		},
@@ -355,7 +349,7 @@ async function main() {
 	try {
 		// Collect content from past week
 		console.log("🔍 Collecting content from the past week...");
-		const content = await collectWeeklyContent();
+		const content = await collectWeeklyContent(process.env.DIGEST_CONTENT_ROOT);
 
 		const totalItems =
 			content.blog.length + content.note.length + content.ephemera.length;

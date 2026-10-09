@@ -2,7 +2,7 @@
 //
 // The global setup file (src/test/setup.ts) mocks fs and gray-matter for the
 // component/integration suites; this suite exercises the real implementations.
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.unmock("fs");
 vi.unmock("path");
@@ -11,6 +11,7 @@ vi.unmock("gray-matter");
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { execFileSync } from "child_process";
 import { fileURLToPath } from "url";
 import {
 	getDateFromFile,
@@ -20,6 +21,8 @@ import {
 	isPublishable,
 	filePathToUrl,
 	generateMarkdownDigest,
+	collectWeeklyContent,
+	sendEmail,
 } from "./send-digest.js";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -196,5 +199,189 @@ describe("generateMarkdownDigest", () => {
 
 		expect(markdown).not.toContain("## 📌");
 		expect(markdown).toContain("This weekly digest is automatically generated");
+	});
+});
+
+const DAY = 24 * 60 * 60 * 1000;
+const isoDaysAgo = (n) => new Date(Date.now() - n * DAY).toISOString();
+
+const writeFixture = (root, rel, frontmatter, body) => {
+	const full = path.join(root, rel);
+	fs.mkdirSync(path.dirname(full), { recursive: true });
+	fs.writeFileSync(
+		full,
+		`---\n${frontmatter}\n---\n\n${body ?? "Body text that is long enough to serve as the description paragraph."}\n`,
+	);
+};
+
+describe("collectWeeklyContent (fixture root)", () => {
+	let root;
+	beforeEach(() => {
+		root = fs.mkdtempSync(path.join(os.tmpdir(), "digest-content-"));
+	});
+	afterEach(() => {
+		fs.rmSync(root, { recursive: true, force: true });
+	});
+
+	it("collects recent publishable content and skips the rest", async () => {
+		writeFixture(
+			root,
+			"blog/2026-10-08-recent.md",
+			`title: Recent Blog\ndate: '${isoDaysAgo(2)}'`,
+		);
+		writeFixture(
+			root,
+			"blog/2026-10-08-secret.md",
+			`title: Secret Post\ndate: '${isoDaysAgo(2)}'\npublished: false`,
+		);
+		writeFixture(
+			root,
+			"blog/2020-01-01-old.md",
+			`title: Old Post\ndate: '2020-01-01T00:00:00Z'`,
+		);
+		writeFixture(
+			root,
+			"note/recent-note.md",
+			`title: Recent Note\npubDate: '${isoDaysAgo(1)}'`,
+		);
+		writeFixture(
+			root,
+			"note/violin/nested-note.md",
+			`title: Nested Note\npubDate: '${isoDaysAgo(1)}'`,
+		);
+		writeFixture(
+			root,
+			"ephemera/2026/10/07/2026-10-07-08-53-54.md",
+			`date: '${isoDaysAgo(2)}'\nsyndication:\n  - href: 'https://mastodon.social/@x/1'\n    title: Mastodon\n  - href: 'https://bsky.app/profile/x/post/1'\n    title: Bluesky`,
+		);
+
+		const content = await collectWeeklyContent(root);
+
+		// blog: secret (published:false) and old (outside window) excluded
+		expect(content.blog.map((p) => p.title)).toEqual(["Recent Blog"]);
+		// note: nested-subdirectory note excluded (collections like violin/)
+		expect(content.note.map((p) => p.title)).toEqual(["Recent Note"]);
+		// ephemera: regression — nested syndication must not flatten into a title
+		expect(content.ephemera.map((p) => p.title)).toEqual([
+			"2026-10-07-08-53-54",
+		]);
+		expect(content.ephemera[0].url).toBe(
+			"https://ryanparsley.com/ephemera/2026/10/07/2026-10-07-08-53-54",
+		);
+	});
+
+	it("returns empty collections when nothing is in the window", async () => {
+		writeFixture(
+			root,
+			"blog/2020-01-01-old.md",
+			`title: Old\ndate: '2020-01-01T00:00:00Z'`,
+		);
+		const content = await collectWeeklyContent(root);
+		expect(content).toEqual({ blog: [], note: [], ephemera: [] });
+	});
+
+	it("handles missing collection directories", async () => {
+		const content = await collectWeeklyContent(root);
+		expect(content).toEqual({ blog: [], note: [], ephemera: [] });
+	});
+});
+
+describe("sendEmail", () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	it("posts the digest to Buttondown with the expected shape", async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () =>
+				Promise.resolve({ id: "email-1", absolute_url: "https://btn.down/x" }),
+		});
+		vi.stubGlobal("fetch", fetchMock);
+
+		const result = await sendEmail("Subject", "Body markdown", "test-key");
+
+		expect(result.id).toBe("email-1");
+		const [url, init] = fetchMock.mock.calls[0];
+		expect(url).toBe("https://api.buttondown.com/v1/emails");
+		expect(init.headers.Authorization).toBe("Token test-key");
+		expect(JSON.parse(init.body)).toMatchObject({
+			subject: "Subject",
+			body: "Body markdown",
+			email_type: "public",
+			status: "about_to_send",
+		});
+	});
+
+	it("throws with status and body on API error", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				ok: false,
+				status: 422,
+				text: () => Promise.resolve("Invalid"),
+			}),
+		);
+		await expect(sendEmail("S", "B", "k")).rejects.toThrow(
+			"Buttondown API error: 422 - Invalid",
+		);
+	});
+});
+
+describe("main (subprocess e2e)", () => {
+	const scriptPath = path.join(scriptDir, "send-digest.js");
+	const repoRoot = path.join(scriptDir, "..");
+	let root;
+	beforeEach(() => {
+		root = fs.mkdtempSync(path.join(os.tmpdir(), "digest-e2e-"));
+	});
+	afterEach(() => {
+		fs.rmSync(root, { recursive: true, force: true });
+	});
+
+	const run = (args, env = {}) => {
+		try {
+			const stdout = execFileSync(process.execPath, [scriptPath, ...args], {
+				cwd: repoRoot,
+				env: { ...process.env, BUTTONDOWN_API_KEY: "", ...env },
+				encoding: "utf-8",
+				stdio: ["ignore", "pipe", "pipe"],
+			});
+			return { code: 0, stdout, stderr: "" };
+		} catch (error) {
+			return {
+				code: error.status,
+				stdout: error.stdout ?? "",
+				stderr: error.stderr ?? "",
+			};
+		}
+	};
+
+	it("--dry-run prints the digest and sends nothing", () => {
+		writeFixture(
+			root,
+			"blog/2026-10-08-recent.md",
+			`title: Recent Blog\ndate: '${isoDaysAgo(2)}'`,
+		);
+		const result = run(["--dry-run"], { DIGEST_CONTENT_ROOT: root });
+		expect(result.code).toBe(0);
+		expect(result.stdout).toContain("=== SUBJECT ===");
+		expect(result.stdout).toContain("[Recent Blog]");
+		expect(result.stdout).toContain("Dry run");
+	});
+
+	it("exits 1 without a key when there is content to send", () => {
+		writeFixture(
+			root,
+			"blog/2026-10-08-recent.md",
+			`title: Recent Blog\ndate: '${isoDaysAgo(2)}'`,
+		);
+		const result = run([], { DIGEST_CONTENT_ROOT: root });
+		expect(result.code).toBe(1);
+		expect(result.stderr).toContain("BUTTONDOWN_API_KEY");
+	});
+
+	it("skips quietly when nothing is in the window", () => {
+		const result = run([], { DIGEST_CONTENT_ROOT: root });
+		expect(result.code).toBe(0);
+		expect(result.stdout).toContain("No new content this week");
 	});
 });
