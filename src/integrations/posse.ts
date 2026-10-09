@@ -55,22 +55,6 @@ export interface SyndicationResult {
 	error?: string;
 }
 
-export interface MockLogger {
-	info: (message: string) => void;
-	warn: (message: string) => void;
-	error: (message: string) => void;
-	debug: (message: string) => void;
-}
-
-export interface TestUtils {
-	createMockLogger: () => MockLogger;
-	createMockEphemeraPost: (overrides?: Record<string, unknown>) => EphemeraPost;
-	createMockConfig: () => {
-		mastodon: { token: string; instance: string };
-		bluesky: { username: string; password: string };
-	};
-}
-
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
