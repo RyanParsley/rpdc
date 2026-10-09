@@ -148,7 +148,9 @@ export function getMimeType(filename: string): string {
 		case "webp":
 			return "image/webp";
 		default:
-			return "image/jpeg";
+			throw new Error(
+				`getMimeType: unknown image extension in "${filename}". Supported: jpg, jpeg, png, gif, webp.`,
+			);
 	}
 }
 

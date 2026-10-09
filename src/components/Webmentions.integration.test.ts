@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterAll } from "vitest";
-import { http, passthrough } from "msw";
+import { describe, it, expect, vi, beforeEach, afterAll } from "vitest";
+import { http, HttpResponse, passthrough } from "msw";
 import { server } from "../test/setup";
 import {
 	fetchWebmentionsForUrl,
@@ -45,6 +45,47 @@ describe("webmention.io integration - intercepted", () => {
 			"https://ref.example/two",
 			"https://ref.example/three",
 		]);
+	});
+
+	it("warns via the injected logger when a fetch attempt fails", async () => {
+		server.use(
+			http.get("https://webmention.io/api/mentions.jf2", () =>
+				HttpResponse.error(),
+			),
+		);
+
+		const logger = {
+			info: vi.fn(),
+			warn: vi.fn(),
+			error: vi.fn(),
+			debug: vi.fn(),
+		};
+
+		const result = await fetchWebmentionsForUrl("https://ryanparsley.com/", {
+			apiToken: "intercepted-test-token",
+			maxRetries: 1,
+			logger,
+		});
+
+		expect(result).toEqual([]);
+		expect(logger.warn).toHaveBeenCalledWith(
+			expect.stringContaining("Webmention fetch attempt 1 failed"),
+		);
+	});
+
+	it("fails silently when no logger is provided", async () => {
+		server.use(
+			http.get("https://webmention.io/api/mentions.jf2", () =>
+				HttpResponse.error(),
+			),
+		);
+
+		const result = await fetchWebmentionsForUrl("https://ryanparsley.com/", {
+			apiToken: "intercepted-test-token",
+			maxRetries: 1,
+		});
+
+		expect(result).toEqual([]);
 	});
 });
 

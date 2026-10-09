@@ -4,13 +4,14 @@
 import { writeFileSync, statSync, readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import matter from "gray-matter";
-import type { AstroIntegration, AstroIntegrationLogger } from "astro";
+import type { AstroIntegration } from "astro";
 
 import { postToMastodon, type MastodonConfig } from "./posse-mastodon";
 import { postToBluesky, type BlueskyConfig } from "./posse-bluesky";
 import type { EphemeraData } from "./ephemera-schema";
+import type { Logger } from "../types/logger";
 
-export type { EphemeraData };
+export type { EphemeraData, Logger };
 
 // ============================================================================
 // TYPES
@@ -22,16 +23,6 @@ export interface PosseOptions {
 	dryRun?: boolean;
 	maxPosts?: number;
 }
-
-/**
- * Minimal logger surface for POSSE. Derived from Astro's integration
- * logger so it can never drift from what the astro:build:done hook
- * provides; structural typing lets test mocks implement just these.
- */
-export type Logger = Pick<
-	AstroIntegrationLogger,
-	"info" | "warn" | "error" | "debug"
->;
 
 export interface SyndicationContext {
 	mastodon: boolean;
@@ -396,7 +387,10 @@ export async function processSinglePost(
 ): Promise<void> {
 	const { mastodon, bluesky, dryRun, logger } = context;
 
-	const canonicalUrl = `https://ryanparsley.com/ephemera/${post.file.replace(".md", "")}`;
+	const canonicalSlug = post.file.endsWith(".md")
+		? post.file.slice(0, -3)
+		: post.file;
+	const canonicalUrl = `https://ryanparsley.com/ephemera/${canonicalSlug}`;
 	const existingSyndication = post.data.syndication || [];
 
 	// Check which platforms are already syndicated
@@ -570,6 +564,7 @@ export function generatePostContent(
 	canonicalUrl: string,
 	body: string,
 	platform: "mastodon" | "bluesky",
+	logger?: Logger,
 ): string {
 	const initialContent = body?.trim()
 		? cleanContentForSocial(body.trim(), platform)
@@ -595,7 +590,7 @@ export function generatePostContent(
 
 	// Log content lengths for debugging (only in development)
 	if (platform === "bluesky" && process.env.NODE_ENV === "development") {
-		console.log(
+		logger?.debug(
 			`POSSE: Bluesky content lengths - content: ${content.length}, available: ${availableContentLength}, final: ${finalContent.length}, total: ${result.length}, max: ${maxLength}`,
 		);
 	}

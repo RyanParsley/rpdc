@@ -14,11 +14,12 @@ any observable build output.
 ## Notes
 
 - **Domain:** Astro 7 static site, POSSE (Mastodon + Bluesky) syndication, webmentions, scripts
-- **Gate every change:** `npx astro check`, `npm run lint`, `npm run test:run` (now 282 passing)
+- **Gate every change:** `npx astro check`, `npm run lint`, `npm run test:run` (now 286 passing)
 - **Tickets:** GitHub Issues #247–#254 (repo `RyanParsley/rpdc`), labeled `enhancement`
 
 ## Done
 
+- ✅ **[TQ-004 / #250](https://github.com/RyanParsley/rpdc/issues/250)** Logging/env hardening — PR: `fix/logging-env-hardening`. `Logger` extracted to `src/types/logger.ts` (neutral home; posse.ts re-exports); both `console.*` sites now take an optional logger; `Webmentions.astro` relies solely on `astro:env` (no more build-time `~/.env` read); `getMimeType` throws on unknown extensions; `canonicalUrl` strips only a trailing `.md`. **Local-dev note:** if your shell sources `~/.env` (this repo's documented dev flow), nothing changes — the token is already in the process env, which is where `astro:env` reads it. The removed fallback only ever fired for builds launched outside such a shell; for those, use the repo-root `.env` (gitignored) or direnv.
 - ✅ **[TQ-003 / #249](https://github.com/RyanParsley/rpdc/issues/249)** MSW mock shadowing removed — PR: `fix/msw-handler-shadowing`. Finding: the shadowed handlers were never actually exercised (posse suites stub `global.fetch`; nothing sent `X-Mock-Error`), so this was preventive hygiene.
 - ✅ **[TQ-001 / #247](https://github.com/RyanParsley/rpdc/issues/247)** Image helpers consolidated into `src/integrations/image.ts` — merged via PR #255.
 - ✅ **[TQ-006 / #252](https://github.com/RyanParsley/rpdc/issues/252)** Coverage thresholds enforced + integration backfill — closed via PR #262.
@@ -27,8 +28,7 @@ any observable build output.
 
 ## Ready to execute (no open decision)
 
-- [ ] **[TQ-004 / #250](https://github.com/RyanParsley/rpdc/issues/250)** Route `console.*` through the logger; drop build-time `~/.env` read; `getMimeType` + `canonicalUrl` fail loudly
-  - Note post-#248: `Logger` is `Pick<AstroIntegrationLogger, ...>` living in `posse.ts`. If `utils/webmentions.ts` needs it, extract it to a neutral home rather than importing utils → integrations.
+_(nothing — everything unblocked has shipped)_
 
 ## Needs your decision (grilling)
 

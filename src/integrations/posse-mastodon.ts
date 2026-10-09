@@ -47,6 +47,7 @@ export async function postToMastodon(
 			canonicalUrl,
 			post.body,
 			"mastodon",
+			logger,
 		);
 
 		let mediaId: string | null = null;

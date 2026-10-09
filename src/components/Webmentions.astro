@@ -1,11 +1,8 @@
 ---
-import { readFileSync, existsSync } from "fs";
-import { join } from "path";
 import { WEBMENTION_IO_TOKEN } from "astro:env/server";
 import {
 	fetchAllVariants,
 	computeCounts,
-	parseTokenFromEnvFile,
 	type WebmentionEntry,
 } from "../utils/webmentions";
 
@@ -14,18 +11,10 @@ interface Props {
 }
 const { target } = Astro.props;
 
-// Load from astro:env first, then fallback to ~/.env
-let API_TOKEN = WEBMENTION_IO_TOKEN;
-
-if (!API_TOKEN) {
-	const homeEnvPath = process.env.HOME ? join(process.env.HOME, ".env") : null;
-	if (homeEnvPath && existsSync(homeEnvPath)) {
-		API_TOKEN =
-			parseTokenFromEnvFile(readFileSync(homeEnvPath, "utf-8")) ?? undefined;
-	}
-}
-
-const children = await fetchAllVariants(target, API_TOKEN ?? "");
+// Token comes only from astro:env (declared in astro.config.mjs). With no
+// token configured, fetchAllVariants short-circuits to an empty list and
+// the section renders nothing — same output as a failed fetch today.
+const children = await fetchAllVariants(target, WEBMENTION_IO_TOKEN ?? "");
 const counts = computeCounts(children);
 const { likesAndRepostsCount, mentionsCount, repliesCount } = counts;
 ---
