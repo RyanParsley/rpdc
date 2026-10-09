@@ -1,9 +1,7 @@
 import { defineCollection } from "astro:content";
 import { z } from "astro/zod";
 import { glob } from "astro/loaders";
-
-const dateTransformer = (val: string | Date | number | undefined) =>
-	val ? new Date(val) : new Date();
+import { dateTransformer, ephemeraSchema } from "./integrations/ephemera-schema";
 
 const dateFields = {
 	pubDate: z.string().or(z.date()).or(z.number()).transform(dateTransformer),
@@ -99,20 +97,7 @@ const ephemeraCollection = defineCollection({
 		pattern: "**/*.md",
 		base: "./src/content/ephemera",
 	}),
-	schema: () =>
-		z.object({
-			date: z.string().or(z.date()).or(z.number()).transform(dateTransformer),
-			syndication: z
-				.array(z.object({ href: z.string(), title: z.string() }))
-				.optional(),
-			youtube: z.string().optional(),
-			image: z
-				.object({
-					src: z.string(),
-					alt: z.string(),
-				})
-				.optional(),
-		}),
+	schema: () => ephemeraSchema,
 });
 
 export const collections = {

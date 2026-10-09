@@ -8,6 +8,9 @@ import type { AstroIntegration, AstroIntegrationLogger } from "astro";
 
 import { postToMastodon, type MastodonConfig } from "./posse-mastodon";
 import { postToBluesky, type BlueskyConfig } from "./posse-bluesky";
+import type { EphemeraData } from "./ephemera-schema";
+
+export type { EphemeraData };
 
 // ============================================================================
 // TYPES
@@ -36,13 +39,6 @@ export interface SyndicationContext {
 	dryRun: boolean;
 	maxPosts: number;
 	logger: Logger;
-}
-
-export interface EphemeraData {
-	title?: string;
-	date?: Date | string;
-	syndication?: Array<{ href: string; title: string }>;
-	image?: { src: string; alt: string };
 }
 
 export interface EphemeraPost {
@@ -316,7 +312,9 @@ export function parseEphemeraFile(
 
 		return {
 			file: relativePath,
-			data,
+			// Typed as EphemeraData: the ephemera collection schema already
+			// validated these files when the collection loaded this build.
+			data: data as EphemeraData,
 			body: content || "",
 			image: data.image,
 		};
