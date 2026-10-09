@@ -4,7 +4,7 @@
 import { writeFileSync, statSync, readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import matter from "gray-matter";
-import type { AstroIntegration } from "astro";
+import type { AstroIntegration, AstroIntegrationLogger } from "astro";
 
 import { postToMastodon, type MastodonConfig } from "./posse-mastodon";
 import { postToBluesky, type BlueskyConfig } from "./posse-bluesky";
@@ -20,14 +20,15 @@ export interface PosseOptions {
 	maxPosts?: number;
 }
 
-export interface Logger {
-	info: (message: string) => void;
-	warn: (message: string) => void;
-	error: (message: string) => void;
-	debug: (message: string) => void;
-}
-
-export type AstroLogger = Logger;
+/**
+ * Minimal logger surface for POSSE. Derived from Astro's integration
+ * logger so it can never drift from what the astro:build:done hook
+ * provides; structural typing lets test mocks implement just these.
+ */
+export type Logger = Pick<
+	AstroIntegrationLogger,
+	"info" | "warn" | "error" | "debug"
+>;
 
 export interface SyndicationContext {
 	mastodon: boolean;
