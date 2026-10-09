@@ -3,11 +3,16 @@
  *
  * Collects blog posts, notes, and ephemera from the past week,
  * generates a Markdown digest, and sends it via Buttondown API.
+ *
+ * Usage:
+ *   node scripts/send-digest.js            # send the digest
+ *   node scripts/send-digest.js --dry-run  # print subject + body, send nothing
  */
 
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
+import matter from "gray-matter";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SITE_URL = "https://ryanparsley.com";
@@ -16,15 +21,10 @@ const SITE_URL = "https://ryanparsley.com";
 const BUTTONDOWN_API_KEY = process.env.BUTTONDOWN_API_KEY;
 const BUTTONDOWN_API_URL = "https://api.buttondown.com/v1";
 
-if (!BUTTONDOWN_API_KEY) {
-	console.error("❌ BUTTONDOWN_API_KEY environment variable is required");
-	process.exit(1);
-}
-
 /**
  * Get all markdown files from a directory recursively
  */
-function getMarkdownFiles(dir) {
+export function getMarkdownFiles(dir) {
 	const files = [];
 	if (!fs.existsSync(dir)) return files;
 
@@ -41,40 +41,17 @@ function getMarkdownFiles(dir) {
 }
 
 /**
- * Parse frontmatter from markdown file
+ * A post is publishable unless frontmatter explicitly opts out.
+ * Mirrors isPublished() in src/content.config.ts.
  */
-function parseFrontmatter(content) {
-	const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-	if (!frontmatterMatch) return {};
-
-	const frontmatter = {};
-	const lines = frontmatterMatch[1].split("\n");
-
-	for (const line of lines) {
-		const colonIndex = line.indexOf(":");
-		if (colonIndex === -1) continue;
-
-		const key = line.slice(0, colonIndex).trim();
-		let value = line.slice(colonIndex + 1).trim();
-
-		// Handle arrays like: [posse, indieWeb, typeScript]
-		if (value.startsWith("[") && value.endsWith("]")) {
-			value = value
-				.slice(1, -1)
-				.split(",")
-				.map((v) => v.trim().replace(/^#/, ""));
-		}
-
-		frontmatter[key] = value;
-	}
-
-	return frontmatter;
+export function isPublishable(frontmatter) {
+	return frontmatter.published !== false;
 }
 
 /**
  * Get the publish/creation date from a file path or frontmatter
  */
-function getDateFromFile(filePath, frontmatter) {
+export function getDateFromFile(filePath, frontmatter) {
 	// Try frontmatter first
 	if (frontmatter.pubDate) {
 		const date = new Date(frontmatter.pubDate);
@@ -99,13 +76,13 @@ function getDateFromFile(filePath, frontmatter) {
 /**
  * Extract title from markdown content
  */
-function getTitleFromContent(content, filePath) {
+export function getTitleFromContent(content, filePath) {
 	// Try frontmatter
-	const frontmatter = parseFrontmatter(content);
-	if (frontmatter.title) return frontmatter.title.replace(/"/g, "").trim();
+	const { data, content: body } = matter(content);
+	if (data.title) return String(data.title).trim();
 
-	// Try first h1
-	const h1Match = content.match(/^#\s+(.+)$/m);
+	// Try first h1 (in the body, not the frontmatter)
+	const h1Match = body.match(/^#\s+(.+)$/m);
 	if (h1Match) return h1Match[1].replace(/"/g, "").trim();
 
 	// Fall back to filename
@@ -115,13 +92,12 @@ function getTitleFromContent(content, filePath) {
 /**
  * Get description from frontmatter or content
  */
-function getDescription(content) {
-	const frontmatter = parseFrontmatter(content);
-	if (frontmatter.description) return frontmatter.description;
+export function getDescription(content) {
+	const { data, content: body } = matter(content);
+	if (data.description) return data.description;
 
 	// Try to extract first paragraph after frontmatter
-	const withoutFrontmatter = content.replace(/^---\n[\s\S]*?\n---\n/, "");
-	const paragraphs = withoutFrontmatter.split(/\n\n+/);
+	const paragraphs = body.split(/\n\n+/);
 	for (const p of paragraphs) {
 		const trimmed = p.trim();
 		if (trimmed && !trimmed.startsWith("#") && trimmed.length > 20) {
@@ -143,10 +119,10 @@ function getDescription(content) {
 /**
  * Get tags from frontmatter
  */
-function getTags(frontmatter) {
+export function getTags(frontmatter) {
 	if (!frontmatter.tags) return [];
 	if (Array.isArray(frontmatter.tags))
-		return frontmatter.tags.map((t) => t.replace(/"/g, "").trim());
+		return frontmatter.tags.map((t) => String(t).replace(/"/g, "").trim());
 	if (typeof frontmatter.tags === "string") {
 		return frontmatter.tags
 			.replace(/[\]"[]/g, "")
@@ -159,7 +135,7 @@ function getTags(frontmatter) {
 /**
  * Build URL from file path
  */
-function filePathToUrl(filePath) {
+export function filePathToUrl(filePath) {
 	const relative = path.relative(
 		path.join(__dirname, "../src/content"),
 		filePath,
@@ -174,7 +150,7 @@ function filePathToUrl(filePath) {
 /**
  * Format date for display
  */
-function formatDate(date) {
+export function formatDate(date) {
 	return date.toLocaleDateString("en-US", {
 		weekday: "short",
 		year: "numeric",
@@ -186,7 +162,7 @@ function formatDate(date) {
 /**
  * Collect content from past week
  */
-async function collectWeeklyContent() {
+export async function collectWeeklyContent() {
 	const oneWeekAgo = new Date();
 	oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
@@ -202,7 +178,8 @@ async function collectWeeklyContent() {
 	);
 	for (const file of blogFiles) {
 		const fileContent = fs.readFileSync(file, "utf-8");
-		const frontmatter = parseFrontmatter(fileContent);
+		const { data: frontmatter } = matter(fileContent);
+		if (!isPublishable(frontmatter)) continue;
 		const date = getDateFromFile(file, frontmatter);
 
 		if (date >= oneWeekAgo) {
@@ -230,7 +207,8 @@ async function collectWeeklyContent() {
 		if (relative.includes("/")) continue;
 
 		const fileContent = fs.readFileSync(file, "utf-8");
-		const frontmatter = parseFrontmatter(fileContent);
+		const { data: frontmatter } = matter(fileContent);
+		if (!isPublishable(frontmatter)) continue;
 		const date = getDateFromFile(file, frontmatter);
 
 		if (date >= oneWeekAgo) {
@@ -251,7 +229,7 @@ async function collectWeeklyContent() {
 	);
 	for (const file of ephemeraFiles) {
 		const fileContent = fs.readFileSync(file, "utf-8");
-		const frontmatter = parseFrontmatter(fileContent);
+		const { data: frontmatter } = matter(fileContent);
 		const date = getDateFromFile(file, frontmatter);
 
 		if (date >= oneWeekAgo) {
@@ -274,7 +252,7 @@ async function collectWeeklyContent() {
 /**
  * Generate Markdown digest
  */
-function generateMarkdownDigest(content) {
+export function generateMarkdownDigest(content) {
 	const now = new Date();
 	const weekStart = new Date(now);
 	weekStart.setDate(weekStart.getDate() - 7);
@@ -370,6 +348,8 @@ async function sendEmail(subject, body) {
  * Main function
  */
 async function main() {
+	const isDryRun = process.argv.includes("--dry-run");
+
 	console.log("📝 Starting weekly digest generation...\n");
 
 	try {
@@ -409,6 +389,20 @@ async function main() {
 
 		console.log(`   Subject: ${subject}\n`);
 
+		if (isDryRun) {
+			console.log("=== SUBJECT ===");
+			console.log(subject);
+			console.log("=== BODY ===");
+			console.log(body);
+			console.log("🏜️  Dry run — no email sent.");
+			return;
+		}
+
+		if (!BUTTONDOWN_API_KEY) {
+			console.error("❌ BUTTONDOWN_API_KEY environment variable is required");
+			process.exit(1);
+		}
+
 		// Send email
 		console.log("🚀 Sending email via Buttondown API...");
 		const result = await sendEmail(subject, body);
@@ -422,4 +416,9 @@ async function main() {
 	}
 }
 
-main();
+// Run only when executed directly (keeps imports side-effect-free for tests)
+const isMainModule =
+	process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMainModule) {
+	main();
+}
