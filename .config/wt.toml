@@ -1,0 +1,6 @@
+# Project configuration for worktrunk (https://worktrunk.dev)
+# Shared with everyone who uses wt on this repo — hooks require one-time approval.
+
+# After creating a worktree (wt switch --create ...), install dependencies so
+# the worktree is immediately buildable. This repo is npm-based (package-lock.json).
+pre-start = "npm ci --no-audit --no-fund"
