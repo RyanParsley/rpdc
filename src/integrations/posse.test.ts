@@ -761,7 +761,7 @@ Content`;
 		it("should post text content successfully", async () => {
 			const post: EphemeraPost = {
 				file: "test.md",
-				data: { title: "Test Post" },
+				data: { date: new Date("2024-01-01"), title: "Test Post" },
 				body: "This is test content for Mastodon posting.",
 			};
 
@@ -802,7 +802,7 @@ Content`;
 		it("uploads an image to /api/v1/media and links it to the status via media_ids", async () => {
 			const post: EphemeraPost = {
 				file: "image-post.md",
-				data: { title: "Test Post With Image" },
+				data: { date: new Date("2024-01-01"), title: "Test Post With Image" },
 				body: "Body text for a post that carries an image.",
 				image: { src: "./diagram.png", alt: "A diagram" },
 			};
@@ -888,7 +888,7 @@ Content`;
 		it("omits the media description part when the image has no alt text", async () => {
 			const post: EphemeraPost = {
 				file: "image-post-noalt.md",
-				data: { title: "Post Without Alt" },
+				data: { date: new Date("2024-01-01"), title: "Post Without Alt" },
 				body: "A post with an image that is missing alt text.",
 				image: { src: "./photo.jpg", alt: "" },
 			};
@@ -937,7 +937,7 @@ Content`;
 		it("skips an image over Mastodon's 8MB limit and posts text only", async () => {
 			const post: EphemeraPost = {
 				file: "oversized-image.md",
-				data: { title: "Post With Oversized Image" },
+				data: { date: new Date("2024-01-01"), title: "Post With Oversized Image" },
 				body: "The image is far too large to upload.",
 				image: { src: "./enormous.png", alt: "something huge" },
 			};
@@ -986,7 +986,7 @@ Content`;
 		it("should handle API errors gracefully", async () => {
 			const post: EphemeraPost = {
 				file: "test.md",
-				data: { title: "Test" },
+				data: { date: new Date("2024-01-01"), title: "Test" },
 				body: "Test content",
 			};
 
@@ -1015,7 +1015,7 @@ Content`;
 		it("should handle rate limit errors", async () => {
 			const post: EphemeraPost = {
 				file: "test.md",
-				data: { title: "Test" },
+				data: { date: new Date("2024-01-01"), title: "Test" },
 				body: "Test content",
 			};
 
@@ -1429,7 +1429,7 @@ Content`;
 			it("should post text content successfully", async () => {
 				const post: EphemeraPost = {
 					file: "test.md",
-					data: { title: "Test Post" },
+					data: { date: new Date("2024-01-01"), title: "Test Post" },
 					body: "This is test content with https://example.com link.",
 				};
 
@@ -1470,7 +1470,7 @@ Content`;
 			it("should handle URLs in content and create facets", async () => {
 				const post: EphemeraPost = {
 					file: "test.md",
-					data: { title: "Test Post" },
+					data: { date: new Date("2024-01-01"), title: "Test Post" },
 					body: "Check this link: https://example.com",
 				};
 
@@ -1513,7 +1513,7 @@ Content`;
 			it("should handle authentication failure", async () => {
 				const post: EphemeraPost = {
 					file: "test.md",
-					data: { title: "Test" },
+					data: { date: new Date("2024-01-01"), title: "Test" },
 					body: "Test content",
 				};
 
@@ -1536,7 +1536,7 @@ Content`;
 			it("should handle post creation failure", async () => {
 				const post: EphemeraPost = {
 					file: "test.md",
-					data: { title: "Test" },
+					data: { date: new Date("2024-01-01"), title: "Test" },
 					body: "Test content",
 				};
 
@@ -1570,7 +1570,7 @@ Content`;
 			it("should handle rate limiting errors", async () => {
 				const post: EphemeraPost = {
 					file: "test.md",
-					data: { title: "Test" },
+					data: { date: new Date("2024-01-01"), title: "Test" },
 					body: "Test content",
 				};
 
@@ -1608,7 +1608,7 @@ Content`;
 				const longBody = "A".repeat(300);
 				const post: EphemeraPost = {
 					file: "test.md",
-					data: { title: "Test Post" },
+					data: { date: new Date("2024-01-01"), title: "Test Post" },
 					body: longBody,
 				};
 
@@ -1857,6 +1857,7 @@ describe("Syndication Workflow", () => {
 		it("skips a post already syndicated to every enabled platform", async () => {
 			const post = workflowPost({
 				data: {
+					date: new Date("2024-01-01"),
 					title: "Already Shared",
 					syndication: [{ href: "https://m.example/1", title: "Mastodon" }],
 				},
@@ -1873,7 +1874,7 @@ describe("Syndication Workflow", () => {
 
 		it("names the platforms a dry run would post to", async () => {
 			const post = workflowPost({
-				data: { title: "Dry Run" },
+				data: { date: new Date("2024-01-01"), title: "Dry Run" },
 			});
 
 			await processSinglePost(post, makeContext({ dryRun: true }));
@@ -1887,7 +1888,7 @@ describe("Syndication Workflow", () => {
 		});
 
 		it("falls back to the filename when the post has no title", async () => {
-			const post = workflowPost({ data: {} });
+			const post = workflowPost({ data: { date: new Date("2024-01-01") } });
 
 			await processSinglePost(post, makeContext({ dryRun: true }));
 
@@ -2019,6 +2020,7 @@ describe("Syndication Workflow", () => {
 		it("appends links to any already recorded in the frontmatter", async () => {
 			const post = workflowPost({
 				data: {
+					date: new Date("2024-01-01"),
 					title: "Existing",
 					syndication: [{ href: "https://old.example/1", title: "Bluesky" }],
 				},
@@ -2124,14 +2126,14 @@ describe("Platform Error Paths", () => {
 
 	const imagePost = (src = "./diagram.png"): EphemeraPost => ({
 		file: "imaged.md",
-		data: { title: "Post With Image" },
+		data: { date: new Date("2024-01-01"), title: "Post With Image" },
 		body: "Text that still goes out when the image cannot.",
 		image: { src, alt: "A diagram" },
 	});
 
 	const textPost: EphemeraPost = {
 		file: "plain.md",
-		data: { title: "Plain Post" },
+		data: { date: new Date("2024-01-01"), title: "Plain Post" },
 		body: "Plain text body for a post without any media.",
 	};
 

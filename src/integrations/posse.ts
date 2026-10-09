@@ -4,10 +4,13 @@
 import { writeFileSync, statSync, readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import matter from "gray-matter";
-import type { AstroIntegration } from "astro";
+import type { AstroIntegration, AstroIntegrationLogger } from "astro";
 
 import { postToMastodon, type MastodonConfig } from "./posse-mastodon";
 import { postToBluesky, type BlueskyConfig } from "./posse-bluesky";
+import type { EphemeraData } from "./ephemera-schema";
+
+export type { EphemeraData };
 
 // ============================================================================
 // TYPES
@@ -20,14 +23,15 @@ export interface PosseOptions {
 	maxPosts?: number;
 }
 
-export interface Logger {
-	info: (message: string) => void;
-	warn: (message: string) => void;
-	error: (message: string) => void;
-	debug: (message: string) => void;
-}
-
-export type AstroLogger = Logger;
+/**
+ * Minimal logger surface for POSSE. Derived from Astro's integration
+ * logger so it can never drift from what the astro:build:done hook
+ * provides; structural typing lets test mocks implement just these.
+ */
+export type Logger = Pick<
+	AstroIntegrationLogger,
+	"info" | "warn" | "error" | "debug"
+>;
 
 export interface SyndicationContext {
 	mastodon: boolean;
@@ -35,13 +39,6 @@ export interface SyndicationContext {
 	dryRun: boolean;
 	maxPosts: number;
 	logger: Logger;
-}
-
-export interface EphemeraData {
-	title?: string;
-	date?: Date | string;
-	syndication?: Array<{ href: string; title: string }>;
-	image?: { src: string; alt: string };
 }
 
 export interface EphemeraPost {
@@ -56,22 +53,6 @@ export interface SyndicationResult {
 	success: boolean;
 	platform: "mastodon" | "bluesky";
 	error?: string;
-}
-
-export interface MockLogger {
-	info: (message: string) => void;
-	warn: (message: string) => void;
-	error: (message: string) => void;
-	debug: (message: string) => void;
-}
-
-export interface TestUtils {
-	createMockLogger: () => MockLogger;
-	createMockEphemeraPost: (overrides?: Record<string, unknown>) => EphemeraPost;
-	createMockConfig: () => {
-		mastodon: { token: string; instance: string };
-		bluesky: { username: string; password: string };
-	};
 }
 
 // ============================================================================
@@ -315,7 +296,9 @@ export function parseEphemeraFile(
 
 		return {
 			file: relativePath,
-			data,
+			// Typed as EphemeraData: the ephemera collection schema already
+			// validated these files when the collection loaded this build.
+			data: data as EphemeraData,
 			body: content || "",
 			image: data.image,
 		};
