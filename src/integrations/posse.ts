@@ -387,7 +387,10 @@ export async function processSinglePost(
 ): Promise<void> {
 	const { mastodon, bluesky, dryRun, logger } = context;
 
-	const canonicalUrl = `https://ryanparsley.com/ephemera/${post.file.replace(".md", "")}`;
+	const canonicalSlug = post.file.endsWith(".md")
+		? post.file.slice(0, -3)
+		: post.file;
+	const canonicalUrl = `https://ryanparsley.com/ephemera/${canonicalSlug}`;
 	const existingSyndication = post.data.syndication || [];
 
 	// Check which platforms are already syndicated

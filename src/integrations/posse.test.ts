@@ -274,10 +274,12 @@ describe("POSSE Integration", () => {
 			expect(getMimeType("image.webp")).toBe("image/webp");
 		});
 
-		it("should default to JPEG for unknown extensions", () => {
-			expect(getMimeType("image.bmp")).toBe("image/jpeg");
-			expect(getMimeType("image.tiff")).toBe("image/jpeg");
-			expect(getMimeType("image")).toBe("image/jpeg");
+		it("should throw for unknown extensions", () => {
+			expect(() => getMimeType("image.bmp")).toThrow(/unknown image extension/);
+			expect(() => getMimeType("image.tiff")).toThrow(
+				/unknown image extension/,
+			);
+			expect(() => getMimeType("image")).toThrow(/unknown image extension/);
 		});
 
 		it("should handle uppercase extensions", () => {
@@ -1334,16 +1336,16 @@ Content`;
 				});
 			});
 
-			it("should default to JPEG for unknown extensions", () => {
+			it("should throw for unknown extensions", () => {
 				const mockBuffer = Buffer.from("fake data");
 				const imageResult = {
 					path: "/path/to/image.bmp",
 					buffer: mockBuffer,
 				};
 
-				const result = createImageResult(imageResult);
-
-				expect(result.mimeType).toBe("image/jpeg");
+				expect(() => createImageResult(imageResult)).toThrow(
+					/unknown image extension/,
+				);
 			});
 
 			it("should handle uppercase extensions", () => {
@@ -1925,6 +1927,29 @@ describe("Syndication Workflow", () => {
 				}),
 			);
 			expect(fsMocks.writeFileSync).toHaveBeenCalledTimes(1);
+		});
+
+		it("strips only a trailing .md when building the canonical URL", async () => {
+			const post = workflowPost({ file: "notes.md/post.md" });
+			mockEphemeraFile(post);
+			mockFetch
+				.mockResolvedValueOnce({ ok: true, json: () => ({}) }) // probe
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => ({ url: "https://mastodon.social/@r/1" }),
+				}); // status
+
+			await processSinglePost(post, makeContext());
+
+			const statusCall = mockFetch.mock.calls.find((c) =>
+				String(c[0]).endsWith("/api/v1/statuses"),
+			);
+			const body = JSON.parse(
+				(statusCall as [string, { body: string }])[1].body,
+			);
+			expect(body.status).toContain(
+				"https://ryanparsley.com/ephemera/notes.md/post",
+			);
 		});
 
 		it("leaves the post untouched when nothing syndicated", async () => {

@@ -53,9 +53,11 @@ describe("image.getMimeType", () => {
 		expect(getMimeType("image.webp")).toBe("image/webp");
 	});
 
-	it("falls back to image/jpeg for unknown or missing extensions", () => {
-		expect(getMimeType("image.bmp")).toBe("image/jpeg");
-		expect(getMimeType("no-extension")).toBe("image/jpeg");
+	it("throws for unknown or missing extensions", () => {
+		expect(() => getMimeType("image.bmp")).toThrow(/unknown image extension/);
+		expect(() => getMimeType("no-extension")).toThrow(
+			/unknown image extension/,
+		);
 	});
 });
 
