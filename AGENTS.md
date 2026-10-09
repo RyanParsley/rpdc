@@ -285,6 +285,7 @@ node scripts/feature-script.js
 
 - Use strictest Astro TSConfig with strict null checks
 - Define interfaces/types at file top
+- Domain types colocate with their module; `src/types/api.ts` holds external API wire formats shared with mocks
 - Use explicit return types for exported functions
 - Prefer `const` assertions for readonly data
 

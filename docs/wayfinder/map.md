@@ -14,24 +14,30 @@ any observable build output.
 ## Notes
 
 - **Domain:** Astro 7 static site, POSSE (Mastodon + Bluesky) syndication, webmentions, scripts
-- **Gate every change:** `npx astro check`, `npm run lint`, `npm run test:run` (now 241 passing)
+- **Gate every change:** `npx astro check`, `npm run lint`, `npm run test:run` (now 282 passing)
 - **Tickets:** GitHub Issues #247–#254 (repo `RyanParsley/rpdc`), labeled `enhancement`
+
+## Done
+
+- ✅ **[TQ-001 / #247](https://github.com/RyanParsley/rpdc/issues/247)** Image helpers consolidated into `src/integrations/image.ts` — merged via PR #255.
+- ✅ **[TQ-006 / #252](https://github.com/RyanParsley/rpdc/issues/252)** Coverage thresholds enforced + integration backfill — closed via PR #262.
+- ✅ **[TQ-007 / #253](https://github.com/RyanParsley/rpdc/issues/253)** + **[TQ-008 / #254](https://github.com/RyanParsley/rpdc/issues/254)** Scripts lint/typecheck + cleanup pass — closed via PR #261.
+- ✅ **[TQ-002 / #248](https://github.com/RyanParsley/rpdc/issues/248)** Type source of truth — **decided B-plus (colocate)**, not the issue's rec A: `src/types/posse.ts` had zero importers and was wrong; the codebase's actual convention is colocation. Done on branch `refactor/posse-types`: dead type file deleted, `Logger` derived via `Pick<AstroIntegrationLogger, ...>`, `EphemeraData` derived via `z.infer` from the new shared `src/integrations/ephemera-schema.ts` (consumed by both `content.config.ts` and `posse.ts`), test-only types moved into `src/test/setup.ts`. Convention recorded in AGENTS.md.
 
 ## Ready to execute (no open decision)
 
-- 🔄 **[TQ-001 / #247](https://github.com/RyanParsley/rpdc/issues/247)** Consolidate image-processing into `src/integrations/image.ts` — highest value, mostly mechanical.
-  - **PR open: #255** — `image.ts` owns all 8 helpers + shared types; `posse.ts`, `posse-mastodon.ts`, `posse-bluesky.ts` import from it; `posse.ts` re-exports to keep its public surface. `astro check` clean, 241 tests, −549 duplicated lines.
-  - The Mastodon image-upload path now has contract tests grounded in the [Mastodon API docs](https://docs.joinmastodon.org/api/): `POST /api/v1/media` → returned `id` threaded into `media_ids` on `POST /api/v1/statuses`; alt text as the `description` part; over-8MB skip. +3 tests.
 - [ ] **[TQ-003 / #249](https://github.com/RyanParsley/rpdc/issues/249)** Fix MSW handler shadowing in shared mock arrays
 - [ ] **[TQ-004 / #250](https://github.com/RyanParsley/rpdc/issues/250)** Route `console.*` through the logger; drop build-time `~/.env` read; `getMimeType` + `canonicalUrl` fail loudly
-- [ ] **[TQ-007 / #253](https://github.com/RyanParsley/rpdc/issues/253)** Lint & typecheck `scripts/` (config block already exists, never invoked)
-- [ ] **[TQ-008 / #254](https://github.com/RyanParsley/rpdc/issues/254)** Cleanup pass (vestigial null checks, dup comment, `ImageGallery` error)
+  - Note post-#248: `Logger` is `Pick<AstroIntegrationLogger, ...>` living in `posse.ts`. If `utils/webmentions.ts` needs it, extract it to a neutral home rather than importing utils → integrations.
 
 ## Needs your decision (grilling)
 
-- [ ] **[TQ-002 / #248](https://github.com/RyanParsley/rpdc/issues/248)** Type source of truth — **rec: A** `src/types/*` authoritative, delete dead copies in `posse.ts`
-- [ ] **[TQ-005 / #251](https://github.com/RyanParsley/rpdc/issues/251)** `send-digest` frontmatter — **rec: A** lift to typechecked TS + `gray-matter`/Zod (ties into #253)
-- [ ] **[TQ-006 / #252](https://github.com/RyanParsley/rpdc/issues/252)** Coverage threshold — **rec:** start non-blocking at 50%, then ratchet to 80% after backfill
+- [ ] **[TQ-005 / #251](https://github.com/RyanParsley/rpdc/issues/251)** `send-digest` frontmatter — **rec: A** lift to typechecked TS + `gray-matter`/Zod. Post-#248 pattern to reuse: shared Zod schema + `z.infer`, as done for ephemera.
+
+## Deferred from #248
+
+- Runtime import cycle: `generatePostContent` in `posse.ts` ↔ platform modules (type-half of the cycle is gone; moving the function is a separate refactor)
+- Platform modules adopting `src/types/api.ts` wire types in place of their inline `BlueskyBlob`/`BlueskySession`/etc.
 
 ## Out of scope
 

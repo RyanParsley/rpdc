@@ -48,7 +48,22 @@ vi.mock("gray-matter", () => ({
 const mockCwd = "/mock/project/root";
 vi.spyOn(process, "cwd").mockReturnValue(mockCwd);
 
-import type { TestUtils, MockLogger } from "../integrations/posse";
+import type { EphemeraPost, Logger } from "../integrations/posse";
+import type { MastodonConfig } from "../integrations/posse-mastodon";
+import type { BlueskyConfig } from "../integrations/posse-bluesky";
+
+// Test-only types live with their consumer (AGENTS.md type-colocation rule).
+// MockLogger is just Logger: four vi.fn()s satisfy the Pick-derived interface.
+export type MockLogger = Logger;
+
+export interface TestUtils {
+	createMockLogger: () => MockLogger;
+	createMockEphemeraPost: (overrides?: Record<string, unknown>) => EphemeraPost;
+	createMockConfig: () => {
+		mastodon: MastodonConfig;
+		bluesky: BlueskyConfig;
+	};
+}
 
 // Global test utilities
 declare global {
