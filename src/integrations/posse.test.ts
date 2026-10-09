@@ -1,3 +1,8 @@
+// @vitest-environment node
+//
+// Node (not jsdom): these tests exercise real fetch through MSW, and
+// jsdom's FormData/Blob/File globals are incompatible with undici's
+// request serialization. Nothing here touches the DOM.
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const fsMocks = vi.hoisted(() => ({
@@ -76,6 +81,9 @@ import { postToBluesky, parseUrlFacets } from "./posse-bluesky";
 import { findProcessedImage, processImageForPlatform } from "./image";
 import posseIntegration from "./posse";
 import type { EphemeraPost, EphemeraData, Logger } from "./posse";
+import { http, HttpResponse } from "msw";
+import { server } from "../test/setup";
+import { requestsTo } from "../test/request-log";
 
 describe("POSSE Integration", () => {
 	beforeEach(() => {
@@ -743,7 +751,6 @@ Content`;
 
 	describe("Mastodon Integration", () => {
 		let mockLogger: Logger;
-		let mockFetch: ReturnType<typeof vi.fn>;
 
 		beforeEach(() => {
 			mockLogger = {
@@ -753,8 +760,6 @@ Content`;
 				debug: vi.fn(),
 			};
 
-			mockFetch = vi.fn();
-			global.fetch = mockFetch as typeof fetch;
 			vi.clearAllMocks();
 		});
 
@@ -764,19 +769,6 @@ Content`;
 				data: { date: new Date("2024-01-01"), title: "Test Post" },
 				body: "This is test content for Mastodon posting.",
 			};
-
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () => Promise.resolve({}),
-			});
-
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () =>
-					Promise.resolve({
-						url: "https://mastodon.social/@user/123456789",
-					}),
-			});
 
 			const result = await postToMastodon(
 				post,
@@ -798,6 +790,9 @@ Content`;
 		// multipart fields, id linkage) protects the path that the image-helper
 		// consolidation rewired: uploadImageToMastodon now consumes the shared
 		// processImageForPlatform() result instead of an inline copy.
+		// Requests flow through the real fetch stack, intercepted by MSW
+		// (see src/test/setup.ts); the shared handlers in
+		// src/test/mocks/mastodon.ts provide the happy-path responses.
 
 		it("uploads an image to /api/v1/media and links it to the status via media_ids", async () => {
 			const post: EphemeraPost = {
@@ -814,28 +809,6 @@ Content`;
 				Buffer.from("\x89PNG\r\n\x1a\n fake-image-bytes"),
 			);
 
-			// 1) connectivity probe, 2) media upload, 3) status creation with media
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () => Promise.resolve({}),
-			});
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () =>
-					Promise.resolve({
-						id: "mock-media-id-123",
-						type: "image",
-						url: "https://mastodon.social/media/mock-image.png",
-					}),
-			});
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () =>
-					Promise.resolve({
-						url: "https://mastodon.social/@user/987654321",
-					}),
-			});
-
 			const result = await postToMastodon(
 				post,
 				"https://example.com/image-post",
@@ -844,39 +817,33 @@ Content`;
 			);
 
 			expect(result.success).toBe(true);
-			expect(result.url).toBe("https://mastodon.social/@user/987654321");
+			expect(result.url).toBe("https://mastodon.social/@user/123456789");
 			expect(result.platform).toBe("mastodon");
 
 			// Endpoint sequence: instance probe, media upload, status creation.
-			const calledUrls = mockFetch.mock.calls.map((c) => String(c[0]));
-			expect(calledUrls).toContain("https://mastodon.social/api/v1/media");
-			expect(calledUrls).toContain("https://mastodon.social/api/v1/statuses");
+			expect(requestsTo("/api/v1/instance")).toHaveLength(1);
+			const mediaRequests = requestsTo("/api/v1/media");
+			expect(mediaRequests).toHaveLength(1);
+			expect(requestsTo("/api/v1/statuses")).toHaveLength(1);
 
 			// The media request is multipart with an authenticated `file` part.
-			const mediaCall = mockFetch.mock.calls.find((c) =>
-				String(c[0]).endsWith("/api/v1/media"),
-			) as [
-				string,
-				{ headers: { Authorization: string }; body: FormData; method: string },
-			];
-			expect(mediaCall[1].method).toBe("POST");
-			expect(mediaCall[1].headers.Authorization).toBe(
+			const mediaRequest = mediaRequests[0]!;
+			expect(mediaRequest.method).toBe("POST");
+			expect(mediaRequest.headers.get("Authorization")).toBe(
 				"Bearer mock-mastodon-token-abc123",
 			);
-			expect(mediaCall[1].body).toBeInstanceOf(FormData);
-			const file = mediaCall[1].body.get("file") as File | null;
+			const form = await mediaRequest.request.formData();
+			const file = form.get("file") as File | null;
 			expect(file).not.toBeNull();
 			expect(file!.name).toBe("image.png");
 			expect(file!.type).toBe("image/png");
 
 			// The alt text is sent as the media `description` part.
-			expect(mediaCall[1].body.get("description")).toBe("A diagram");
+			expect(form.get("description")).toBe("A diagram");
 
 			// The id returned by the media upload is threaded into the status.
-			const statusCall = mockFetch.mock.calls.find((c) =>
-				String(c[0]).endsWith("/api/v1/statuses"),
-			) as [string, { body: string }];
-			const statusBody = JSON.parse(statusCall[1].body) as {
+			const statusRequest = requestsTo("/api/v1/statuses")[0]!;
+			const statusBody = (await statusRequest.request.json()) as {
 				status: string;
 				visibility: string;
 				media_ids?: string[];
@@ -897,27 +864,6 @@ Content`;
 			fsMocks.readdirSync.mockReturnValue([]);
 			fsMocks.readFileSync.mockReturnValue(Buffer.from("jpeg-bytes"));
 
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () => Promise.resolve({}),
-			});
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () =>
-					Promise.resolve({
-						id: "mock-media-id-noalt",
-						type: "image",
-						url: "https://mastodon.social/media/mock.jpg",
-					}),
-			});
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () =>
-					Promise.resolve({
-						url: "https://mastodon.social/@user/111",
-					}),
-			});
-
 			const result = await postToMastodon(
 				post,
 				"https://example.com/image-post-noalt",
@@ -927,17 +873,19 @@ Content`;
 
 			expect(result.success).toBe(true);
 
-			const mediaCall = mockFetch.mock.calls.find((c) =>
-				String(c[0]).endsWith("/api/v1/media"),
-			) as [string, { body: FormData; headers: { Authorization: string } }];
-			expect(mediaCall[1].body.get("description")).toBeNull();
-			expect(mediaCall[1].body.get("file")).not.toBeNull();
+			const mediaRequest = requestsTo("/api/v1/media")[0]!;
+			const form = await mediaRequest.request.formData();
+			expect(form.get("description")).toBeNull();
+			expect(form.get("file")).not.toBeNull();
 		});
 
 		it("skips an image over Mastodon's 8MB limit and posts text only", async () => {
 			const post: EphemeraPost = {
 				file: "oversized-image.md",
-				data: { date: new Date("2024-01-01"), title: "Post With Oversized Image" },
+				data: {
+					date: new Date("2024-01-01"),
+					title: "Post With Oversized Image",
+				},
 				body: "The image is far too large to upload.",
 				image: { src: "./enormous.png", alt: "something huge" },
 			};
@@ -945,19 +893,6 @@ Content`;
 			// 9MB exceeds Mastodon's 8MB media limit.
 			fsMocks.statSync.mockReturnValue({ size: 9 * 1024 * 1024 });
 			fsMocks.readdirSync.mockReturnValue([]);
-
-			// No media upload happens: connectivity probe, then status only.
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () => Promise.resolve({}),
-			});
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () =>
-					Promise.resolve({
-						url: "https://mastodon.social/@user/999",
-					}),
-			});
 
 			const result = await postToMastodon(
 				post,
@@ -969,15 +904,9 @@ Content`;
 			expect(result.success).toBe(true);
 
 			// The media endpoint is never hit and the status carries no media_ids.
-			expect(
-				mockFetch.mock.calls.some((c) =>
-					String(c[0]).endsWith("/api/v1/media"),
-				),
-			).toBe(false);
-			const statusCall = mockFetch.mock.calls.find((c) =>
-				String(c[0]).endsWith("/api/v1/statuses"),
-			) as [string, { body: string }];
-			const statusBody = JSON.parse(statusCall[1].body) as {
+			expect(requestsTo("/api/v1/media")).toHaveLength(0);
+			const statusRequest = requestsTo("/api/v1/statuses")[0]!;
+			const statusBody = (await statusRequest.request.json()) as {
 				media_ids?: string[];
 			};
 			expect(statusBody.media_ids).toBeUndefined();
@@ -990,16 +919,12 @@ Content`;
 				body: "Test content",
 			};
 
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () => Promise.resolve({}),
-			});
-
-			mockFetch.mockResolvedValueOnce({
-				ok: false,
-				status: 422,
-				text: () => Promise.resolve("Validation error"),
-			});
+			// Scoped error override; auto-reset by afterEach in setup.ts.
+			server.use(
+				http.post("https://mastodon.social/api/v1/statuses", () =>
+					HttpResponse.text("Validation error", { status: 422 }),
+				),
+			);
 
 			const result = await postToMastodon(
 				post,
@@ -1019,19 +944,11 @@ Content`;
 				body: "Test content",
 			};
 
-			mockFetch.mockResolvedValueOnce({
-				ok: true,
-				json: () => Promise.resolve({}),
-			});
-
-			mockFetch.mockResolvedValueOnce({
-				ok: false,
-				status: 429,
-				headers: {
-					get: () => "60",
-				},
-				text: () => Promise.resolve("Rate limit exceeded"),
-			});
+			server.use(
+				http.post("https://mastodon.social/api/v1/statuses", () =>
+					HttpResponse.text("Rate limit exceeded", { status: 429 }),
+				),
+			);
 
 			const result = await postToMastodon(
 				post,
