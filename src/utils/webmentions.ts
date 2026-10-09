@@ -118,16 +118,6 @@ export const fetchAllVariants = async (
 	return deduplicateMentions(results.flat());
 };
 
-export const parseTokenFromEnvFile = (content: string): string | null => {
-	for (const line of content.split("\n")) {
-		const match = line.match(/^export\s+WEBMENTION_IO_TOKEN=(.*)$/);
-		if (match?.[1]) {
-			return match[1].replace(/^["']|["']$/g, "");
-		}
-	}
-	return null;
-};
-
 export const buildBlueskyShareUrl = (
 	postTitle: string,
 	postUrl: string,

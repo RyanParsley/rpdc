@@ -6,7 +6,6 @@ import {
 	fetchAllVariants,
 	deduplicateMentions,
 	computeCounts,
-	parseTokenFromEnvFile,
 	type WebmentionEntry,
 } from "../utils/webmentions";
 
@@ -426,49 +425,5 @@ describe("fetchWebmentionsForUrl - timeout", () => {
 
 		expect(result).toEqual([]);
 		expect(globalThis.fetch).toHaveBeenCalledTimes(1);
-	});
-});
-
-describe("parseTokenFromEnvFile", () => {
-	it("parses unquoted token", () => {
-		expect(parseTokenFromEnvFile("export WEBMENTION_IO_TOKEN=abc123")).toBe(
-			"abc123",
-		);
-	});
-
-	it("parses single-quoted token", () => {
-		expect(parseTokenFromEnvFile("export WEBMENTION_IO_TOKEN='abc123'")).toBe(
-			"abc123",
-		);
-	});
-
-	it("parses double-quoted token", () => {
-		expect(parseTokenFromEnvFile('export WEBMENTION_IO_TOKEN="abc123"')).toBe(
-			"abc123",
-		);
-	});
-
-	it("parses token from multiline file", () => {
-		const content = [
-			"OTHER_VAR=foo",
-			"export WEBMENTION_IO_TOKEN=secret123",
-			"ANOTHER_VAR=bar",
-		].join("\n");
-
-		expect(parseTokenFromEnvFile(content)).toBe("secret123");
-	});
-
-	it("returns null when no token found", () => {
-		expect(parseTokenFromEnvFile("OTHER_VAR=foo\nANOTHER_VAR=bar")).toBeNull();
-	});
-
-	it("returns null for empty string", () => {
-		expect(parseTokenFromEnvFile("")).toBeNull();
-	});
-
-	it("ignores lines without export prefix", () => {
-		expect(
-			parseTokenFromEnvFile("WEBMENTION_IO_TOKEN=should-not-match"),
-		).toBeNull();
 	});
 });
