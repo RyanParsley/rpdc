@@ -23,6 +23,8 @@ import {
 	generateMarkdownDigest,
 	collectWeeklyContent,
 	sendEmail,
+	deleteEmail,
+	createAndVerifyDraft,
 } from "./send-digest.js";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -297,7 +299,9 @@ describe("sendEmail", () => {
 		});
 		vi.stubGlobal("fetch", fetchMock);
 
-		const result = await sendEmail("Subject", "Body markdown", "test-key");
+		const result = await sendEmail("Subject", "Body markdown", {
+			apiKey: "test-key",
+		});
 
 		expect(result.id).toBe("email-1");
 		const [url, init] = fetchMock.mock.calls[0];
@@ -311,6 +315,32 @@ describe("sendEmail", () => {
 		});
 	});
 
+	it("defaults to about_to_send (the real send path must not drift to draft)", async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({ id: "email-1" }),
+		});
+		vi.stubGlobal("fetch", fetchMock);
+
+		await sendEmail("S", "B", { apiKey: "k" });
+
+		expect(JSON.parse(fetchMock.mock.calls[0][1].body).status).toBe(
+			"about_to_send",
+		);
+	});
+
+	it("can create a draft instead of sending", async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({ id: "draft-1" }),
+		});
+		vi.stubGlobal("fetch", fetchMock);
+
+		await sendEmail("S", "B", { apiKey: "k", status: "draft" });
+
+		expect(JSON.parse(fetchMock.mock.calls[0][1].body).status).toBe("draft");
+	});
+
 	it("throws with status and body on API error", async () => {
 		vi.stubGlobal(
 			"fetch",
@@ -320,7 +350,7 @@ describe("sendEmail", () => {
 				text: () => Promise.resolve("Invalid"),
 			}),
 		);
-		await expect(sendEmail("S", "B", "k")).rejects.toThrow(
+		await expect(sendEmail("S", "B", { apiKey: "k" })).rejects.toThrow(
 			"Buttondown API error: 422 - Invalid",
 		);
 	});
@@ -383,5 +413,82 @@ describe("main (subprocess e2e)", () => {
 		const result = run([], { DIGEST_CONTENT_ROOT: root });
 		expect(result.code).toBe(0);
 		expect(result.stdout).toContain("No new content this week");
+	});
+
+	it("--draft requires a key (and never touches the network without one)", () => {
+		writeFixture(
+			root,
+			"blog/2026-10-08-recent.md",
+			`title: Recent Blog\ndate: '${isoDaysAgo(2)}'`,
+		);
+		const result = run(["--draft"], { DIGEST_CONTENT_ROOT: root });
+		expect(result.code).toBe(1);
+		expect(result.stderr).toContain("BUTTONDOWN_API_KEY");
+	});
+});
+
+describe("deleteEmail", () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	it("DELETEs the email by id", async () => {
+		const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+		vi.stubGlobal("fetch", fetchMock);
+
+		await deleteEmail("em_123", "test-key");
+
+		const [url, init] = fetchMock.mock.calls[0];
+		expect(url).toBe("https://api.buttondown.com/v1/emails/em_123");
+		expect(init.method).toBe("DELETE");
+		expect(init.headers.Authorization).toBe("Token test-key");
+	});
+
+	it("throws on API error", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				ok: false,
+				status: 404,
+				text: () => Promise.resolve("Not found"),
+			}),
+		);
+		await expect(deleteEmail("em_nope", "k")).rejects.toThrow(
+			"Buttondown API error: 404 - Not found",
+		);
+	});
+});
+
+describe("createAndVerifyDraft", () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	it("creates a draft then deletes it (no delivery, no residue)", async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValueOnce({
+				ok: true,
+				json: () => Promise.resolve({ id: "draft-1" }),
+			})
+			.mockResolvedValueOnce({ ok: true });
+		vi.stubGlobal("fetch", fetchMock);
+
+		const draft = await createAndVerifyDraft("S", "B", "k");
+
+		expect(draft.id).toBe("draft-1");
+		expect(JSON.parse(fetchMock.mock.calls[0][1].body).status).toBe("draft");
+		expect(fetchMock.mock.calls[1][0]).toContain("draft-1");
+		expect(fetchMock.mock.calls[1][1].method).toBe("DELETE");
+	});
+
+	it("does not attempt deletion when draft creation fails", async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: false,
+			status: 500,
+			text: () => Promise.resolve("boom"),
+		});
+		vi.stubGlobal("fetch", fetchMock);
+
+		await expect(createAndVerifyDraft("S", "B", "k")).rejects.toThrow(
+			"Buttondown API error: 500",
+		);
+		expect(fetchMock).toHaveBeenCalledTimes(1);
 	});
 });

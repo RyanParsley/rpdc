@@ -7,6 +7,8 @@
  * Usage:
  *   node scripts/send-digest.js            # send the digest
  *   node scripts/send-digest.js --dry-run  # print subject + body, send nothing
+ *   node scripts/send-digest.js --draft    # create + delete a Buttondown draft
+ *                                          # (server-verified contract check; nothing delivers)
  *
  * Env:
  *   BUTTONDOWN_API_KEY   required unless --dry-run
@@ -311,9 +313,14 @@ ${dateRange}
 }
 
 /**
- * Send email via Buttondown API
+ * Send email via Buttondown API.
+ * status "about_to_send" delivers to subscribers; "draft" creates a draft only.
  */
-export async function sendEmail(subject, body, apiKey = BUTTONDOWN_API_KEY) {
+export async function sendEmail(
+	subject,
+	body,
+	{ apiKey = BUTTONDOWN_API_KEY, status = "about_to_send" } = {},
+) {
 	const response = await fetch(`${BUTTONDOWN_API_URL}/emails`, {
 		method: "POST",
 		headers: {
@@ -325,7 +332,7 @@ export async function sendEmail(subject, body, apiKey = BUTTONDOWN_API_KEY) {
 			subject,
 			body,
 			email_type: "public",
-			status: "about_to_send",
+			status,
 		}),
 	});
 
@@ -339,10 +346,44 @@ export async function sendEmail(subject, body, apiKey = BUTTONDOWN_API_KEY) {
 }
 
 /**
+ * Delete an email (used to clean up drafts created by --draft).
+ */
+export async function deleteEmail(id, apiKey = BUTTONDOWN_API_KEY) {
+	const response = await fetch(`${BUTTONDOWN_API_URL}/emails/${id}`, {
+		method: "DELETE",
+		headers: {
+			Authorization: `Token ${apiKey}`,
+			"User-Agent": "RyanParsleyDotCom/1.0",
+		},
+	});
+
+	if (!response.ok) {
+		const error = await response.text();
+		throw new Error(`Buttondown API error: ${response.status} - ${error}`);
+	}
+}
+
+/**
+ * Create a Buttondown draft and immediately delete it: a server-verified
+ * smoke test of the send path (auth, endpoint, payload validation) that
+ * never delivers anything and leaves no residue.
+ */
+export async function createAndVerifyDraft(
+	subject,
+	body,
+	apiKey = BUTTONDOWN_API_KEY,
+) {
+	const draft = await sendEmail(subject, body, { apiKey, status: "draft" });
+	await deleteEmail(draft.id, apiKey);
+	return draft;
+}
+
+/**
  * Main function
  */
 async function main() {
 	const isDryRun = process.argv.includes("--dry-run");
+	const isDraft = process.argv.includes("--draft");
 
 	console.log("📝 Starting weekly digest generation...\n");
 
@@ -395,6 +436,16 @@ async function main() {
 		if (!BUTTONDOWN_API_KEY) {
 			console.error("❌ BUTTONDOWN_API_KEY environment variable is required");
 			process.exit(1);
+		}
+
+		if (isDraft) {
+			console.log(
+				"🌱 Draft mode: verifying the Buttondown contract (create + delete draft, nothing delivers)",
+			);
+			const draft = await createAndVerifyDraft(subject, body);
+			console.log(`   Draft ${draft.id} created and deleted ✔`);
+			console.log(`   Subject: ${subject}\n`);
+			return;
 		}
 
 		// Send email
