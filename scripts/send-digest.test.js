@@ -315,6 +315,20 @@ describe("sendEmail", () => {
 		});
 	});
 
+	it("pins the API version (the contract must not float)", async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve({ id: "email-1" }),
+		});
+		vi.stubGlobal("fetch", fetchMock);
+
+		await sendEmail("S", "B", { apiKey: "k" });
+
+		expect(fetchMock.mock.calls[0][1].headers["X-API-Version"]).toBe(
+			"2026-04-01",
+		);
+	});
+
 	it("defaults to about_to_send (the real send path must not drift to draft)", async () => {
 		const fetchMock = vi.fn().mockResolvedValue({
 			ok: true,
@@ -440,6 +454,7 @@ describe("deleteEmail", () => {
 		expect(url).toBe("https://api.buttondown.com/v1/emails/em_123");
 		expect(init.method).toBe("DELETE");
 		expect(init.headers.Authorization).toBe("Token test-key");
+		expect(init.headers["X-API-Version"]).toBe("2026-04-01");
 	});
 
 	it("throws on API error", async () => {

@@ -26,6 +26,12 @@ const SITE_URL = "https://ryanparsley.com";
 // Configuration
 const BUTTONDOWN_API_KEY = process.env.BUTTONDOWN_API_KEY;
 const BUTTONDOWN_API_URL = "https://api.buttondown.com/v1";
+// Buttondown versions v1 by date (Stripe-style), via the X-API-Version
+// header; without it, requests resolve to the account pin or float on
+// latest. Pin explicitly so the contract is deterministic; to upgrade,
+// bump this and verify with --draft.
+// https://docs.buttondown.com/api-versioning
+const BUTTONDOWN_API_VERSION = "2026-04-01";
 
 const DEFAULT_CONTENT_ROOT = path.join(__dirname, "../src/content");
 
@@ -326,6 +332,7 @@ export async function sendEmail(
 		headers: {
 			Authorization: `Token ${apiKey}`,
 			"Content-Type": "application/json",
+			"X-API-Version": BUTTONDOWN_API_VERSION,
 			"User-Agent": "RyanParsleyDotCom/1.0",
 		},
 		body: JSON.stringify({
@@ -353,6 +360,7 @@ export async function deleteEmail(id, apiKey = BUTTONDOWN_API_KEY) {
 		method: "DELETE",
 		headers: {
 			Authorization: `Token ${apiKey}`,
+			"X-API-Version": BUTTONDOWN_API_VERSION,
 			"User-Agent": "RyanParsleyDotCom/1.0",
 		},
 	});
