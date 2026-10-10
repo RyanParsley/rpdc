@@ -19,6 +19,7 @@ any observable build output.
 
 ## Done
 
+- ✅ **[TQ-005 / #251](https://github.com/RyanParsley/rpdc/issues/251)** send-digest frontmatter — **decided B-plus**: `gray-matter` in place (not the rec-A TS module), plus `published:false` fix, `--dry-run`, a `--draft` contract check (create + delete a Buttondown draft; scheduled weekly via `digest-drift.yml`, API version pinned to 2026-04-01), and 36 tests (pure functions + fixture-driven collector + `sendEmail` shape + subprocess e2e of `main`; script coverage ~76%). Workflow keeps its `npm run build` step — under B it's the only schema gate. Also removed the hand-rolled `~/.env` loader from `pesos-mastodon.js` (the issue's claim it lived in send-digest.js was wrong).
 - ✅ **[TQ-004 / #250](https://github.com/RyanParsley/rpdc/issues/250)** Logging/env hardening — PR: `fix/logging-env-hardening`. `Logger` extracted to `src/types/logger.ts` (neutral home; posse.ts re-exports); both `console.*` sites now take an optional logger; `Webmentions.astro` relies solely on `astro:env` (no more build-time `~/.env` read); `getMimeType` throws on unknown extensions; `canonicalUrl` strips only a trailing `.md`. **Local-dev note:** if your shell sources `~/.env` (this repo's documented dev flow), nothing changes — the token is already in the process env, which is where `astro:env` reads it. The removed fallback only ever fired for builds launched outside such a shell; for those, use the repo-root `.env` (gitignored) or direnv.
 - ✅ **[TQ-003 / #249](https://github.com/RyanParsley/rpdc/issues/249)** MSW mock shadowing removed — PR: `fix/msw-handler-shadowing`. Finding: the shadowed handlers were never actually exercised (posse suites stub `global.fetch`; nothing sent `X-Mock-Error`), so this was preventive hygiene.
 - ✅ **[TQ-001 / #247](https://github.com/RyanParsley/rpdc/issues/247)** Image helpers consolidated into `src/integrations/image.ts` — merged via PR #255.
@@ -32,7 +33,7 @@ _(nothing — everything unblocked has shipped)_
 
 ## Needs your decision (grilling)
 
-- [ ] **[TQ-005 / #251](https://github.com/RyanParsley/rpdc/issues/251)** `send-digest` frontmatter — **rec: A** lift to typechecked TS + `gray-matter`/Zod. Post-#248 pattern to reuse: shared Zod schema + `z.infer`, as done for ephemera.
+_(nothing — the backlog is clear)_
 
 ## Deferred from #248
 

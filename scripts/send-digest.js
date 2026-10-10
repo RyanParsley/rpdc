@@ -3,11 +3,22 @@
  *
  * Collects blog posts, notes, and ephemera from the past week,
  * generates a Markdown digest, and sends it via Buttondown API.
+ *
+ * Usage:
+ *   node scripts/send-digest.js            # send the digest
+ *   node scripts/send-digest.js --dry-run  # print subject + body, send nothing
+ *   node scripts/send-digest.js --draft    # create + delete a Buttondown draft
+ *                                          # (server-verified contract check; nothing delivers)
+ *
+ * Env:
+ *   BUTTONDOWN_API_KEY   required unless --dry-run
+ *   DIGEST_CONTENT_ROOT  override the content directory (used by tests)
  */
 
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
+import matter from "gray-matter";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SITE_URL = "https://ryanparsley.com";
@@ -15,16 +26,19 @@ const SITE_URL = "https://ryanparsley.com";
 // Configuration
 const BUTTONDOWN_API_KEY = process.env.BUTTONDOWN_API_KEY;
 const BUTTONDOWN_API_URL = "https://api.buttondown.com/v1";
+// Buttondown versions v1 by date (Stripe-style), via the X-API-Version
+// header; without it, requests resolve to the account pin or float on
+// latest. Pin explicitly so the contract is deterministic; to upgrade,
+// bump this and verify with --draft.
+// https://docs.buttondown.com/api-versioning
+const BUTTONDOWN_API_VERSION = "2026-04-01";
 
-if (!BUTTONDOWN_API_KEY) {
-	console.error("❌ BUTTONDOWN_API_KEY environment variable is required");
-	process.exit(1);
-}
+const DEFAULT_CONTENT_ROOT = path.join(__dirname, "../src/content");
 
 /**
  * Get all markdown files from a directory recursively
  */
-function getMarkdownFiles(dir) {
+export function getMarkdownFiles(dir) {
 	const files = [];
 	if (!fs.existsSync(dir)) return files;
 
@@ -41,40 +55,17 @@ function getMarkdownFiles(dir) {
 }
 
 /**
- * Parse frontmatter from markdown file
+ * A post is publishable unless frontmatter explicitly opts out.
+ * Mirrors isPublished() in src/content.config.ts.
  */
-function parseFrontmatter(content) {
-	const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-	if (!frontmatterMatch) return {};
-
-	const frontmatter = {};
-	const lines = frontmatterMatch[1].split("\n");
-
-	for (const line of lines) {
-		const colonIndex = line.indexOf(":");
-		if (colonIndex === -1) continue;
-
-		const key = line.slice(0, colonIndex).trim();
-		let value = line.slice(colonIndex + 1).trim();
-
-		// Handle arrays like: [posse, indieWeb, typeScript]
-		if (value.startsWith("[") && value.endsWith("]")) {
-			value = value
-				.slice(1, -1)
-				.split(",")
-				.map((v) => v.trim().replace(/^#/, ""));
-		}
-
-		frontmatter[key] = value;
-	}
-
-	return frontmatter;
+export function isPublishable(frontmatter) {
+	return frontmatter.published !== false;
 }
 
 /**
  * Get the publish/creation date from a file path or frontmatter
  */
-function getDateFromFile(filePath, frontmatter) {
+export function getDateFromFile(filePath, frontmatter) {
 	// Try frontmatter first
 	if (frontmatter.pubDate) {
 		const date = new Date(frontmatter.pubDate);
@@ -99,13 +90,13 @@ function getDateFromFile(filePath, frontmatter) {
 /**
  * Extract title from markdown content
  */
-function getTitleFromContent(content, filePath) {
+export function getTitleFromContent(content, filePath) {
 	// Try frontmatter
-	const frontmatter = parseFrontmatter(content);
-	if (frontmatter.title) return frontmatter.title.replace(/"/g, "").trim();
+	const { data, content: body } = matter(content);
+	if (data.title) return String(data.title).trim();
 
-	// Try first h1
-	const h1Match = content.match(/^#\s+(.+)$/m);
+	// Try first h1 (in the body, not the frontmatter)
+	const h1Match = body.match(/^#\s+(.+)$/m);
 	if (h1Match) return h1Match[1].replace(/"/g, "").trim();
 
 	// Fall back to filename
@@ -115,13 +106,12 @@ function getTitleFromContent(content, filePath) {
 /**
  * Get description from frontmatter or content
  */
-function getDescription(content) {
-	const frontmatter = parseFrontmatter(content);
-	if (frontmatter.description) return frontmatter.description;
+export function getDescription(content) {
+	const { data, content: body } = matter(content);
+	if (data.description) return data.description;
 
 	// Try to extract first paragraph after frontmatter
-	const withoutFrontmatter = content.replace(/^---\n[\s\S]*?\n---\n/, "");
-	const paragraphs = withoutFrontmatter.split(/\n\n+/);
+	const paragraphs = body.split(/\n\n+/);
 	for (const p of paragraphs) {
 		const trimmed = p.trim();
 		if (trimmed && !trimmed.startsWith("#") && trimmed.length > 20) {
@@ -143,10 +133,10 @@ function getDescription(content) {
 /**
  * Get tags from frontmatter
  */
-function getTags(frontmatter) {
+export function getTags(frontmatter) {
 	if (!frontmatter.tags) return [];
 	if (Array.isArray(frontmatter.tags))
-		return frontmatter.tags.map((t) => t.replace(/"/g, "").trim());
+		return frontmatter.tags.map((t) => String(t).replace(/"/g, "").trim());
 	if (typeof frontmatter.tags === "string") {
 		return frontmatter.tags
 			.replace(/[\]"[]/g, "")
@@ -159,11 +149,8 @@ function getTags(frontmatter) {
 /**
  * Build URL from file path
  */
-function filePathToUrl(filePath) {
-	const relative = path.relative(
-		path.join(__dirname, "../src/content"),
-		filePath,
-	);
+export function filePathToUrl(filePath, contentRoot = DEFAULT_CONTENT_ROOT) {
+	const relative = path.relative(contentRoot, filePath);
 
 	// Remove extension and convert to URL path
 	// e.g., "blog/2025/2025-08-31-posse-astro-integration.md" → "/blog/2025/2025-08-31-posse-astro-integration"
@@ -174,7 +161,7 @@ function filePathToUrl(filePath) {
 /**
  * Format date for display
  */
-function formatDate(date) {
+export function formatDate(date) {
 	return date.toLocaleDateString("en-US", {
 		weekday: "short",
 		year: "numeric",
@@ -186,7 +173,7 @@ function formatDate(date) {
 /**
  * Collect content from past week
  */
-async function collectWeeklyContent() {
+export async function collectWeeklyContent(contentRoot = DEFAULT_CONTENT_ROOT) {
 	const oneWeekAgo = new Date();
 	oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
@@ -197,18 +184,17 @@ async function collectWeeklyContent() {
 	};
 
 	// Collect blog posts
-	const blogFiles = getMarkdownFiles(
-		path.join(__dirname, "../src/content/blog"),
-	);
+	const blogFiles = getMarkdownFiles(path.join(contentRoot, "blog"));
 	for (const file of blogFiles) {
 		const fileContent = fs.readFileSync(file, "utf-8");
-		const frontmatter = parseFrontmatter(fileContent);
+		const { data: frontmatter } = matter(fileContent);
+		if (!isPublishable(frontmatter)) continue;
 		const date = getDateFromFile(file, frontmatter);
 
 		if (date >= oneWeekAgo) {
 			content.blog.push({
 				title: getTitleFromContent(fileContent, file),
-				url: filePathToUrl(file),
+				url: filePathToUrl(file, contentRoot),
 				date,
 				description: getDescription(fileContent),
 				tags: getTags(frontmatter),
@@ -218,25 +204,21 @@ async function collectWeeklyContent() {
 	}
 
 	// Collect notes
-	const noteFiles = getMarkdownFiles(
-		path.join(__dirname, "../src/content/note"),
-	);
+	const noteFiles = getMarkdownFiles(path.join(contentRoot, "note"));
 	for (const file of noteFiles) {
 		// Skip subdirectories that are treated as collections (violin, mpcnc, etc.)
-		const relative = path.relative(
-			path.join(__dirname, "../src/content/note"),
-			file,
-		);
+		const relative = path.relative(path.join(contentRoot, "note"), file);
 		if (relative.includes("/")) continue;
 
 		const fileContent = fs.readFileSync(file, "utf-8");
-		const frontmatter = parseFrontmatter(fileContent);
+		const { data: frontmatter } = matter(fileContent);
+		if (!isPublishable(frontmatter)) continue;
 		const date = getDateFromFile(file, frontmatter);
 
 		if (date >= oneWeekAgo) {
 			content.note.push({
 				title: getTitleFromContent(fileContent, file),
-				url: filePathToUrl(file),
+				url: filePathToUrl(file, contentRoot),
 				date,
 				description: getDescription(fileContent),
 				tags: getTags(frontmatter),
@@ -246,12 +228,10 @@ async function collectWeeklyContent() {
 	}
 
 	// Collect ephemera
-	const ephemeraFiles = getMarkdownFiles(
-		path.join(__dirname, "../src/content/ephemera"),
-	);
+	const ephemeraFiles = getMarkdownFiles(path.join(contentRoot, "ephemera"));
 	for (const file of ephemeraFiles) {
 		const fileContent = fs.readFileSync(file, "utf-8");
-		const frontmatter = parseFrontmatter(fileContent);
+		const { data: frontmatter } = matter(fileContent);
 		const date = getDateFromFile(file, frontmatter);
 
 		if (date >= oneWeekAgo) {
@@ -259,10 +239,13 @@ async function collectWeeklyContent() {
 			const slug = path.basename(file, path.extname(file));
 			content.ephemera.push({
 				title: frontmatter.title || slug,
-				url: filePathToUrl(file),
+				url: filePathToUrl(file, contentRoot),
 				date,
 				description: getDescription(fileContent),
 				tags: getTags(frontmatter),
+				syndication: Array.isArray(frontmatter.syndication)
+					? frontmatter.syndication
+					: [],
 				type: "ephemera",
 			});
 		}
@@ -274,7 +257,7 @@ async function collectWeeklyContent() {
 /**
  * Generate Markdown digest
  */
-function generateMarkdownDigest(content) {
+export function generateMarkdownDigest(content) {
 	const now = new Date();
 	const weekStart = new Date(now);
 	weekStart.setDate(weekStart.getDate() - 7);
@@ -328,6 +311,9 @@ ${dateRange}
 			if (item.description) {
 				markdown += `\n${item.description}\n`;
 			}
+			if (item.syndication?.length > 0) {
+				markdown += `\nAlso on: ${item.syndication.map((s) => `[${s.title}](${s.href})`).join(" · ")}\n`;
+			}
 			markdown += `\n---\n`;
 		}
 	}
@@ -339,21 +325,27 @@ ${dateRange}
 }
 
 /**
- * Send email via Buttondown API
+ * Send email via Buttondown API.
+ * status "about_to_send" delivers to subscribers; "draft" creates a draft only.
  */
-async function sendEmail(subject, body) {
+export async function sendEmail(
+	subject,
+	body,
+	{ apiKey = BUTTONDOWN_API_KEY, status = "about_to_send" } = {},
+) {
 	const response = await fetch(`${BUTTONDOWN_API_URL}/emails`, {
 		method: "POST",
 		headers: {
-			Authorization: `Token ${BUTTONDOWN_API_KEY}`,
+			Authorization: `Token ${apiKey}`,
 			"Content-Type": "application/json",
+			"X-API-Version": BUTTONDOWN_API_VERSION,
 			"User-Agent": "RyanParsleyDotCom/1.0",
 		},
 		body: JSON.stringify({
 			subject,
 			body,
 			email_type: "public",
-			status: "about_to_send",
+			status,
 		}),
 	});
 
@@ -367,15 +359,52 @@ async function sendEmail(subject, body) {
 }
 
 /**
+ * Delete an email (used to clean up drafts created by --draft).
+ */
+export async function deleteEmail(id, apiKey = BUTTONDOWN_API_KEY) {
+	const response = await fetch(`${BUTTONDOWN_API_URL}/emails/${id}`, {
+		method: "DELETE",
+		headers: {
+			Authorization: `Token ${apiKey}`,
+			"X-API-Version": BUTTONDOWN_API_VERSION,
+			"User-Agent": "RyanParsleyDotCom/1.0",
+		},
+	});
+
+	if (!response.ok) {
+		const error = await response.text();
+		throw new Error(`Buttondown API error: ${response.status} - ${error}`);
+	}
+}
+
+/**
+ * Create a Buttondown draft and immediately delete it: a server-verified
+ * smoke test of the send path (auth, endpoint, payload validation) that
+ * never delivers anything and leaves no residue.
+ */
+export async function createAndVerifyDraft(
+	subject,
+	body,
+	apiKey = BUTTONDOWN_API_KEY,
+) {
+	const draft = await sendEmail(subject, body, { apiKey, status: "draft" });
+	await deleteEmail(draft.id, apiKey);
+	return draft;
+}
+
+/**
  * Main function
  */
 async function main() {
+	const isDryRun = process.argv.includes("--dry-run");
+	const isDraft = process.argv.includes("--draft");
+
 	console.log("📝 Starting weekly digest generation...\n");
 
 	try {
 		// Collect content from past week
 		console.log("🔍 Collecting content from the past week...");
-		const content = await collectWeeklyContent();
+		const content = await collectWeeklyContent(process.env.DIGEST_CONTENT_ROOT);
 
 		const totalItems =
 			content.blog.length + content.note.length + content.ephemera.length;
@@ -409,6 +438,30 @@ async function main() {
 
 		console.log(`   Subject: ${subject}\n`);
 
+		if (isDryRun) {
+			console.log("=== SUBJECT ===");
+			console.log(subject);
+			console.log("=== BODY ===");
+			console.log(body);
+			console.log("🏜️  Dry run — no email sent.");
+			return;
+		}
+
+		if (!BUTTONDOWN_API_KEY) {
+			console.error("❌ BUTTONDOWN_API_KEY environment variable is required");
+			process.exit(1);
+		}
+
+		if (isDraft) {
+			console.log(
+				"🌱 Draft mode: verifying the Buttondown contract (create + delete draft, nothing delivers)",
+			);
+			const draft = await createAndVerifyDraft(subject, body);
+			console.log(`   Draft ${draft.id} created and deleted ✔`);
+			console.log(`   Subject: ${subject}\n`);
+			return;
+		}
+
 		// Send email
 		console.log("🚀 Sending email via Buttondown API...");
 		const result = await sendEmail(subject, body);
@@ -422,4 +475,9 @@ async function main() {
 	}
 }
 
-main();
+// Run only when executed directly (keeps imports side-effect-free for tests)
+const isMainModule =
+	process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMainModule) {
+	main();
+}

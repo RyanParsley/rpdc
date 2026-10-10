@@ -9,6 +9,7 @@ export default defineConfig({
 		setupFiles: ["./src/test/setup.ts"],
 		include: [
 			"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx,astro}",
+			"scripts/**/*.test.js",
 			// Root-level so the config guard below can live next to the config it
 			// protects.
 			"vitest.config.test.ts",
