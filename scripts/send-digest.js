@@ -243,6 +243,9 @@ export async function collectWeeklyContent(contentRoot = DEFAULT_CONTENT_ROOT) {
 				date,
 				description: getDescription(fileContent),
 				tags: getTags(frontmatter),
+				syndication: Array.isArray(frontmatter.syndication)
+					? frontmatter.syndication
+					: [],
 				type: "ephemera",
 			});
 		}
@@ -307,6 +310,9 @@ ${dateRange}
 			markdown += `*ephemera* • ${formatDate(item.date)}\n`;
 			if (item.description) {
 				markdown += `\n${item.description}\n`;
+			}
+			if (item.syndication?.length > 0) {
+				markdown += `\nAlso on: ${item.syndication.map((s) => `[${s.title}](${s.href})`).join(" · ")}\n`;
 			}
 			markdown += `\n---\n`;
 		}

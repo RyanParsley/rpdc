@@ -192,6 +192,35 @@ describe("generateMarkdownDigest", () => {
 		expect(markdown).not.toContain("Tags:");
 	});
 
+	it("renders syndication links for ephemera entries", () => {
+		const syndicated = {
+			...item("ephemera"),
+			syndication: [
+				{ href: "https://mastodon.social/@x/1", title: "Mastodon" },
+				{ href: "https://bsky.app/profile/x/post/1", title: "Bluesky" },
+			],
+		};
+		const markdown = generateMarkdownDigest({
+			blog: [],
+			note: [],
+			ephemera: [syndicated],
+		});
+
+		expect(markdown).toContain("Also on:");
+		expect(markdown).toContain("[Mastodon](https://mastodon.social/@x/1)");
+		expect(markdown).toContain("[Bluesky](https://bsky.app/profile/x/post/1)");
+	});
+
+	it("omits the syndication line when an entry has none", () => {
+		const markdown = generateMarkdownDigest({
+			blog: [],
+			note: [],
+			ephemera: [item("ephemera")],
+		});
+
+		expect(markdown).not.toContain("Also on:");
+	});
+
 	it("renders no sections when all collections are empty", () => {
 		const markdown = generateMarkdownDigest({
 			blog: [],
@@ -270,6 +299,11 @@ describe("collectWeeklyContent (fixture root)", () => {
 		expect(content.ephemera[0].url).toBe(
 			"https://ryanparsley.com/ephemera/2026/10/07/2026-10-07-08-53-54",
 		);
+		// and both silo links survive intact (the old parser kept only the last)
+		expect(content.ephemera[0].syndication).toEqual([
+			{ href: "https://mastodon.social/@x/1", title: "Mastodon" },
+			{ href: "https://bsky.app/profile/x/post/1", title: "Bluesky" },
+		]);
 	});
 
 	it("returns empty collections when nothing is in the window", async () => {
