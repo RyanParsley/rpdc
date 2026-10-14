@@ -1,1 +1,24 @@
+# Husky v9 loads this file with `$SHELL -e`, so keep it POSIX and side-effect
+# free before lint-staged runs. No shebang line: it would be inert here.
+#
+# Refuse direct commits on the default branch. One PR = one branch = one
+# worktree, created with `wt switch --create <type>/<slug>`. See AGENTS.md
+# "Git" and agents/build-devops-agent.md.
+#
+# Human-only override for merge commits and release bumps on main:
+#   ALLOW_MAIN_COMMIT=1 git commit ...
+# Deliberately not printed in the failure message below: the runtime path an
+# agent sees should offer one action (a worktree), not an escape hatch.
+branch=$(git branch --show-current)
+if [ "$branch" = "main" ] && [ "${ALLOW_MAIN_COMMIT:-0}" != "1" ]; then
+	echo "x Commits on 'main' are blocked in this repo."
+	echo
+	echo "  Create a worktree for the branch instead:"
+	echo "    wt switch --create feat/<slug>"
+	echo
+	echo "  If you think a commit belongs directly on main (merge commit, release"
+	echo "  bump), stop and ask. Do not work around this hook."
+	exit 1
+fi
+
 npx lint-staged

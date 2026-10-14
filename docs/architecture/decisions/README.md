@@ -1,0 +1,8 @@
+* [1. Record architecture decisions](0001-record-architecture-decisions.md)
+* [2. Codify style policy as mechanical gates, not prose](0002-codify-style-policy-as-mechanical-gates-not-prose.md)
+* [3. Prettier is the sole formatting authority; ESLint defers](0003-prettier-is-the-sole-formatting-authority-eslint-defers.md)
+* [4. One path-alias source of truth, shared by tsconfig and Vitest](0004-one-path-alias-source-of-truth-shared-by-tsconfig-and-vitest.md)
+* [5. Coverage thresholds are a measured ratchet, not a 100 percent claim](0005-coverage-thresholds-are-a-measured-ratchet-not-a-100-percent-claim.md)
+* [6. PascalCase components, kebab-case modules](0006-pascalcase-components-kebab-case-modules.md)
+* [7. Nullish-coalescing and return-type rules stay advisory](0007-nullish-coalescing-and-return-type-rules-stay-advisory.md)
+* [8. Vitest convention tests enforce rules no linter expresses](0008-vitest-convention-tests-enforce-rules-no-linter-expresses.md)
