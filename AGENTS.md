@@ -63,8 +63,11 @@ All changes require review from relevant sub-agents:
 
 ### Git
 
+- **Never branch or commit in the primary checkout.** The main working copy stays on `main`; every PR gets its own git worktree
+- Use the `wt` CLI (worktrunk) so worktrees land in a consistent place and `.config/wt.toml` hooks run: `wt switch --create <type>/<slug>`
+- One branch = one PR = one worktree; remove it when merged with `wt remove` (deletes the branch if merged)
 - Conventional commits (enforced by commitlint)
-- Pre-commit hooks run linting/formatting
+- Pre-commit hooks run linting/formatting and refuse commits on `main`
 - Use descriptive commit messages
 
 ### Testing

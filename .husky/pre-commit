@@ -1,1 +1,20 @@
+#!/usr/bin/env bash
+# Husky v9 loads user files with `$SHELL -e` and no shell is spawned for the
+# shebang, so keep this POSIX and side-effect free before lint-staged runs.
+# Refuse direct commits on the default branch. One PR = one branch = one
+# worktree, created with `wt switch --create <type>/<slug>` — see AGENTS.md
+# "Git" and agents/build-devops-agent.md.
+# Escape hatch for merge commits and releases: ALLOW_MAIN_COMMIT=1
+branch=$(git branch --show-current)
+if [ "$branch" = "main" ] && [ "${ALLOW_MAIN_COMMIT:-0}" != "1" ]; then
+	echo "x Commits on 'main' are blocked in this repo."
+	echo
+	echo "  Create a worktree for the branch instead:"
+	echo "    wt switch --create feat/<slug>"
+	echo
+	echo "  If you really mean to commit on main:"
+	echo "    ALLOW_MAIN_COMMIT=1 git commit ..."
+	exit 1
+fi
+
 npx lint-staged
