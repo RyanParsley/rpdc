@@ -6,3 +6,4 @@
 * [6. PascalCase components, kebab-case modules](0006-pascalcase-components-kebab-case-modules.md)
 * [7. Nullish-coalescing and return-type rules stay advisory](0007-nullish-coalescing-and-return-type-rules-stay-advisory.md)
 * [8. Vitest convention tests enforce rules no linter expresses](0008-vitest-convention-tests-enforce-rules-no-linter-expresses.md)
+* [9. Explicit types at boundaries, inferred inside](0009-explicit-types-at-boundaries-inferred-inside.md)

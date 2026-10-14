@@ -10,6 +10,8 @@ tags:
 links:
 - target: 2
   kind: relatesto
+- target: 9
+  kind: amendedby
 ---
 
 # 7. Nullish-coalescing and return-type rules stay advisory
@@ -106,9 +108,15 @@ src/integrations/posse.ts:194:2
 src/utils/webmentions.ts:137:60
 ```
 
-Remaining distribution: `src/pages` 9, `src/components` 2, test files 11.
+Remaining distribution: `src/pages` 9 (8 framework-dictated `getStaticPaths`,
+1 template closure), `src/components` 2 closures, test files 11.
 
 That makes a third path available (option **d** in MG-007): gate the rule on
 module boundaries, leave `.astro` templates and pages exempt, and fix three
-lines. If that is chosen, this ADR keeps only the `prefer-nullish-coalescing`
-decision and the return-type half moves to an accepted gate.
+lines.
+
+**Resolved 2026-10-14 by ADR 9.** Option (d) was chosen, and ADR 9's reasoning
+supersedes this ADR's framing: the 11 exempt sites are exempt because they are
+framework signatures and closures, which is where Rust itself permits omission,
+not because a glob happened to skip them. This ADR keeps only the
+`prefer-nullish-coalescing` decision, which still stands as written.
