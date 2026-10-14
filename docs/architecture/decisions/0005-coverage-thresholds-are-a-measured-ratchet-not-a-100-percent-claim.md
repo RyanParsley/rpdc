@@ -4,11 +4,11 @@ title: Coverage thresholds are a measured ratchet, not a 100 percent claim
 date: 2026-10-14
 status: accepted
 tags:
-- testing
-- coverage
+  - testing
+  - coverage
 links:
-- target: 2
-  kind: relatesto
+  - target: 2
+    kind: relatesto
 ---
 
 # 5. Coverage thresholds are a measured ratchet, not a 100 percent claim
@@ -88,7 +88,7 @@ does for #252.
 ## Amendment (2026-10-14)
 
 Two things were true that this ADR did not know, and they change the decision.
-The `90/84/97/91` thresholds proposed above are **not** what gets applied.
+The `90/84/97/91` thresholds proposed earlier are **not** what gets applied.
 
 **The denominator only counts files the suite imports.** The default config
 reports 9 files: `scripts/send-digest.js`, `src/consts.ts`, the five
@@ -97,13 +97,13 @@ reports 9 files: `scripts/send-digest.js`, `src/consts.ts`, the five
 rather than zero. `--coverage.all=true` changes nothing (90.99% before and
 after). Setting `coverage.include` makes the absences appear as zeros:
 
-| File | Statements | under honest include |
-| --- | --- | --- |
-| `scripts/new-content.js` | 444 | 0% |
-| `scripts/pesos-mastodon.js` | 397 | 0% |
-| `scripts/promote-draft.js` | 202 | 0% |
-| `src/integrations/ephemera-schema.ts` | added in #248 | 0% |
-| **All files** | | **57.80 stmts / 60.48 branches / 65.51 funcs / 58.90 lines** |
+| File                                  | Statements    | under honest include                                         |
+| ------------------------------------- | ------------- | ------------------------------------------------------------ |
+| `scripts/new-content.js`              | 444           | 0%                                                           |
+| `scripts/pesos-mastodon.js`           | 397           | 0%                                                           |
+| `scripts/promote-draft.js`            | 202           | 0%                                                           |
+| `src/integrations/ephemera-schema.ts` | added in #248 | 0%                                                           |
+| **All files**                         |               | **57.80 stmts / 60.48 branches / 65.51 funcs / 58.90 lines** |
 
 So "90.99%" was a ratchet on nine files while three untested scripts and one
 untested integration module sat outside the measurement entirely.
@@ -133,11 +133,12 @@ to "every PR".
    ```
 
    Exact glob semantics are set in MG-001b, not asserted here.
+
 3. Scripts keep their own floors rather than being exempted, and rather than
    being averaged into `src` where a 444-statement untested file can hide a
    regression in `posse.ts`.
 4. A convention test (ADR 8) asserts no source file sits at 0%, backed by an
-   explicit, named debt register listing the four files above. The register is
+   explicit, named debt register listing the four files. The register is
    the point: the exemption is reviewable and shrinks, instead of being an
    artifact of what happened to be imported.
 

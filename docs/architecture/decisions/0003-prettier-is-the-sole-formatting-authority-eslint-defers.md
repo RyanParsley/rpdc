@@ -4,12 +4,12 @@ title: Prettier is the sole formatting authority; ESLint defers
 date: 2026-10-14
 status: accepted
 tags:
-- formatting
-- prettier
-- ci
+  - formatting
+  - prettier
+  - ci
 links:
-- target: 2
-  kind: relatesto
+  - target: 2
+    kind: relatesto
 ---
 
 # 3. Prettier is the sole formatting authority; ESLint defers
@@ -58,7 +58,7 @@ this repo. Concretely:
 
 - Formatting can fail CI for the first time, which is why the three files must
   land in the same PR as the gate.
-- `lint-staged`'s "format only what you touch" behaviour stops being load-bearing;
+- `lint-staged`'s "format only what you edit" behavior stops being load-bearing;
   it becomes a convenience rather than the only line of defence.
 - Docs no longer describe a style the repo does not have, so agents stop being
   invited to write single-quoted code.

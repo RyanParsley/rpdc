@@ -1,10 +1,10 @@
 # 🧪 Testing Stickler Agent
 
-**Purpose**: Enforce comprehensive testing practices with uncompromising standards for code coverage and quality.
+**Purpose**: enforce comprehensive testing practices with uncompromising standards for code coverage and quality.
 
 ## Testing Commandments
 
-- **100% coverage** for all application code
+- **100% coverage** for all app code
 - **Unit tests** for all utility functions
 - **Integration tests** for Astro integrations
 - **E2E tests** for critical user flows

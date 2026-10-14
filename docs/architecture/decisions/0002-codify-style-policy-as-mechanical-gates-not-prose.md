@@ -4,24 +4,24 @@ title: Codify style policy as mechanical gates, not prose
 date: 2026-10-14
 status: accepted
 tags:
-- style
-- tooling
-- ci
+  - style
+  - tooling
+  - ci
 links:
-- target: 3
-  kind: relatesto
-- target: 4
-  kind: relatesto
-- target: 5
-  kind: relatesto
-- target: 6
-  kind: relatesto
-- target: 7
-  kind: relatesto
-- target: 8
-  kind: relatesto
-- target: 9
-  kind: relatesto
+  - target: 3
+    kind: relatesto
+  - target: 4
+    kind: relatesto
+  - target: 5
+    kind: relatesto
+  - target: 6
+    kind: relatesto
+  - target: 7
+    kind: relatesto
+  - target: 8
+    kind: relatesto
+  - target: 9
+    kind: relatesto
 ---
 
 # 2. Codify style policy as mechanical gates, not prose
@@ -39,19 +39,19 @@ Proposed
 against the working tree and found a clean split: rules backed by an
 enforcer are at 100% compliance, rules backed only by prose have drifted.
 
-| Policy as written                     | Enforcer                             | Measured                |
-| ------------------------------------- | ------------------------------------ | ----------------------- |
-| Zero `any`                            | `no-explicit-any` (in `recommended`) | 0 violations            |
-| No `@ts-ignore`                       | `ban-ts-comment`                     | 0 violations            |
-| Type checking clean                   | `astro check` in `npm run build`     | 0 errors, 0 warnings    |
-| ESLint clean                          | `npm run lint` + pre-commit          | 0 violations            |
-| Conventional commits                  | commitlint `commit-msg` hook         | 100% of recent history  |
-| `console.*` routed through `Logger`   | none                                 | 0 in `src` (by choice)  |
-| "100% unit test coverage"             | vitest thresholds at 80%             | 91.0% statements        |
-| "Single quotes, no semicolons"        | none (Prettier defaults are opposite) | 1500:1 double:single   |
-| "kebab-case file names"               | none                                 | every component violates |
-| "No relative imports beyond `../`"    | none                                 | 13 violations           |
-| "Prettier formatting"                 | lint-staged on touched files only    | 3 files unformatted     |
+| Policy as written                   | Enforcer                              | Measured                 |
+| ----------------------------------- | ------------------------------------- | ------------------------ |
+| Zero `any`                          | `no-explicit-any` (in `recommended`)  | 0 violations             |
+| No `@ts-ignore`                     | `ban-ts-comment`                      | 0 violations             |
+| Type checking clean                 | `astro check` in `npm run build`      | 0 errors, 0 warnings     |
+| ESLint clean                        | `npm run lint` + pre-commit           | 0 violations             |
+| Conventional commits                | commitlint `commit-msg` hook          | 100% of recent history   |
+| `console.*` routed through `Logger` | none                                  | 0 in `src` (by choice)   |
+| "100% unit test coverage"           | vitest thresholds at 80%              | 91.0% statements         |
+| "Single quotes, no semicolons"      | none (Prettier defaults are opposite) | 1500:1 double:single     |
+| "kebab-case file names"             | none                                  | every component violates |
+| "No relative imports beyond `../`"  | none                                  | 13 violations            |
+| "Prettier formatting"               | lint-staged on touched files only     | 3 files unformatted      |
 
 The prose-only rows are where cost accumulates: an agent reading `AGENTS.md`
 either follows a rule the codebase does not actually use, or has no way to know

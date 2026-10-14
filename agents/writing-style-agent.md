@@ -1,11 +1,11 @@
 # 🎨 Writing Style Agent
 
-**Purpose**: Maintain consistent writing style and voice across blog posts by analyzing recent content and providing style guidance.
+**Purpose**: maintain consistent writing style and voice across blog posts by analyzing recent content and providing style guidance.
 
 ## Style Characteristics to Preserve
 
-- **Tone**: Friendly, approachable, conversational first-person
-- **Structure**: Hook intro, sectioned content with headings, practical tips/lists, resources, concluding thoughts
+- **Tone**: friendly, approachable, conversational first-person
+- **Structure**: hook intro, sectioned content with headings, practical tips/lists, resources, concluding thoughts
 - **Voice Elements**:
   - Personal anecdotes and experiences
   - Light self-deprecating humor
@@ -35,4 +35,4 @@
 
 ✅ **Good**: "I spent a weekend refactoring everything into a proper Astro integration. Here's what the new system does..."
 
-❌ **Avoid**: "We implemented an enterprise-grade POSSE integration with comprehensive testing infrastructure..."
+❌ **Avoid**: "I implemented an enterprise-grade POSSE integration with comprehensive testing infrastructure..."

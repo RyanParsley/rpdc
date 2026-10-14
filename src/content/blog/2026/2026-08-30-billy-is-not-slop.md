@@ -24,7 +24,7 @@ it needs to be to hold my books. I would much rather a hardwood map storage
 cabinet than an Alex, but I did not care to spend the time to build one nor
 money to buy the premium option.
 
-We have a broken Alex in one room of my house. The plastic runners don't seem to
+There is a broken Alex in one room of my house. The plastic runners don't seem to
 have a mechanism for removing the tray all the way to fix it. The cardboard
 bottom blew out. The underlying structure resists mending. It's a shame. I hate
 that when one out of six drawers is in disrepair, throwing the whole thing out
@@ -48,10 +48,10 @@ function returns the expected value when provided a particular input.
 
 There's a major departure between the wispy innards of Lack and slop. Slop is
 very costly. Arguably, inference is less costly than human development time.
-But, it also consumes developer time. So it will always be a game of diminishing
+But, it also consumes developer time. So it is always a game of diminishing
 returns and tremendous opportunity cost. While the effect of slop is akin to
 that of chipboard, GPUs are made of precious materials and usage is priced
-accordingly. I don't know that we can learn from Ikea when it comes to agentic
+accordingly. I don't know that anyone can learn from Ikea when it comes to agentic
 software development. Part of me thinks it's possible to architect an app with
 dialed-in static analysis that can hide or mitigate the slop within. But
 another, maybe more rational part, resists the premise that a fundamentally

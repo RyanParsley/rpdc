@@ -4,13 +4,13 @@ title: PascalCase components, kebab-case modules
 date: 2026-10-14
 status: accepted
 tags:
-- naming
-- convention
+  - naming
+  - convention
 links:
-- target: 2
-  kind: relatesto
-- target: 8
-  kind: relatesto
+  - target: 2
+    kind: relatesto
+  - target: 8
+    kind: relatesto
 ---
 
 # 6. PascalCase components, kebab-case modules
@@ -25,20 +25,20 @@ Accepted
 
 Two documents conflict with the tree and with each other. `AGENTS.md` says
 "PascalCase for components and types" and "kebab-case for file names" in
-adjacent bullets; `agents/code-quality-agent.md` says "kebab-case: File names,
+adjacent bullets; `agents/code-quality-agent.md` says "kebab-case: file names,
 directories" without qualification.
 
 Measured naming in `src`:
 
-| Location                            | Actual case                  | Claim         |
-| ----------------------------------- | ---------------------------- | ------------- |
-| `src/components/*.astro`            | PascalCase (`Backlinks.astro`) | kebab-case    |
-| `src/components/*.test.ts`          | PascalCase (`YoutubeEmbed.test.ts`) | kebab-case |
-| `src/layouts/*.astro`               | PascalCase                   | kebab-case    |
-| `src/utils/*.ts`                    | kebab-case (`backlinks.ts`)  | kebab-case    |
-| `src/integrations/*.ts`             | kebab-case (`posse-mastodon.ts`) | kebab-case |
-| `src/types/*.ts`                    | kebab-case (`api.ts`)        | kebab-case    |
-| `src/content/**` slugs              | free-form (`OpenWebUI.md`, `CodebergPagesCI.md`) | kebab-case |
+| Location                   | Actual case                                      | Claim      |
+| -------------------------- | ------------------------------------------------ | ---------- |
+| `src/components/*.astro`   | PascalCase (`Backlinks.astro`)                   | kebab-case |
+| `src/components/*.test.ts` | PascalCase (`YoutubeEmbed.test.ts`)              | kebab-case |
+| `src/layouts/*.astro`      | PascalCase                                       | kebab-case |
+| `src/utils/*.ts`           | kebab-case (`backlinks.ts`)                      | kebab-case |
+| `src/integrations/*.ts`    | kebab-case (`posse-mastodon.ts`)                 | kebab-case |
+| `src/types/*.ts`           | kebab-case (`api.ts`)                            | kebab-case |
+| `src/content/**` slugs     | free-form (`OpenWebUI.md`, `CodebergPagesCI.md`) | kebab-case |
 
 So the prose is not wrong so much as under-specified: the convention is real,
 it is just per-directory, and no tool expresses it.

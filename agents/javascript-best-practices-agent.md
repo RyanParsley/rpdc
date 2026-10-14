@@ -1,6 +1,6 @@
 # ⚡ JavaScript Best Practices Agent
 
-**Purpose**: Enforce modern JavaScript patterns and functional programming principles.
+**Purpose**: enforce modern JavaScript patterns and functional programming principles.
 
 ## Variable Declaration Rules
 
