@@ -74,12 +74,30 @@ function fromGit(file) {
 	);
 	if (res.status !== 0) return null;
 	const lines = res.stdout.trim().split("\n").filter(Boolean);
+	if (lines.length === 0) return null;
 	const year = Number(lines[lines.length - 1]);
 	return Number.isFinite(year) && year > 1990 ? year : null;
 }
 
 function resolveYear(file) {
 	return fromFrontmatter(file) ?? fromPath(file) ?? fromGit(file);
+}
+
+function shallowRepo() {
+	const res = spawnSync("git", ["rev-parse", "--is-shallow-repository"], {
+		encoding: "utf8",
+	});
+	return res.status === 0 && res.stdout.trim() === "true";
+}
+
+if (shallowRepo()) {
+	console.error(
+		"git history is shallow, so a post's add-date cannot be read and every file " +
+			"would look added today. That widens this gate to content that is meant to " +
+			"be treated as history.\n" +
+			"Fix the checkout: fetch-depth: 0 (see .github/workflows/build.yml).",
+	);
+	process.exit(2);
 }
 
 function docsFiles() {

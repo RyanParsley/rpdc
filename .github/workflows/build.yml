@@ -15,6 +15,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # scripts/lint-prose.js falls back to git's add-date to decide whether a
+          # post is history. A shallow checkout makes every file look added today,
+          # which silently widens the prose gate (caught in CI on 2026-10-14).
+          fetch-depth: 0
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
