@@ -1,0 +1,17 @@
+extends: existence
+message: "Don't put a period at the end of a heading."
+link: "https://developers.google.com/style/capitalization#capitalization-in-titles-and-headings"
+level: warning
+scope: heading
+nonword: true
+ignorecase: true
+# Replaces Google.HeadingPunctuation, whose token `[a-z0-9][.]\s*$` fires on the
+# ordinal in `# 1. Record architecture decisions`, where no heading ends with a
+# period. Vale splits heading scope at ". ", so "1." arrives as its own segment
+# and the anchor matches. Restricting the character before the period to a letter
+# removes those false positives and still catches `## Setup.` and `#### Notes,
+# etc.`. Known gap: a heading ending in digit-period (`### Section 1.`) is not
+# caught, because that shape is indistinguishable from ADR numbering under the
+# same split. Verified 2026-10-14 against /tmp/hp/t3.md.
+tokens:
+  - '[a-z]\.\s*$'

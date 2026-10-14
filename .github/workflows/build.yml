@@ -29,5 +29,14 @@ jobs:
           restore-keys: |
             astro-${{ runner.os }}-
       - run: npm run lint
+      - run: npm run lint:style:check
+      - run: npm run format:check
+      - name: Install Vale
+        run: |
+          curl -sSL -o /tmp/vale.tar.gz \
+            https://github.com/errata-ai/vale/releases/download/v3.17.1/vale_3.17.1_Linux_64-bit.tar.gz
+          tar -xzf /tmp/vale.tar.gz -C /tmp vale
+          echo /tmp >>"$GITHUB_PATH"
+      - run: npm run lint:prose
       - run: npm run build
       - run: npm run test:coverage

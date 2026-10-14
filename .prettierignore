@@ -1,0 +1,11 @@
+# Vendored and generated browser assets. Not source; reformatting them is churn
+# that nobody reviews.
+public/**
+
+# Build and tooling output. Prettier 3 already honors .gitignore, so these are
+# listed for clarity if that behavior ever changes.
+dist/
+coverage/
+.astro/
+test-results/
+playwright-report/
