@@ -8,7 +8,7 @@ measured: 2026-10-13
 
 Inventory of style and quality rules that `AGENTS.md` / `agents/*.md` assert but
 that nothing enforces, with measured cost to close each one. Decisions live in
-`docs/architecture/decisions/`; the sequenced work lives in
+`docs/architecture/decisions/` (ADRs 1-9); the sequenced work lives in
 `docs/wayfinder/mechanical-gates-map.md`, filed as GitHub issues **#281–#292**
 (12 stories, 2026-10-14; MG-012 `recommendedTypeChecked` is deliberately not in
 that range - it leaves for its own map and ADR).
@@ -97,7 +97,7 @@ Counts are the whole cost of the PR that gates that rule.
 | `prefer-optional-chain`                     | 5    | 15   | error prod, off tests                   | fixable                        |
 | `no-non-null-assertion`                     | 4    | 13   | error prod, off tests                   | `posse.ts:537` `result.url!` etc |
 | `only-throw-error`                          | 0    | 1    | error                                    | test fixture only              |
-| `explicit-function-return-type`             | 14   | 25   | **open** (MG-007)                         | 3 if scoped to module-boundary dirs |
+| `explicit-function-return-type`             | 14   | 25   | **gated on boundary dirs** (MG-007, ADR 9) | 3 edits: 8 framework + 3 closure sites exempt by rule |
 | `prefer-nullish-coalescing`                 | 13   | 15   | **advisory** (ADR 7)                    | autofix changes semantics       |
 
 ## Tier C: needs a dependency or a new CI job
@@ -128,6 +128,10 @@ for it; it only stays relevant if shell survives elsewhere.
 | `AGENTS.md` only claims runnable gates                      | parse the Quality Gates section, assert each named command is a `package.json` script that exits 0 |
 
 ## Deliberately not gated
+
+- Return types on framework-dictated signatures (`getStaticPaths` x8) and on
+  `.astro` template closures (x3). ADR 9 exempts them on principle: a restated
+  framework contract drifts, and closures infer their type at the call site.
 
 - `as const` for readonly data: no rule exists. Stays prose.
 - 100% coverage: not achievable for guarded browser branches; ADR 5 replaces the

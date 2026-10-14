@@ -29,7 +29,7 @@ Evidence baseline and measured counts:
   gets re-scoped, not squeezed into the same PR.
 - **Suggested labels:** `enhancement` (matches what TQ-00x used; verified via
   `gh label list`).
-- **Issues filed 2026-10-14:** **#281–#292**. Story-to-issue mapping is in each
+- **Issues filed 2026-10-14:** **#281-#292**. Story-to-issue mapping is in each
   heading below. MG-012 stays out of this map (separate epic), and the commitlint
   + shellcheck backlog items are unfiled until they're next up.
 
@@ -43,13 +43,15 @@ Evidence baseline and measured counts:
 | `recommendedTypeChecked` | option (a): separate epic, own map, own ADR | MG-012 leaves this map |
 | Playwright cadence | option (a): every PR | MG-010 becomes sequenced; third-party hosts verified as attribute-only assertions |
 | `.cloudcannon/postbuild` | option (c): move validation into the integration hook, delete the script | MG-011; needs a scope note, see Out of scope |
-| GitHub issues | yes, sequenced stories only | **filed: #281–#292** (12 issues) |
+| Return-type policy | option (d), calibrated against Rust's boundary rule | MG-007 decided; **ADR 9 added** and it amends ADR 7 |
+| GitHub issues | yes, sequenced stories only | **filed: #281-#292** (12 issues) |
 | Commit shape | two commits | `chore: init ADR tooling` then `docs: ...` |
 
 ## Ready to execute
 
-Ordered by dependency. MG-001 → MG-001b → MG-004 → MG-002 → {MG-003, MG-005,
-MG-006} → MG-013 → {MG-010, MG-011, MG-009}.
+Ordered by dependency. MG-001 → MG-001b → MG-007 → MG-004 → MG-002 →
+{MG-003, MG-005, MG-006} → MG-013 → {MG-010, MG-011, MG-009}. MG-007 waits for
+MG-001 because both edit `eslint.config.mjs`.
 
 ### MG-001 / [#281](https://github.com/RyanParsley/rpdc/issues/281) - Tier A: config-only gates
 
@@ -143,6 +145,26 @@ and with it the dead duplicate `#!/bin/bash` on line 3. Needs the Out-of-scope
 note below lifted, and CloudCannon's postbuild hook contract checked before
 deleting (the directory may be required even if the file is not).
 
+### MG-007 / [#288](https://github.com/RyanParsley/rpdc/issues/288) - Gate return types at module boundaries
+
+Decided 2026-10-14 as option (d) under ADR 9. ADR 9 states the standard, so this
+story is now implementation only:
+
+- `explicit-function-return-type` as an error, `files:` scoped to
+  `src/integrations/**/*.ts`, `src/utils/**/*.ts`, `src/types/**/*.ts`, with
+  `allowExpressions: true` and `allowTypedFunctionExpressions: true`
+- Annotate the 3 sites: `ephemera-schema.ts:10` (`dateTransformer`),
+  `posse.ts:194` (`scanDirectory`, recursive), `webmentions.ts:137`
+  (`computeCounts`, returns an object literal no reader can name)
+- Config comment recording both exemptions and why: framework signatures
+  (`getStaticPaths`, 8 sites) and template closures (3 sites) are exempt because a
+  restated framework contract drifts, not because a glob skipped them
+- `AGENTS.md` wording changes from "exported functions" to "functions in
+  module-boundary directories, excluding framework-dictated signatures"
+- Lands **after** MG-001, since both touch `eslint.config.mjs`
+
+Refs: ADR 9, ADR 7 (amended) | Map: `MG-007`
+
 ### MG-009 / [#292](https://github.com/RyanParsley/rpdc/issues/292) - Import grouping and order
 
 `eslint-plugin-simple-import-sort` for the "external libs, then internal" rule.
@@ -150,21 +172,13 @@ New dependency; count violations after install before deciding error vs warn.
 
 ## Needs your decision
 
-- **MG-007 / [#288](https://github.com/RyanParsley/rpdc/issues/288) - `explicit-function-return-type`.** Verified: the rule's full option
-  set is `allowConciseArrowFunctionExpressionsStartingWithVoid`,
-  `allowDirectConstAssertionInArrowFunctions`, `allowedNames`, `allowExpressions`,
-  `allowFunctionsWithoutTypeParameters`, `allowHigherOrderFunctions`, `allowIIFEs`,
-  `allowTypedFunctionExpressions`. No export-scope option, so it cannot express
-  "exported functions only" symbol by symbol - but flat config can scope it by
-  **file glob**, which is a different answer than the one I first gave you.
-  - (a) gate everywhere: 14 prod violations, 9 of them in `src/pages`, 2 in components
-  - (b) advisory + rewrite the docs line to describe what is enforceable
-  - (c) plugin or custom rule that understands export scope
-  - (d) **gate on module-boundary directories only**
-    (`src/integrations`, `src/utils`, `src/types`): **3 prod violations**, listed
-    in ADR 7's amendment; `.astro`, pages, and layouts exempt
-  Recommendation: (d). If chosen, ADR 7 keeps only the `prefer-nullish-coalescing`
-  half and the return-type half becomes an accepted gate.
+Nothing. MG-007 was the last open question. It landed as option (d), with the
+reasoning recorded in ADR 9 rather than in this map. ADR 7 survives in part: the
+`prefer-nullish-coalescing` advisory decision is untouched, because that rule's
+autofix changes behavior in POSSE payload paths and no calibration fixes that.
+
+New decisions arising from implementation (for example, the exact glob floors in
+MG-001b) go on their issues as they come up, not here.
 
 ## Backlog (sequenced after the above)
 

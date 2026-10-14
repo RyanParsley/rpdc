@@ -12,6 +12,8 @@ links:
   kind: relatesto
 - target: 8
   kind: relatesto
+- target: 9
+  kind: relatesto
 ---
 
 # 4. One path-alias source of truth, shared by tsconfig and Vitest
