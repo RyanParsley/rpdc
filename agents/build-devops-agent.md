@@ -17,7 +17,7 @@
 ### Worktrees are mandatory for branch-based work
 
 - **The primary checkout stays on `main`.** It is for browsing, merging, and
-  release work only - never for editing a PR
+  release work only - never for editing a PR, and never a place to commit from
 - **One PR = one branch = one worktree**, created with the `wt` CLI (worktrunk):
 
   ```bash
@@ -46,8 +46,15 @@
 ### Everything else
 
 - **Conventional commits** (enforced by commitlint)
-- **Pre-commit hooks** for linting/formatting, and a guard that refuses commits
-  on `main` (`ALLOW_MAIN_COMMIT=1` is the escape hatch)
+- **Never commit on `main`.** The `pre-commit` guard refuses it. If it fires, the
+  fix is a worktree (`wt switch --create <type>/<slug>`), not an override
+- **Never bypass hooks.** No `git commit --no-verify`, and no reading of the hook
+  source to find an override variable. Both skip `lint-staged` and `commitlint`
+  at once, and CI re-runs the checks against the result. Merge commits and
+  release bumps on `main` are human actions; if one is genuinely required, ask
+  rather than work around it
+- **If a hook legitimately blocks correct work:** fix the file it flagged, or
+  `git add` what the hook auto-modified and commit again
 - **Descriptive commit messages** with context
 - **Squash merges** for clean history
 
