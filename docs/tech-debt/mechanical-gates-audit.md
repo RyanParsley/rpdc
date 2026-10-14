@@ -9,7 +9,9 @@ measured: 2026-10-13
 Inventory of style and quality rules that `AGENTS.md` / `agents/*.md` assert but
 that nothing enforces, with measured cost to close each one. Decisions live in
 `docs/architecture/decisions/`; the sequenced work lives in
-`docs/wayfinder/mechanical-gates-map.md`.
+`docs/wayfinder/mechanical-gates-map.md`, filed as GitHub issues **#281–#292**
+(12 stories, 2026-10-14; MG-012 `recommendedTypeChecked` is deliberately not in
+that range - it leaves for its own map and ADR).
 
 ## How to reproduce the numbers
 
