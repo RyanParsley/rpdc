@@ -2,7 +2,7 @@
 labels: wayfinder:map
 ---
 
-# Wayfinder Map: Mechanical Gates for Style Policy
+# Wayfinder Map for Mechanical Gates in Style Policy
 
 ## Destination
 
@@ -13,7 +13,7 @@ number the tooling does not check.
 
 Evidence baseline and measured counts:
 [`docs/tech-debt/mechanical-gates-audit.md`](../tech-debt/mechanical-gates-audit.md)
-(2026-10-13, amended 2026-10-14). Decisions: ADR 2 through ADR 8, **all accepted**.
+(2026-10-13, amended 2026-10-14). Decisions are ADR 2 through ADR 8, **all accepted**.
 
 ## Notes
 
@@ -31,21 +31,21 @@ Evidence baseline and measured counts:
   `gh label list`).
 - **Issues filed 2026-10-14:** **#281-#292**. Story-to-issue mapping is in each
   heading below. MG-012 stays out of this map (separate epic), and the commitlint
-  + shellcheck backlog items are unfiled until they're next up.
+  - shellcheck backlog items are unfiled until they're next up.
 
 ## Decided 2026-10-14
 
-| Item | Outcome | Effect on this map |
-| ---- | ------- | ------------------ |
-| ADRs 2, 4, 8 | accepted (`adrs status N accepted`) | unblocks MG-001 and MG-004 |
-| Coverage denominator | option (c): `coverage.include` + floors re-derived from the honest number + a convention test that no source file is at 0% | threshold work **moved out of MG-001** into new MG-001b; ADR 5 amended |
-| Scripts vs coverage floor | option (a): own per-file floors via Vitest glob thresholds | folded into MG-001b; MG-008 retired |
-| `recommendedTypeChecked` | option (a): separate epic, own map, own ADR | MG-012 leaves this map |
-| Playwright cadence | option (a): every PR | MG-010 becomes sequenced; third-party hosts verified as attribute-only assertions |
-| `.cloudcannon/postbuild` | option (c): move validation into the integration hook, delete the script | MG-011; needs a scope note, see Out of scope |
-| Return-type policy | option (d), calibrated against Rust's boundary rule | MG-007 decided; **ADR 9 added** and it amends ADR 7 |
-| GitHub issues | yes, sequenced stories only | **filed: #281-#292** (12 issues) |
-| Commit shape | two commits | `chore: init ADR tooling` then `docs: ...` |
+| Item                      | Outcome                                                                                                                    | Effect on this map                                                                |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| ADRs 2, 4, 8              | accepted (`adrs status N accepted`)                                                                                        | unblocks MG-001 and MG-004                                                        |
+| Coverage denominator      | option (c): `coverage.include` + floors re-derived from the honest number + a convention test that no source file is at 0% | threshold work **moved out of MG-001** into new MG-001b; ADR 5 amended            |
+| Scripts vs coverage floor | option (a): own per-file floors via Vitest glob thresholds                                                                 | folded into MG-001b; MG-008 retired                                               |
+| `recommendedTypeChecked`  | option (a): separate epic, own map, own ADR                                                                                | MG-012 leaves this map                                                            |
+| Playwright cadence        | option (a): every PR                                                                                                       | MG-010 becomes sequenced; third-party hosts verified as attribute-only assertions |
+| `.cloudcannon/postbuild`  | option (c): move validation into the integration hook, delete the script                                                   | MG-011; needs a scope note, see Out of scope                                      |
+| Return-type policy        | option (d), calibrated against Rust's boundary rule                                                                        | MG-007 decided; **ADR 9 added** and it amends ADR 7                               |
+| GitHub issues             | yes, sequenced stories only                                                                                                | **filed: #281-#292** (12 issues)                                                  |
+| Commit shape              | two commits                                                                                                                | `chore: init ADR tooling` then `docs: ...`                                        |
 
 ## Ready to execute
 
@@ -90,7 +90,7 @@ today, so the PR is the gate plus the docs correction. ADR 2, ADR 3.
   page/layout cannot be instrumented, so MG-010 is the only gate that sees them.
 - Do not enable `autoUpdate`; it rewrites a tracked file from inside CI.
 - **Verify:** `npm run test:coverage` twice - the second run must fail if any
-  threshold is above actual.
+  threshold exceeds actual.
 
 ### MG-004 / [#283](https://github.com/RyanParsley/rpdc/issues/283) - Alias source of truth (ADR 4)
 
@@ -161,9 +161,9 @@ story is now implementation only:
   restated framework contract drifts, not because a glob skipped them
 - `AGENTS.md` wording changes from "exported functions" to "functions in
   module-boundary directories, excluding framework-dictated signatures"
-- Lands **after** MG-001, since both touch `eslint.config.mjs`
+- Lands **after** MG-001, since both edit `eslint.config.mjs`
 
-Refs: ADR 9, ADR 7 (amended) | Map: `MG-007`
+Refs ADR 9 and ADR 7 (amended) | Map: `MG-007`
 
 ### MG-009 / [#292](https://github.com/RyanParsley/rpdc/issues/292) - Import grouping and order
 
@@ -180,7 +180,7 @@ autofix changes behavior in POSSE payload paths and no calibration fixes that.
 New decisions arising from implementation (for example, the exact glob floors in
 MG-001b) go on their issues as they come up, not here.
 
-## Backlog (sequenced after the above)
+## Backlog (sequenced after these)
 
 - **MG-012** `recommendedTypeChecked` - leaves this map. Own wayfinder map, own
   ADR, and it must decide test-file scoping up front: of 76 measured violations,

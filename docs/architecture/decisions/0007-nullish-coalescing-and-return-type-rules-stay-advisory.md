@@ -4,14 +4,14 @@ title: Nullish-coalescing and return-type rules stay advisory
 date: 2026-10-14
 status: accepted
 tags:
-- eslint
-- advisory
-- typescript
+  - eslint
+  - advisory
+  - typescript
 links:
-- target: 2
-  kind: relatesto
-- target: 9
-  kind: amendedby
+  - target: 2
+    kind: relatesto
+  - target: 9
+    kind: amendedby
 ---
 
 # 7. Nullish-coalescing and return-type rules stay advisory
@@ -57,7 +57,7 @@ recorded here so it can be driven down deliberately:
 
 Warnings are allowed to be noisy; errors are allowed to block nothing else.
 Keeping these two at `warn` is what lets the genuinely safe rules (ADR 2) be
-hard gates without the whole gate set getting disabled out of frustration.
+hard gates without the whole gate set getting turned off out of frustration.
 
 ## Consequences
 
@@ -80,7 +80,7 @@ hard gates without the whole gate set getting disabled out of frustration.
 ## Amendment (2026-10-14)
 
 The `explicit-function-return-type` half of this decision is **still open**. The
-claim above was verified rather than assumed. The rule's complete option set in
+earlier claim was verified rather than assumed. The rule's complete option set in
 `@typescript-eslint` 8.71 is:
 
 ```

@@ -1,6 +1,6 @@
 # 🔧 TypeScript Pedant Agent
 
-**Purpose**: Enforce strict TypeScript practices with zero tolerance for type-related compromises.
+**Purpose**: enforce strict TypeScript practices with zero tolerance for type-related compromises.
 
 ## Core Principles
 

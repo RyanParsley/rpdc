@@ -4,22 +4,22 @@ title: Explicit types at boundaries, inferred inside
 date: 2026-10-14
 status: accepted
 tags:
-- typescript
-- convention
-- style
+  - typescript
+  - convention
+  - style
 links:
-- target: 7
-  kind: amends
-- target: 2
-  kind: relates to
-- target: 4
-  kind: relates to
-- target: 7
-  kind: amends
-- target: 2
-  kind: relatesto
-- target: 4
-  kind: relatesto
+  - target: 7
+    kind: amends
+  - target: 2
+    kind: relates to
+  - target: 4
+    kind: relates to
+  - target: 7
+    kind: amends
+  - target: 2
+    kind: relatesto
+  - target: 4
+    kind: relatesto
 ---
 
 # 9. Explicit types at boundaries, inferred inside
@@ -40,14 +40,14 @@ policy, because the policy was never the thing worth enforcing.
 The calibration is Rust's, which has already solved "where does a type have to be
 written down." Rust is not "annotate everything":
 
-| Rust construct | Rust rule | Reason |
-| --- | --- | --- |
-| `fn` item, `pub` or private | Signature mandatory, no inference | A `fn` is a contract. The compiler will not let a callable's type escape into the crate unnamed |
-| `impl Trait for X` | Types **may be omitted**, copied from the trait | Restating a signature the trait fixed adds nothing and can drift |
-| Closures | Fully inferred. Annotation is legal and never written | A closure's type is decided by its call site |
-| `let` bindings | Inferred unless pinning a surprising type | `let x: u32 = 5` is noise |
-| `Result<T, E>` | `E` must be named | Callers branch on it |
-| Public API review | `missing_docs` gates at the crate boundary; `cargo public-api` and `cargo interface` print resolved types | Rust answers "can a human read the boundary" with a tool, not with redundant annotations |
+| Rust construct              | Rust rule                                                                                                 | Reason                                                                                          |
+| --------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `fn` item, `pub` or private | Signature mandatory, no inference                                                                         | A `fn` is a contract. The compiler does not let a callable's type escape into the crate unnamed |
+| `impl Trait for X`          | Types **may be omitted**, copied from the trait                                                           | Restating a signature the trait fixed adds nothing and can drift                                |
+| Closures                    | Fully inferred. Annotation is legal and never written                                                     | A closure's type is decided by its call site                                                    |
+| `let` bindings              | Inferred unless pinning a surprising type                                                                 | `let x: u32 = 5` is noise                                                                       |
+| `Result<T, E>`              | `E` must be named                                                                                         | Callers branch on it                                                                            |
+| Public API review           | `missing_docs` gates at the crate boundary; `cargo public-api` and `cargo interface` print resolved types | Rust answers "can a human read the boundary" with a tool, not with redundant annotations        |
 
 One principle, applied in both directions: **write a type where it crosses a
 boundary, stay silent where a checker already knows it.**
@@ -55,13 +55,13 @@ boundary, stay silent where a checker already knows it.**
 Measured against this repo, the 14 production sites named by
 `explicit-function-return-type` are not one kind of thing:
 
-| Count | Shape | Rust equivalent | Verdict |
-| --- | --- | --- | --- |
-| 8 | `export async function getStaticPaths()` in `src/pages/**` | Trait impl signature | Omit |
-| 3 | `const getFullPath`, `tagCount`, `formatDate` in `.astro` | Closure | Omit |
-| 1 | `export const dateTransformer` in `src/integrations/ephemera-schema.ts:10` | `pub fn` | Annotate |
-| 1 | `function scanDirectory` (recursive) in `src/integrations/posse.ts:194` | Private `fn` item | Annotate |
-| 1 | `export const computeCounts` in `src/utils/webmentions.ts:137` | `pub fn` returning an object literal | Annotate |
+| Count | Shape                                                                      | Rust equivalent                      | Verdict  |
+| ----- | -------------------------------------------------------------------------- | ------------------------------------ | -------- |
+| 8     | `export async function getStaticPaths()` in `src/pages/**`                 | Trait impl signature                 | Omit     |
+| 3     | `const getFullPath`, `tagCount`, `formatDate` in `.astro`                  | Closure                              | Omit     |
+| 1     | `export const dateTransformer` in `src/integrations/ephemera-schema.ts:10` | `pub fn`                             | Annotate |
+| 1     | `function scanDirectory` (recursive) in `src/integrations/posse.ts:194`    | Private `fn` item                    | Annotate |
+| 1     | `export const computeCounts` in `src/utils/webmentions.ts:137`             | `pub fn` returning an object literal | Annotate |
 
 The third annotation is the one that justifies the rule. `computeCounts` returns
 an object literal, so the type callers depend on exists nowhere in source.
@@ -99,7 +99,7 @@ directories, excluding framework-dictated signatures".
 
 - The gate is real instead of advisory, because the two exemptions that a file
   glob cannot express (framework signatures, template helpers) move into the
-  documentation and the config comment instead of into an eslint-disable.
+  documentation and the config comment instead of into an inline directive that turns the check off.
 - Rules 4 and 5 pre-decide two arguments the type-checked epic would otherwise
   re-litigate: the `.json()` casts in `posse-bluesky.ts` and
   `posse-mastodon.ts`, and the 5 unnecessary assertions.
@@ -108,7 +108,7 @@ directories, excluding framework-dictated signatures".
 - Exemptions are documented, not incidental. If a `getStaticPaths` ever appears
   inside a util module, rule 1 flags it, and that is a useful complaint about
   file layout rather than a false positive.
-- A divergence from Rust is written down rather than hidden: Rust requires
+- A divergence from Rust is written down rather than hidden. Rust requires
   signatures on private `fn` items in every module. `.astro` frontmatter is
   excluded here because it runs in script scope at render time, which puts its
   private helpers closer to closures in a function body than to items in a

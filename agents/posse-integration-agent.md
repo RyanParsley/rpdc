@@ -1,17 +1,17 @@
 # 📡 POSSE Integration Agent
 
-**Purpose**: Specialized agent for POSSE (Publish on your Own Site, Syndicate Elsewhere) implementation and maintenance.
+**Purpose**: specialized agent for POSSE (Publish on your Own Site, Syndicate Elsewhere) implementation and maintenance.
 
 ## Core Features
 
-- **Automatic Discovery**: Scans `src/content/ephemera/` for recent posts (last 24 hours)
-- **Smart Filtering**: Only processes posts that haven't been syndicated yet
-- **Multi-Platform Support**: Currently supports Mastodon and Bluesky
-- **Image Handling**: Uploads images from ephemera posts to social platforms
-- **Content Processing**: Cleans markdown content for social media consumption
-- **Rate Limiting**: Prevents spam with configurable delays between posts
-- **Dry-Run Mode**: Test syndication without actually posting
-- **Error Resilience**: Continues processing even if individual posts fail
+- **Automatic discovery**: scans `src/content/ephemera/` for recent posts (last 24 hours)
+- **Smart filtering**: only processes posts that haven't been syndicated yet
+- **Multi-platform support**: currently supports Mastodon and Bluesky
+- **Image handling**: uploads images from ephemera posts to social platforms
+- **Content processing**: cleans markdown content for social media consumption
+- **Rate limiting**: prevents spam with configurable delays between posts
+- **Dry-run mode**: test syndication without actually posting
+- **Error resilience**: continues processing even if individual posts fail
 
 ## Configuration Template
 

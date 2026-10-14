@@ -4,16 +4,16 @@ title: Vitest convention tests enforce rules no linter expresses
 date: 2026-10-14
 status: accepted
 tags:
-- testing
-- convention
-- ci
+  - testing
+  - convention
+  - ci
 links:
-- target: 2
-  kind: relatesto
-- target: 4
-  kind: relatesto
-- target: 6
-  kind: relatesto
+  - target: 2
+    kind: relatesto
+  - target: 4
+    kind: relatesto
+  - target: 6
+    kind: relatesto
 ---
 
 # 8. Vitest convention tests enforce rules no linter expresses
@@ -51,9 +51,9 @@ one file per rule, each test naming the rule and its ADR in the failure message.
 
 Constraints that keep them honest:
 
-- Read-only: `node:fs`, `node:path`, config imports. No build, no network, no
-  Astro dev server.
-- Fast: each file well under 100ms, so the suite's 1.5s stays 1.5s.
+- Read-only. `node:fs`, `node:path`, and config imports only. No build, no
+  network, no Astro dev server.
+- Fast. Each file stays well under 100 ms, so the suite's 1.5 s total holds.
 - Assertion messages state the offending path and the rule, because a
   convention test that fails with "expected true" trains people to delete tests.
 - One rule per file, so a rejected convention is one `git rm`.

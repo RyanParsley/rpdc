@@ -2,7 +2,7 @@
 labels: wayfinder:map
 ---
 
-# Wayfinder Map: rpdc Code-Quality Pass
+# Wayfinder Map for the rpdc Code-Quality Pass
 
 ## Destination
 
@@ -13,27 +13,27 @@ any observable build output.
 
 ## Notes
 
-- **Domain:** Astro 7 static site, POSSE (Mastodon + Bluesky) syndication, webmentions, scripts
+- **Domain:** the Astro 7 static site, POSSE (Mastodon + Bluesky) syndication, webmentions, scripts
 - **Gate every change:** `npx astro check`, `npm run lint`, `npm run test:run` (now 286 passing)
-- **Tickets:** GitHub Issues #247–#254 (repo `RyanParsley/rpdc`), labeled `enhancement`
+- **Tickets** live in GitHub issues #247-#254 (repo `RyanParsley/rpdc`), labeled `enhancement`
 
 ## Done
 
-- ✅ **[TQ-005 / #251](https://github.com/RyanParsley/rpdc/issues/251)** send-digest frontmatter — **decided B-plus**: `gray-matter` in place (not the rec-A TS module), plus `published:false` fix, `--dry-run`, a `--draft` contract check (create + delete a Buttondown draft; scheduled weekly via `digest-drift.yml`, API version pinned to 2026-04-01), and 36 tests (pure functions + fixture-driven collector + `sendEmail` shape + subprocess e2e of `main`; script coverage ~76%). Workflow keeps its `npm run build` step — under B it's the only schema gate. Also removed the hand-rolled `~/.env` loader from `pesos-mastodon.js` (the issue's claim it lived in send-digest.js was wrong).
-- ✅ **[TQ-004 / #250](https://github.com/RyanParsley/rpdc/issues/250)** Logging/env hardening — PR: `fix/logging-env-hardening`. `Logger` extracted to `src/types/logger.ts` (neutral home; posse.ts re-exports); both `console.*` sites now take an optional logger; `Webmentions.astro` relies solely on `astro:env` (no more build-time `~/.env` read); `getMimeType` throws on unknown extensions; `canonicalUrl` strips only a trailing `.md`. **Local-dev note:** if your shell sources `~/.env` (this repo's documented dev flow), nothing changes — the token is already in the process env, which is where `astro:env` reads it. The removed fallback only ever fired for builds launched outside such a shell; for those, use the repo-root `.env` (gitignored) or direnv.
-- ✅ **[TQ-003 / #249](https://github.com/RyanParsley/rpdc/issues/249)** MSW mock shadowing removed — PR: `fix/msw-handler-shadowing`. Finding: the shadowed handlers were never actually exercised (posse suites stub `global.fetch`; nothing sent `X-Mock-Error`), so this was preventive hygiene.
-- ✅ **[TQ-001 / #247](https://github.com/RyanParsley/rpdc/issues/247)** Image helpers consolidated into `src/integrations/image.ts` — merged via PR #255.
-- ✅ **[TQ-006 / #252](https://github.com/RyanParsley/rpdc/issues/252)** Coverage thresholds enforced + integration backfill — closed via PR #262.
-- ✅ **[TQ-007 / #253](https://github.com/RyanParsley/rpdc/issues/253)** + **[TQ-008 / #254](https://github.com/RyanParsley/rpdc/issues/254)** Scripts lint/typecheck + cleanup pass — closed via PR #261.
-- ✅ **[TQ-002 / #248](https://github.com/RyanParsley/rpdc/issues/248)** Type source of truth — **decided B-plus (colocate)**, not the issue's rec A: `src/types/posse.ts` had zero importers and was wrong; the codebase's actual convention is colocation. Done on branch `refactor/posse-types`: dead type file deleted, `Logger` derived via `Pick<AstroIntegrationLogger, ...>`, `EphemeraData` derived via `z.infer` from the new shared `src/integrations/ephemera-schema.ts` (consumed by both `content.config.ts` and `posse.ts`), test-only types moved into `src/test/setup.ts`. Convention recorded in AGENTS.md.
+- ✅ **[TQ-005 / #251](https://github.com/RyanParsley/rpdc/issues/251)** send-digest frontmatter. **Decided B-plus**: `gray-matter` in place (not the rec-A TS module), plus `published:false` fix, `--dry-run`, a `--draft` contract check (create + delete a Buttondown draft; scheduled weekly via `digest-drift.yml`, API version pinned to 2026-04-01), and 36 tests (pure functions + fixture-driven collector + `sendEmail` shape + subprocess e2e of `main`; script coverage ~76%). Workflow keeps its `npm run build` step. Under B it is the only schema gate. Also removed the hand-rolled `~/.env` loader from `pesos-mastodon.js` (the issue's claim it lived in send-digest.js was wrong).
+- ✅ **[TQ-004 / #250](https://github.com/RyanParsley/rpdc/issues/250)** Logging/env hardening. PR: `fix/logging-env-hardening`. `Logger` extracted to `src/types/logger.ts` (neutral home; posse.ts re-exports); both `console.*` sites now take an optional logger; `Webmentions.astro` relies solely on `astro:env` (no more build-time `~/.env` read); `getMimeType` throws on unknown extensions; `canonicalUrl` strips only a trailing `.md`. **Local-dev note:** if your shell sources `~/.env` (this repo's documented dev flow), nothing changes, because the token is already in the process env, which is where `astro:env` reads it. The removed fallback only ever fired for builds launched outside such a shell; for those, use the repo-root `.env` (gitignored) or direnv.
+- ✅ **[TQ-003 / #249](https://github.com/RyanParsley/rpdc/issues/249)** MSW mock shadowing removed. PR: `fix/msw-handler-shadowing`. Finding: the shadowed handlers were never actually exercised (posse suites stub `global.fetch`; nothing sent `X-Mock-Error`), so this was preventive hygiene.
+- ✅ **[TQ-001 / #247](https://github.com/RyanParsley/rpdc/issues/247)** Image helpers consolidated into `src/integrations/image.ts`. Merged via PR #255.
+- ✅ **[TQ-006 / #252](https://github.com/RyanParsley/rpdc/issues/252)** Coverage thresholds enforced + integration backfill. Closed via PR #262.
+- ✅ **[TQ-007 / #253](https://github.com/RyanParsley/rpdc/issues/253)** + **[TQ-008 / #254](https://github.com/RyanParsley/rpdc/issues/254)** Scripts lint/typecheck + cleanup pass. Closed via PR #261.
+- ✅ **[TQ-002 / #248](https://github.com/RyanParsley/rpdc/issues/248)** Type source of truth. **Decided B-plus (colocate)**, not the issue's rec A: `src/types/posse.ts` had zero importers and was wrong; the codebase's actual convention is colocation. Done on branch `refactor/posse-types`: dead type file deleted, `Logger` derived via `Pick<AstroIntegrationLogger, ...>`, `EphemeraData` derived via `z.infer` from the new shared `src/integrations/ephemera-schema.ts` (consumed by both `content.config.ts` and `posse.ts`), test-only types moved into `src/test/setup.ts`. Convention recorded in AGENTS.md.
 
 ## Ready to execute (no open decision)
 
-_(nothing — everything unblocked has shipped)_
+_(nothing. Everything unblocked has shipped)_
 
 ## Needs your decision (grilling)
 
-_(nothing — the backlog is clear)_
+_(nothing. The backlog is clear)_
 
 ## Deferred from #248
 

@@ -37,13 +37,22 @@ This project uses specialized sub-agents to maintain consistent quality across d
 
 ## Quality Gates
 
-All code changes must pass:
+Every gate below is a command. Where a rule has no command, it says so and is a
+preference, not a gate.
 
-- **TypeScript compilation** with zero errors
-- **ESLint** with zero violations
-- **Prettier** formatting
-- **Unit tests** with 100% coverage
-- **Integration tests** for critical paths
+- **Type checking**: `npx astro check`, zero errors (also runs inside `npm run build`)
+- **ESLint**: `npm run lint`, zero violations
+- **Prettier**: `npm run format:check`, zero diffs. `npm run format` fixes
+- **CSS and Astro styles**: `npm run lint:style:check`. `npm run lint:style` fixes with `--fix`
+- **Unit tests**: `npm run test:coverage`, which fails below the thresholds in `vitest.config.ts`. The floor is 80% on all four metrics; measured actual on 2026-10-14 was 90.99% statements / 85.22% branches / 97.93% functions / 91.37% lines. That measurement covers only the files a test imports, which #282 fixes. No gate claims 100%, and ADR 5 explains why the floor is a ratchet that only tightens
+- **E2E**: `npm run test:e2e` (Playwright). Not in CI yet, tracked in #290
+
+- **Prose**: `npm run lint:prose`. Vale at warning level, scoped by date: writing from
+  the current year plus the repo's own docs. Anything older than this year is
+  history and stays as published, so the gate runs against 46 files today and skips 99. `scripts/lint-prose.js` resolves each file's year from frontmatter, then the
+  path, then git's add-date, and the cutoff comes from the clock rather than a
+  hard-coded year, so next January's posts are gated without anyone editing config.
+  Measured 2026-10-14 at zero errors and zero warnings on the gated set.
 
 ## Commit Standards
 
@@ -66,7 +75,7 @@ All changes require review from relevant sub-agents:
 - **Never branch or commit in the primary checkout.** The main working copy stays on `main`; every PR gets its own git worktree
 - **Never commit on `main`.** If the pre-commit guard fires, you are in the wrong checkout: `wt switch --create <type>/<slug>`
 - **Never bypass hooks** - no `git commit --no-verify`. If a hook blocks correct work, fix what it flagged or ask. Do not go looking for a way around it
-- Use the `wt` CLI (worktrunk) so worktrees land in a consistent place and `.config/wt.toml` hooks run: `wt switch --create <type>/<slug>`
+- Use the `wt` command-line tool (worktrunk) so worktrees land in a consistent place and `.config/wt.toml` hooks run: `wt switch --create <type>/<slug>`
 - One branch = one PR = one worktree; remove it when merged with `wt remove` (deletes the branch if merged)
 - Conventional commits (enforced by commitlint)
 - Pre-commit hooks run linting/formatting; CI runs `npm run lint`, `npm run build`, `npm run test:coverage`
@@ -77,13 +86,13 @@ All changes require review from relevant sub-agents:
 - Playwright installed for E2E testing
 - Vitest configured for unit testing with TypeScript support
 - Comprehensive test coverage for POSSE integration
-- 100% type safety with no `any` types in application code
+- Full type safety with no `any` types in app code
 
 ### TypeScript Configuration
 
 - **Config file**: `tsconfig.json` extends `"astro/tsconfigs/strictest"`
-- **Strict mode**: Enabled by default (includes `noImplicitAny: true`)
-- **No `any` types**: Strictly enforced - replace with proper types
+- **Strict mode**: enabled by default (includes `noImplicitAny: true`)
+- **No `any` types**: strictly enforced - replace with proper types
 - **Null checks**: `strictNullChecks: true` enabled
 - **Build verification**: `npm run build` includes type checking
 
@@ -224,7 +233,7 @@ for (const item of items) {
 
 **For features that need to run during the build process (POSSE, RSS generation, search indexing, etc.), always use Astro integrations instead of standalone scripts.**
 
-#### ✅ Recommended: Astro Integration
+#### ✅ Recommended as an Astro integration
 
 ```typescript
 // src/integrations/feature-name.ts
@@ -243,14 +252,10 @@ export default function featureIntegration(options): AstroIntegration {
 }
 
 // astro.config.mjs
-integrations: [
-  featureIntegration({
-    /* options */
-  }),
-];
+integrations: [featureIntegration({/* options */})];
 ```
 
-#### ❌ Avoid: Standalone Scripts
+#### ❌ Avoid as a standalone script
 
 ```bash
 # .cloudcannon/postbuild
@@ -278,9 +283,13 @@ node scripts/feature-script.js
 
 - **Build**: `npm run build` (includes type checking)
 - **Dev server**: `npm run dev`
-- **Lint**: `npm run lint` (ESLint on src/)
-- **Style lint**: `npm run lint:style` (Stylelint on CSS/Astro)
-- **Format**: `npm run format` (Prettier on multiple file types)
+- **Lint**: `npm run lint` (ESLint on src/ and scripts/)
+- **Style lint**: `npm run lint:style` (Stylelint on CSS/Astro, auto-fixes)
+- **Style check**: `npm run lint:style:check` (same rules, no writes, CI uses this)
+- **Prose lint**: `npm run lint:prose` (Vale, warning level, current-year writing and
+  repo docs; see Quality Gates for the date scope)
+- **Format**: `npm run format` (Prettier on css, astro, js, mjs, ts, yml, json)
+- **Format check**: `npm run format:check` (CI uses this; add `--write` to fix)
 - **Preview**: `npm run preview`
 - **Type check**: `npx astro check`
 
@@ -296,22 +305,27 @@ node scripts/feature-script.js
 
 ### Imports & Paths
 
-- Use path aliases: `@components/*`, `@layouts/*`, `@data/*`
-- Group imports: external libs, then internal components
-- No relative imports beyond `../`
+- Use path aliases. Live today: `@components/*` and `@layouts/*`. Declared but unused: `@data/*`. Vitest-only, so they fail an `astro build` if used in app code: `@/*`, `@utils/*`, `@integrations/*`. #283 makes `tsconfig.json` the single list
+- Group imports: external libs, then internal components. No enforcer yet, #292
+- No relative imports beyond `../`. No enforcer yet, #284, with 13 violations as its starting count
 
 ### Formatting
 
-- 2-space indentation (EditorConfig)
-- Single quotes for strings
-- No semicolons (Prettier default)
+Prettier plus `.editorconfig` is the only definition of formatting here (ADR 3). These are the values `npm run format:check` enforces, which is why they are written down: an earlier version of this file listed a style the repository never had.
+
+- Tab indentation, display width 2 (`.editorconfig` `indent_style = tab`, `indent_size = 2`)
+- Double quotes
+- Semicolons
 - Trailing commas in multiline structures
+- 80-column lines (Prettier default)
+- `eslint-config-prettier` stays last in `eslint.config.mjs`, so ESLint holds no competing view on format
 
 ### Naming Conventions
 
-- PascalCase for components and types
-- camelCase for variables/functions
-- kebab-case for file names
+- PascalCase for components, layouts, types, and interfaces
+- camelCase for variables and functions
+- File names by directory (ADR 6): `.astro` files in `src/components` and `src/layouts` are PascalCase, modules in `src/utils`, `src/integrations`, and `src/types` are kebab-case
+- `src/content/**` is exempt. Those slugs become published URLs, not code style
 - UPPER_SNAKE_CASE for constants
 
 ### Error Handling

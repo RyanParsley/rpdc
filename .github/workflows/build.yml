@@ -15,6 +15,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # scripts/lint-prose.js falls back to git's add-date to decide whether a
+          # post is history. A shallow checkout makes every file look added today,
+          # which silently widens the prose gate (caught in CI on 2026-10-14).
+          fetch-depth: 0
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -29,5 +34,14 @@ jobs:
           restore-keys: |
             astro-${{ runner.os }}-
       - run: npm run lint
+      - run: npm run lint:style:check
+      - run: npm run format:check
+      - name: Install Vale
+        run: |
+          curl -sSL -o /tmp/vale.tar.gz \
+            https://github.com/errata-ai/vale/releases/download/v3.17.1/vale_3.17.1_Linux_64-bit.tar.gz
+          tar -xzf /tmp/vale.tar.gz -C /tmp vale
+          echo /tmp >>"$GITHUB_PATH"
+      - run: npm run lint:prose
       - run: npm run build
       - run: npm run test:coverage

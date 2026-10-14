@@ -1,6 +1,6 @@
 # 🚀 Astro Expert Agent
 
-**Purpose**: Provide authoritative guidance on Astro framework patterns, integrations, and best practices.
+**Purpose**: provide authoritative guidance on Astro framework patterns, integrations, and best practices.
 
 ## Astro Integration Patterns
 

@@ -5,7 +5,7 @@ pubDate: "2026-02-28T23:53:00-05:00"
 tags: ["music", "ssg", "homelab"]
 ---
 
-This is the story of self-hosting a [music portfolio](https://music.ryanparsley.com/) in my homelab using [Faircamp](https://simonrepp.com/faircamp/). I doubt you are looking to set up exactly this project with exactly this tech stack, but I suspect sharing my journey will be useful in one way or another. All in all, the process is straightforward. Perhaps, seeing that will encourage you to try for yourself.
+This is the story of self-hosting a [music portfolio](https://music.ryanparsley.com/) in my homelab using [Faircamp](https://simonrepp.com/faircamp/). I doubt you are looking to set up exactly this project with exactly this tech stack, but I suspect sharing my journey is useful in one way or another. All in all, the process is straightforward. Perhaps seeing that encourages you to try for yourself.
 
 ## What is Faircamp
 
@@ -23,7 +23,7 @@ to any static site (folder full of html) you my want to share with the world.
 ## What is even going on with your network?
 
 I have a Raspberry Pi in my homelab. Nothing about this is uniquely suited to
-that hardware though, anything you have will work just fine. It has a few
+that hardware though, anything you have works just fine. It has a few
 services running. All of them configured via Coolify, but I'm not going to use that today. To use that would get in the way of the slick minimal deploy workflow that Faircamp supports out of the box.
 
 ### How do I safely expose myself?
@@ -31,7 +31,7 @@ services running. All of them configured via Coolify, but I'm not going to use t
 I don't want to make my local network any more public than I need to. Instead
 of opening a port on my router, I'm going to make use of Cloudflare's Zero Trust Tunnel. At the time of writing, you can make use of this for free and it's a
 user-friendly way to enable a local port to be accessible to the outside
-world without having a static IP address. If all of that is Greek to you, no
+world without having a static external IP address. If all of that is Greek to you, no
 problem, the point is you don't need to deal with any of it.
 
 ### DNS friction
@@ -44,7 +44,7 @@ move control of my domain name to Cloudflare. That went pretty smoothly because 
 
 One gotcha that is easy to overlook is that the default CNAME for CloudCannon is `site.cloudcannon.com` but it does not work with Cloudflare and that needs to be changed to `orange-cloud.cloudcannon.com`.
 
-#### Here's a snapshot of what I did in the abstract to get things working.
+#### Here's a snapshot of what I did in the abstract to get things working
 
 | Type  | Name  | Content                      |
 | ----- | ----- | ---------------------------- |
@@ -87,7 +87,7 @@ needing a password each time.
 
 The only thing I had to do was give my user access to the opt folder. You'll
 likely see the same issue as this the `opt` folder is locked down by default.
-Here are my settings, yours will be different unless many fantastic coincidences line up.
+Here are my settings, yours are different unless many fantastic coincidences line up.
 
 ```bash
 sudo chown -R ryan:ryan /opt/music-site
@@ -96,6 +96,6 @@ sudo chown -R ryan:ryan /opt/music-site
 ## Tada
 
 And that's how I served up a collection of music I made via a Raspberry Pi. The
-state of the web is in a funny place where we just keep heaping complexity on
+state of the web is in a funny place where complexity keeps getting heaped on
 top of abstractions. The idea of having a single binary run over a folder of
 static files and rsyncing the result to a computer I own felt refreshing.

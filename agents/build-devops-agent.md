@@ -1,6 +1,6 @@
 # ⚙️ Build & DevOps Agent
 
-**Purpose**: Manage build processes, deployment pipelines, and development workflow optimization.
+**Purpose**: manage build processes, deployment pipelines, and development workflow optimization.
 
 ## Build Commands
 
@@ -18,7 +18,7 @@
 
 - **The primary checkout stays on `main`.** It is for browsing, merging, and
   release work only - never for editing a PR, and never a place to commit from
-- **One PR = one branch = one worktree**, created with the `wt` CLI (worktrunk):
+- **One PR = one branch = one worktree**, created with the `wt` command-line tool (worktrunk):
 
   ```bash
   wt switch --create fix/posse-media-retry   # branch + worktree + npm ci
@@ -30,7 +30,7 @@
 - **`.config/wt.toml` is the repo's worktree config** and is committed. Its
   `pre-start` hook runs `npm ci --no-audit --no-fund`, so a fresh worktree is
   immediately buildable. Hook commands require one-time approval (`wt config
-  approvals`); a missing approval looks like a broken worktree, not a config bug
+approvals`); a missing approval looks like a broken worktree, not a config bug
 - **Branch naming stays conventional-commit compatible:** `<type>/<slug>` with
   `type` in `feat|fix|refactor|docs|chore|test`, kebab-case slug, because
   commitlint scopes and PR titles mirror it

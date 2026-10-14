@@ -1,7 +1,10 @@
 import { defineCollection } from "astro:content";
 import { z } from "astro/zod";
 import { glob } from "astro/loaders";
-import { dateTransformer, ephemeraSchema } from "./integrations/ephemera-schema";
+import {
+	dateTransformer,
+	ephemeraSchema,
+} from "./integrations/ephemera-schema";
 
 const dateFields = {
 	pubDate: z.string().or(z.date()).or(z.number()).transform(dateTransformer),

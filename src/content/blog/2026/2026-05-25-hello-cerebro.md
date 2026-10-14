@@ -64,7 +64,7 @@ server to expose cortex to harnesses. I don't know if I'll keep it around, but
 when I ask an agent about one of my projects, it reads the same context I'd read
 myself and that seems nice for grounding and sharing between projects. I also
 have a skill that is aware of cortex and can make use of the cli that it seems
-just as good. Time will tell if the MCP is worth maintaining. For now, I have it
+just as good. Only time tells whether the MCP is worth maintaining. For now, I have it
 and it plays nicely with opencode.
 
 I'm not using Cerebro to write more code faster. I'm using it to connect with

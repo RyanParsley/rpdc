@@ -30,7 +30,7 @@ from local models running via pi. I'm using [pi-token-speed](https://pi.dev/pack
 ## The data
 
 Throughput stays within a token-per-second of cold or warm, so a warm prompt
-isn't faster at generating the tokens — it just starts sooner. Time to first
+isn't faster at generating the tokens. It just starts sooner. Time to first
 token is where cold and warm diverge (3 to 1 for devstral, 88 for qwen), so
 each gets its own chart.
 
