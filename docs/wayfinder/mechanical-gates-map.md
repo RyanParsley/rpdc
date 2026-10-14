@@ -180,8 +180,27 @@ autofix changes behavior in POSSE payload paths and no calibration fixes that.
 New decisions arising from implementation (for example, the exact glob floors in
 MG-001b) go on their issues as they come up, not here.
 
+One exception as of this evening: **#299**. The prose gate now fails on warnings, and
+the only alert it would have failed on is the 2026-07-31 ephemera joke, which #298
+put back after I rewrote it. That PR exempts the line with a scoped `vale off` and
+a reason comment. That is a real exemption, so it needs your yes or no.
+
+## Session state, 2026-10-14
+
+For a fresh context. Nothing here is recorded elsewhere:
+
+- **Lanes B and D no longer exist.** I created `rpdc.fix-coverage-denominator` (#282) and `rpdc.ci-e2e-pr-gate` (#290). `git cleanup` removed both, correctly, since a branch with no commits is trivially merged. Recreate with `wt switch --create`
+- **Two live worktrees:** the primary checkout on `main`, and `rpdc-tierA` on `indieweb/tier-a`, rebased onto `origin/main` today. `node_modules` there is a **symlink to the primary checkout's**, so it resolves against main's lockfile rather than its own. That branch fails `npm run lint` with 2 pre-existing errors: `webmention-sender.ts:350` (`no-useless-assignment`) and `webmention-sender.test.ts:519` (unused `_url`)
+- **Housekeeping nobody has decided on:** branches `dependencyBump` (2 commits, probably superseded by dependabot) and `backup/indieweb-tier-a-prerebase` (my safety ref before that rebase), plus stashes `WIP on dependencyBump` and `WIP on dependencyUpdates`
+- **The prose gate now fails on warnings.** Vale exits non-zero only on errors and has no fail-on-warning flag, so `scripts/lint-prose.js` parses the JSON and decides. It refuses to guess at an unrecognized `Severity`, because silently misreading those keys is what produced the bogus 0-error measurement
+- **`<!-- vale off -->` must be the entire comment.** `<!-- vale off: because reasons -->` is not a directive, and the alert just moves to another line. Put the reason in its own comment before the directive
+- **Two different tools are named `wt`.** `wt` on `PATH` is worktrunk (v0.74.0, `.config/wt.toml`, runs `npm ci` on create). `git wt` is a legacy git alias that calls `git worktree add` and then **`pnpm install`**, which is wrong for this npm-only repo. Use the `wt` command-line tool
+- **Local runs lint untracked drafts; CI does not.** The script walks the working tree, so a red local run with green CI means someone's in-progress note, not a broken main. Today's example: `note/2026-07-02-fixing-headphones-in-rocknix-on-rg351v.md` has 18 alerts and is untracked
+- **One prose alert was exempted rather than fixed:** the 2026-07-31 ephemera joke, which #298 restored after I rewrote it. It is already syndicated to Mastodon and Bluesky, so a second rewrite diverges those copies. Needs a yes or no in #299
+
 ## Backlog (sequenced after these)
 
+- **#299** prose gate strictness, plus the one exempted joke line
 - **MG-012** `recommendedTypeChecked` - leaves this map. Own wayfinder map, own
   ADR, and it must decide test-file scoping up front: of 76 measured violations,
   41 are production (`restrict-template-expressions` is 10/10 production, which
@@ -207,4 +226,6 @@ MG-001b) go on their issues as they come up, not here.
 
 ## Done
 
-_(nothing yet)_
+- **MG-001 / [#281](https://github.com/RyanParsley/rpdc/issues/281)** Tier A config gates - shipped as PR #297. `no-restricted-globals`, `no-var`, `prefer-const` on `src/**`; `eslint-config-prettier` appended; `format:check`, `lint:style:check`, `lint:prose` in CI; `.prettierignore`; corrected style claims in `AGENTS.md` and `agents/code-quality-agent.md`. Coverage thresholds deliberately excluded, see MG-001b
+- **Unplanned, and it should not have been.** The prose gate exposed that my first Vale measurement was a parse bug: `--output=JSON` keys are `Severity` and `Check`, and I read lowercase, so 828 alerts counted as suggestions. Real numbers over all of `src/content` were 54 errors and 201 warnings. Resolved by scoping the gate to current-year writing plus repo docs instead of exempting prose, then rewriting 108 alerts. `scripts/lint-prose.js` owns the date scope and takes the cutoff from the clock
+- **MG-007 / [#288](https://github.com/RyanParsley/rpdc/issues/288)** decided as option (d) under ADR 9. Implementation still open
