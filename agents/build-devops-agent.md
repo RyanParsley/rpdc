@@ -46,13 +46,13 @@
 ### Everything else
 
 - **Conventional commits** (enforced by commitlint)
-- **Never commit on `main`.** The `pre-commit` guard refuses it. If it fires, the
-  fix is a worktree (`wt switch --create <type>/<slug>`), not an override
-- **Never bypass hooks.** No `git commit --no-verify`, and no reading of the hook
-  source to find an override variable. Both skip `lint-staged` and `commitlint`
-  at once, and CI re-runs the checks against the result. Merge commits and
-  release bumps on `main` are human actions; if one is genuinely required, ask
-  rather than work around it
+- **Never commit on `main`.** The `pre-commit` guard refuses it. If it fires,
+  create a worktree with `wt switch --create <type>/<slug>`
+- **Never bypass hooks.** No `git commit --no-verify`, and no reading hook source
+  looking for a bypass. Skipping hooks skips `lint-staged` and `commitlint` at
+  once, and CI re-runs the checks against the result anyway
+- **Merge commits and release bumps on `main` are human actions.** If one seems
+  required, ask
 - **If a hook legitimately blocks correct work:** fix the file it flagged, or
   `git add` what the hook auto-modified and commit again
 - **Descriptive commit messages** with context

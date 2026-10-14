@@ -65,7 +65,7 @@ All changes require review from relevant sub-agents:
 
 - **Never branch or commit in the primary checkout.** The main working copy stays on `main`; every PR gets its own git worktree
 - **Never commit on `main`.** If the pre-commit guard fires, you are in the wrong checkout: `wt switch --create <type>/<slug>`
-- **Never bypass hooks** - no `git commit --no-verify`, no hook override variables. A merge commit or release bump on `main` is a human action, not something to unblock from an agent turn
+- **Never bypass hooks** - no `git commit --no-verify`. If a hook blocks correct work, fix what it flagged or ask. Do not go looking for a way around it
 - Use the `wt` CLI (worktrunk) so worktrees land in a consistent place and `.config/wt.toml` hooks run: `wt switch --create <type>/<slug>`
 - One branch = one PR = one worktree; remove it when merged with `wt remove` (deletes the branch if merged)
 - Conventional commits (enforced by commitlint)
