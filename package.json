@@ -80,7 +80,7 @@
     "husky": "^9.1.7",
     "jsdom": "^30.0.1",
     "lint-staged": "^17.3.0",
-    "markdown-it": "^15.0.1",
+    "markdown-it": "^15.0.3",
     "msw": "^2.15.0",
     "playwright": "^1.62.1",
     "prettier": "^3.9.6",
