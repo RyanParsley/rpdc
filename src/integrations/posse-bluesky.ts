@@ -161,6 +161,12 @@ export function parseUrlFacets(text: string): BlueskyFacet[] | undefined {
 
 	const facets = [...text.matchAll(urlRegex)]
 		.map((match) => {
+			// `index` is optional on the lib type even though `matchAll` always
+			// populates it, so it is narrowed instead of asserted (#287). The null
+			// path is the same one the invalid-URL branch below takes.
+			const { index } = match;
+			if (index === undefined) return null;
+
 			let uri = match[0];
 			let endOffset = match[0].length;
 
@@ -181,10 +187,8 @@ export function parseUrlFacets(text: string): BlueskyFacet[] | undefined {
 				return null; // Invalid URL, skip
 			}
 
-			const byteStart = encoder.encode(text.slice(0, match.index!)).length;
-			const byteEnd = encoder.encode(
-				text.slice(0, match.index! + endOffset),
-			).length;
+			const byteStart = encoder.encode(text.slice(0, index)).length;
+			const byteEnd = encoder.encode(text.slice(0, index + endOffset)).length;
 
 			if (byteStart >= byteEnd) return null;
 

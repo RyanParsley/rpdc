@@ -530,13 +530,20 @@ export async function updatePostWithSyndication(
 		const fileContent = readFileSync(sourcePath, "utf-8");
 		const { data, content } = matter(fileContent);
 
-		// Convert results to syndication format
-		const syndicationUrls = syndicationResults
-			.filter((result) => result.success && result.url)
-			.map((result) => ({
-				href: result.url!,
-				title: result.platform === "mastodon" ? "Mastodon" : "Bluesky",
-			}));
+		// Convert results to syndication format.
+		// The predicate narrows `url?: string` to `string`, which is what the
+		// assertion in the old `.map()` papered over (#287): a plain truthiness
+		// filter cannot narrow an optional property, so the `!` was load-bearing for
+		// the compiler and invisible to the reader. `!!result.url` keeps the exact
+		// predicate the old filter used, so an empty-string url is still excluded.
+		const posted = syndicationResults.filter(
+			(result): result is SyndicationResult & { url: string } =>
+				result.success && !!result.url,
+		);
+		const syndicationUrls = posted.map((result) => ({
+			href: result.url,
+			title: result.platform === "mastodon" ? "Mastodon" : "Bluesky",
+		}));
 
 		data.syndication = [...(data.syndication ?? []), ...syndicationUrls];
 
