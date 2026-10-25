@@ -7,8 +7,9 @@ import { z } from "astro/zod";
  * - src/integrations/posse.ts (types the gray-matter parse of the same files)
  */
 
-export const dateTransformer = (val: string | Date | number | undefined) =>
-	val ? new Date(val) : new Date();
+export const dateTransformer = (
+	val: string | Date | number | undefined,
+): Date => (val ? new Date(val) : new Date());
 
 export const ephemeraSchema = z.object({
 	title: z.string().optional(),

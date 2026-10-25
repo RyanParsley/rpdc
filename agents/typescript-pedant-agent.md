@@ -6,7 +6,10 @@
 
 - **Zero `any` types** - Every value must have a proper type
 - **Strict null checks** - No implicit `any` for null/undefined
-- **Explicit return types** - All exported functions must declare return types
+- **Explicit return types at boundaries** - functions in `src/integrations`,
+  `src/utils`, and `src/types` declare return types (ADR 9). Framework-dictated
+  signatures and `.astro` template closures are omitted on purpose: a restated
+  `getStaticPaths` drifts, and a closure infers its type at the call site
 - **Interface over type** - Use interfaces for object shapes, types for unions
 - **Const assertions** - Use `as const` for readonly data structures
 
