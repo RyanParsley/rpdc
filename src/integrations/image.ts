@@ -21,18 +21,18 @@ export interface ImageLogger {
 }
 
 /** Resolved image: absolute path plus its in-memory bytes. */
-export type ResolvedImage = {
+export interface ResolvedImage {
 	path: string;
 	buffer: Buffer;
-};
+}
 
 /** Full processing result consumed by platform uploaders. */
-export type ProcessedImage = {
+export interface ProcessedImage {
 	path: string;
 	buffer: Buffer;
 	size: number;
 	mimeType: string;
-};
+}
 
 // ============================================================================
 // IMAGE PROCESSING

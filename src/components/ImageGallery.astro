@@ -1,15 +1,15 @@
 ---
 import type { ImageMetadata } from "astro";
 
-export type ImageData = {
+export interface ImageData {
 	url: string;
 	alt: string;
-};
+}
 
-type Props = {
+interface Props {
 	images: ImageData[];
 	path: string;
-};
+}
 
 const { images, path } = Astro.props;
 

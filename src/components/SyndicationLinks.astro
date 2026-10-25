@@ -1,8 +1,12 @@
 ---
-export type Syndication = { href: string; title: string };
-type Props = {
+export interface Syndication {
+	href: string;
+	title: string;
+}
+
+interface Props {
 	syndication: Syndication[];
-};
+}
 const { syndication } = Astro.props;
 ---
 
