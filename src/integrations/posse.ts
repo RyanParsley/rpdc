@@ -8,6 +8,10 @@ import type { AstroIntegration } from "astro";
 
 import { postToMastodon, type MastodonConfig } from "./posse-mastodon";
 import { postToBluesky, type BlueskyConfig } from "./posse-bluesky";
+import {
+	ephemeraContentDir,
+	reportSyndicationDiagnostics,
+} from "./posse-diagnostics";
 import type { EphemeraData } from "./ephemera-schema";
 import type { Logger } from "../types/logger";
 
@@ -155,7 +159,7 @@ export function scanEphemeraPosts(
 	logger: Logger,
 ): EphemeraPost[] {
 	try {
-		const ephemeraDir = join(process.cwd(), "src", "content", "ephemera");
+		const ephemeraDir = ephemeraContentDir();
 		// Legacy cutoff: only process posts from 2025-08-30 or newer
 		const legacyCutoff = new Date("2025-08-30T00:00:00.000Z");
 
@@ -314,6 +318,9 @@ export default function posseIntegration(
 		hooks: {
 			"astro:build:done": async ({ logger }) => {
 				await runSyndication(options, logger);
+				// The counts `.cloudcannon/postbuild` used to print, after the pass so
+				// they include the links this build just wrote (#291).
+				reportSyndicationDiagnostics(logger);
 			},
 		},
 	};

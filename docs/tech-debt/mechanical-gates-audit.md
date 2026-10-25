@@ -111,21 +111,29 @@ Counts are the whole cost of the PR that gates that rule.
 
 ### `.cloudcannon/postbuild`
 
-Decided as (c): validation moves into the POSSE integration's
-`astro:build:done` hook and the script is deleted, which is what the
-"integrations, not standalone scripts" policy actually wants. Current state of
-the file: pure `echo`/`grep`/`find` diagnostics, plus a dead duplicate
-`#!/bin/bash` on line 3 that no tool inspects. shellcheck is therefore not needed
-for it; it only stays relevant if shell survives elsewhere.
+Decided as (c), and shipped that way: the syndication-count diagnostics moved to
+`src/integrations/posse-diagnostics.ts`, called from the POSSE integration's
+`astro:build:done` hook through the injected `Logger`, and the script is deleted.
+CloudCannon's hook contract is opt-in per file ("create one of the named files in
+the `.cloudcannon` folder"), the site's CloudCannon config lives in
+`cloudcannon.config.yml` at the root and declares only `build.cache` and
+`build.command`, and nothing else in the repo referenced the script - so the
+directory does not have to survive the file.
+
+Two counts changed meaning on the way in, both documented in the module header:
+link presence is read from parsed frontmatter instead of grepping for the
+`syndication:` key, and recency comes from the post's own `date` instead of
+`find -mtime -1`, which reported every file as new on a freshly checked-out CI
+runner.
 
 ## Tier D: no linter can express it, needs convention tests (ADR 8)
 
-| Rule                                                         | Test                                                                                                             |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| PascalCase components / kebab-case modules (ADR 6)           | walk `src/components`, `src/layouts`, `src/utils`, `src/integrations`, `src/types`                               |
-| tsconfig paths == vitest alias (ADR 4)                       | import both configs, compare key sets                                                                            |
-| Build-time features are integrations, not standalone scripts | assert `.cloudcannon/postbuild` has no `git`/`curl`/`fetch`, and `astro.config.mjs` registers each named feature |
-| `AGENTS.md` only claims runnable gates                       | parse the Quality Gates section, assert each named command is a `package.json` script that exits 0               |
+| Rule                                                         | Test                                                                                                  |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| PascalCase components / kebab-case modules (ADR 6)           | walk `src/components`, `src/layouts`, `src/utils`, `src/integrations`, `src/types`                    |
+| tsconfig paths == vitest alias (ADR 4)                       | import both configs, compare key sets                                                                 |
+| Build-time features are integrations, not standalone scripts | assert `.cloudcannon/postbuild` no longer exists, and `astro.config.mjs` registers each named feature |
+| `AGENTS.md` only claims runnable gates                       | parse the Quality Gates section, assert each named command is a `package.json` script that exits 0    |
 
 ## Deliberately not gated
 
