@@ -120,12 +120,19 @@ for it; it only stays relevant if shell survives elsewhere.
 
 ## Tier D: no linter can express it, needs convention tests (ADR 8)
 
-| Rule                                                         | Test                                                                                                             |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| PascalCase components / kebab-case modules (ADR 6)           | walk `src/components`, `src/layouts`, `src/utils`, `src/integrations`, `src/types`                               |
-| tsconfig paths == vitest alias (ADR 4)                       | import both configs, compare key sets                                                                            |
-| Build-time features are integrations, not standalone scripts | assert `.cloudcannon/postbuild` has no `git`/`curl`/`fetch`, and `astro.config.mjs` registers each named feature |
-| `AGENTS.md` only claims runnable gates                       | parse the Quality Gates section, assert each named command is a `package.json` script that exits 0               |
+| Rule                                                         | Test                                                                                                             | Status                                                                   |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| PascalCase components / kebab-case modules (ADR 6)           | walk `src/components`, `src/layouts`, `src/utils`, `src/integrations`, `src/types`                               | implemented: `src/conventions/file-naming.test.ts` (#289)                |
+| tsconfig paths == vitest alias (ADR 4)                       | import both configs, compare key sets                                                                            | implemented: `vitest.config.test.ts` (#283)                              |
+| Build-time features are integrations, not standalone scripts | assert `.cloudcannon/postbuild` has no `git`/`curl`/`fetch`, and `astro.config.mjs` registers each named feature | implemented: `src/conventions/build-features-are-integrations.test.ts`   |
+| `AGENTS.md` only claims runnable gates                       | parse the Quality Gates section, assert each named command is a `package.json` script that exits 0               | implemented, weaker than written: `src/conventions/agents-gates.test.ts` |
+
+"exits 0" is deliberately not what the meta-gate checks. Running every gate inside a
+unit test would shell out to `npm run build`, cost more than the rest of the suite,
+and duplicate CI in a weaker form. `agents-gates.test.ts` checks the claim is
+structurally true instead: each named command resolves to a `package.json` script or
+an installed tool, and each statement about CI matches the workflow files. Red and
+green stay CI's job.
 
 ## Deliberately not gated
 

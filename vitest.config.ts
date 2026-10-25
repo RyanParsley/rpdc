@@ -84,6 +84,10 @@ export default defineConfig({
 				"dist/",
 				".astro/",
 				"src/test/",
+				// ADR 8 / #289: repo-shape tests read the tree, they are not code the
+				// site ships. Instrumenting them would add to the denominator #282 is
+				// trying to make honest, in the wrong direction.
+				"src/conventions/",
 				"**/*.d.ts",
 				"**/*.config.{js,ts}",
 				"astro.config.mjs",
