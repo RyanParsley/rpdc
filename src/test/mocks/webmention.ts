@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import type { WebmentionEntry } from "../../utils/webmentions";
+import type { WebmentionEntry } from "@/utils/webmentions";
 
 const mention = (id: string, url: string): WebmentionEntry => ({
 	type: "entry",

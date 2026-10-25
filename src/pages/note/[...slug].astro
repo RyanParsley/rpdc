@@ -3,7 +3,7 @@ import { getCollection, render } from "astro:content";
 import Post from "@layouts/Post.astro";
 import Tags from "@components/Tags.astro";
 import Backlinks from "@components/Backlinks.astro";
-import { isPublished } from "../../content.config";
+import { isPublished } from "@/content.config";
 const { id: slug } = Astro.props;
 const posts = (await getCollection("note")).filter(isPublished);
 

@@ -1,7 +1,7 @@
 import rss from "@astrojs/rss";
 import { getCollection } from "astro:content";
-import { SITE_TITLE, SITE_DESCRIPTION } from "../../consts.ts";
-import { isPublished } from "../../content.config";
+import { SITE_TITLE, SITE_DESCRIPTION } from "@/consts.ts";
+import { isPublished } from "@/content.config";
 import { marked } from "marked";
 
 export async function GET(context) {
