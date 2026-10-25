@@ -1,0 +1,66 @@
+name: E2E CI
+
+# MG-010 / #290: `tests/*.spec.ts` are the only automated checks that render
+# `.astro` at all — coverage cannot instrument `.astro` files, so 23 components and
+# every route would otherwise ship unverified. `npm run test:e2e` existed with no
+# workflow referencing Playwright until now.
+#
+# Cost is one extra full build per PR: `playwright.config.ts` sets
+# `webServer: { command: "npm run build && npm run preview" }`, so the suite builds
+# the site itself and cannot share build.yml's `dist/`. Measured locally on
+# 2026-10-25: 47 tests pass in ~1.2m after a ~25s build.
+#
+# Triggers on pull requests only, which is what #290 decided. Pushes to main get
+# build.yml's gates; a manual `workflow_dispatch` is available for debugging the
+# suite against a specific ref.
+
+on:
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      # Before `npm ci`, whose postinstall is `npx playwright install chromium`:
+      # restored cache means that install is a no-op instead of a download.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles("package-lock.json") }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - run: npm ci
+
+      # System libraries, not browsers. `npm ci` already installs the browser
+      # through `postinstall`, so a plain `playwright install` step here would
+      # download the same Chromium twice (#290 AC: the install must not duplicate
+      # postinstall work). The libraries are what postinstall cannot provide, and
+      # without them Chromium fails to start on a clean runner image.
+      - name: Install Playwright system dependencies
+        run: sudo npx playwright install-deps chromium
+
+      - name: Run Playwright e2e
+        run: npm run test:e2e
+
+      # `trace: "retain-on-failure"` in playwright.config.ts puts the trace here,
+      # which is the difference between a CI red flag and a guess.
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 7

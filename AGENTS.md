@@ -45,7 +45,10 @@ preference, not a gate.
 - **Prettier**: `npm run format:check`, zero diffs. `npm run format` fixes
 - **CSS and Astro styles**: `npm run lint:style:check`. `npm run lint:style` fixes with `--fix`
 - **Unit tests**: `npm run test:coverage`, which fails below the thresholds in `vitest.config.ts`. The floor is 80% on all four metrics; measured actual on 2026-10-14 was 90.99% statements / 85.22% branches / 97.93% functions / 91.37% lines. That measurement covers only the files a test imports, which #282 fixes. No gate claims 100%, and ADR 5 explains why the floor is a ratchet that only tightens
-- **E2E**: `npm run test:e2e` (Playwright). Not in CI yet, tracked in #290
+- **E2E**: `npm run test:e2e` (Playwright). 47 specs, green locally in about 1.2
+  minutes after a build of about 25 seconds. Runs on every PR to `main` via
+  `.github/workflows/e2e.yml` (#290); the suite builds the site itself, so it is a
+  second full build per PR, not a free ride on the build job's `dist/`
 
 - **Prose**: `npm run lint:prose`. Vale at warning level, scoped by date: writing from
   the current year plus the repo's own docs. Anything older than this year is
