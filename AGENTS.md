@@ -311,7 +311,9 @@ node scripts/feature-script.js
   directory that exists. Used in app code today: `@components/*` and `@layouts/*`.
   Declared and unused: `@/*`, `@data/*`, `@integrations/*`, `@utils/*`
 - Group imports: external libs, then internal components. No enforcer yet, #292
-- No relative imports beyond `../`. No enforcer yet, #284, with 13 violations as its starting count
+- No relative imports beyond `../`. Gated by `no-restricted-imports` on
+  `src/**/*.{ts,astro,js}` (#284, ADR 4). ESLint has no MDX parser, so
+  `src/content/**.mdx` is outside the rule
 
 ### Formatting
 

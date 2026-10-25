@@ -3,7 +3,7 @@ import type {
 	MastodonStatusRequest,
 	MastodonStatusResponse,
 	MastodonMediaResponse,
-} from "../../types/api";
+} from "@/types/api";
 
 export const mastodonHandlers = [
 	// Instance connectivity probe

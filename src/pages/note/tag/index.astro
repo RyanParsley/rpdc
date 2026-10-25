@@ -3,7 +3,7 @@ import { getCollection } from "astro:content";
 import Layout from "@layouts/Page.astro";
 import Tags from "@components/Tags.astro";
 import PostsByTag from "@components/PostsByTag.astro";
-import { isPublished } from "../../../content.config";
+import { isPublished } from "@/content.config";
 const notes = (await getCollection("note")).filter(isPublished);
 ---
 

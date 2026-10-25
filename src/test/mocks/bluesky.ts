@@ -5,7 +5,7 @@ import type {
 	BlueskyPostRequest,
 	BlueskyPostResponse,
 	BlueskyBlobResponse,
-} from "../../types/api";
+} from "@/types/api";
 
 export const blueskyHandlers = [
 	// Authentication endpoint
