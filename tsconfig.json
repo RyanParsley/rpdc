@@ -6,9 +6,12 @@
     "strictNullChecks": true,
     "baseUrl": ".",
     "paths": {
-      "@data/*": ["data/*"],
+      "@/*": ["src/*"],
       "@components/*": ["src/components/*"],
-      "@layouts/*": ["src/layouts/*"]
+      "@data/*": ["data/*"],
+      "@integrations/*": ["src/integrations/*"],
+      "@layouts/*": ["src/layouts/*"],
+      "@utils/*": ["src/utils/*"]
     }
   }
 }
