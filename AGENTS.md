@@ -305,7 +305,11 @@ node scripts/feature-script.js
 
 ### Imports & Paths
 
-- Use path aliases. Live today: `@components/*` and `@layouts/*`. Declared but unused: `@data/*`. Vitest-only, so they fail an `astro build` if used in app code: `@/*`, `@utils/*`, `@integrations/*`. #283 makes `tsconfig.json` the single list
+- Use path aliases. `tsconfig.json` `compilerOptions.paths` is the only list
+  (ADR 4, #283): `vitest.config.ts` derives its `resolve.alias` from that file, and
+  `vitest.config.test.ts` fails if the two disagree or an alias stops pointing at a
+  directory that exists. Used in app code today: `@components/*` and `@layouts/*`.
+  Declared and unused: `@/*`, `@data/*`, `@integrations/*`, `@utils/*`
 - Group imports: external libs, then internal components. No enforcer yet, #292
 - No relative imports beyond `../`. No enforcer yet, #284, with 13 violations as its starting count
 
