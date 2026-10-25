@@ -191,7 +191,7 @@ export function findMarkdownFiles(
 ): string[] {
 	const markdownFiles: string[] = [];
 
-	function scanDirectory(currentDir: string) {
+	function scanDirectory(currentDir: string): void {
 		try {
 			const items = readdirSync(currentDir);
 

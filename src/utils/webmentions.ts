@@ -28,6 +28,13 @@ export interface WebmentionEntry {
 	"wm-private": boolean;
 }
 
+/** Aggregated reaction counts for one post and its children. */
+export interface WebmentionCounts {
+	likesAndRepostsCount: number;
+	mentionsCount: number;
+	repliesCount: number;
+}
+
 export const isProperty = (
 	item: WebmentionEntry,
 	property: string,
@@ -134,7 +141,7 @@ export const buildMastodonShareUrl = (
 	return `https://${instance}/share?text=${encodeURIComponent(postTitle)}&url=${encodeURIComponent(postUrl)}`;
 };
 
-export const computeCounts = (children: WebmentionEntry[]) =>
+export const computeCounts = (children: WebmentionEntry[]): WebmentionCounts =>
 	children.reduce(
 		({ likesAndRepostsCount, mentionsCount, repliesCount }, item) => ({
 			likesAndRepostsCount:

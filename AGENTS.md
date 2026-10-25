@@ -300,7 +300,10 @@ node scripts/feature-script.js
 - Use strictest Astro TSConfig with strict null checks
 - Define interfaces/types at file top
 - Domain types colocate with their module; cross-cutting types (`Logger`, external API wire formats) live in `src/types/`
-- Use explicit return types for exported functions
+- Use explicit return types on functions in the module-boundary directories
+  (`src/integrations`, `src/utils`, `src/types`), excluding framework-dictated
+  signatures such as `getStaticPaths` and Astro component props. ADR 9, gated by
+  `npm run lint`
 - Prefer `const` assertions for readonly data
 
 ### Imports & Paths
