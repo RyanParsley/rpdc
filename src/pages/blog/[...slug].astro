@@ -39,14 +39,10 @@ const canonicalURL = new URL(`blog/${slug}`, Astro.site)
 		baseRoute="blog/tag"
 		slot="aside"
 	/>
-	{
-		post.data.categories && (
-			<RelatedPosts
-				slot="aside"
-				categories={post.data.categories}
-				tags={post.data.tags}
-				slug={post.id}
-			/>
-		)
-	}
+	<RelatedPosts
+		slot="aside"
+		categories={post.data.categories}
+		tags={post.data.tags}
+		slug={post.id}
+	/>
 </Post>
