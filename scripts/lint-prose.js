@@ -148,9 +148,11 @@ if (gated.length === 0) {
 	process.exit(0);
 }
 
-const result = spawnSync("vale", ["--minAlertLevel=warning", ...gated], {
-	stdio: "inherit",
-});
+const result = spawnSync(
+	"vale",
+	["--output=JSON", "--minAlertLevel=warning", ...gated],
+	{ encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+);
 
 if (result.error?.code === "ENOENT") {
 	console.error(
@@ -159,4 +161,51 @@ if (result.error?.code === "ENOENT") {
 	process.exit(127);
 }
 
-process.exit(result.status ?? 1);
+/**
+ * Vale exits non-zero only for errors; warnings never fail the process, and the
+ * CLI has no "fail on any alert" flag. So the exit code is decided here from the
+ * parsed alerts, or warnings would be display-only and the gate would be a
+ * report (found in CI on 2026-10-14: "0 errors, 1 warning" passed green).
+ *
+ * JSON keys are capitalized (`Severity`, `Check`, `Message`). An alert without a
+ * recognizable Severity is treated as a tool failure rather than silently
+ * counted as passing, because misreading these keys is how a first measurement
+ * of this repo reported 0 errors when there were 54.
+ */
+let alerts;
+try {
+	alerts = JSON.parse(result.stdout || "{}");
+} catch {
+	console.error("could not parse vale JSON output");
+	console.error(result.stderr || result.stdout || "(no output)");
+	process.exit(2);
+}
+
+const KNOWN = new Set(["error", "warning", "suggestion"]);
+let errors = 0;
+let warnings = 0;
+
+for (const [file, messages] of Object.entries(alerts)) {
+	for (const alert of messages) {
+		const severity = String(alert.Severity ?? "").toLowerCase();
+		if (!KNOWN.has(severity)) {
+			console.error(
+				`unexpected vale severity ${JSON.stringify(alert.Severity)} from ${JSON.stringify(alert.Check)}; refusing to guess`,
+			);
+			process.exit(2);
+		}
+		if (severity === "suggestion") continue;
+		if (severity === "error") errors++;
+		else warnings++;
+		console.error(
+			`${file}:${alert.Line ?? 0}  ${severity}  ${alert.Message ?? ""}  (${alert.Check ?? "?"})`,
+		);
+	}
+}
+
+if (errors + warnings > 0) {
+	console.error(`prose gate failed: ${errors} errors, ${warnings} warnings`);
+	process.exit(1);
+}
+
+process.exit(0);
