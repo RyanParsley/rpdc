@@ -113,7 +113,7 @@ async function uploadImageToMastodon(
 		const imageResult = processImageForPlatform(post.image, "mastodon", logger);
 		if (!imageResult) return null;
 
-		const imageBuffer = readFileSync(imageResult.path!);
+		const imageBuffer = readFileSync(imageResult.path);
 		const mimeType = imageResult.mimeType;
 
 		logger.debug(

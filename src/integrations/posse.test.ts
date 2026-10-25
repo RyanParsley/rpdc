@@ -2041,6 +2041,24 @@ describe("Syndication Workflow", () => {
 			);
 		});
 
+		it("excludes a successful result whose url is an empty string", async () => {
+			// The predicate that replaced `result.url!` in #287 keeps the original
+			// truthiness test, so "" is still excluded rather than only undefined.
+			const post = workflowPost();
+			mockEphemeraFile(post);
+
+			await updatePostWithSyndication(
+				post,
+				[{ success: true, platform: "bluesky", url: "" }],
+				logger,
+			);
+
+			expect(matterMock.stringify).toHaveBeenCalledWith(
+				expect.any(String),
+				expect.objectContaining({ syndication: [] }),
+			);
+		});
+
 		it("refuses to rewrite a file that is not markdown", async () => {
 			const post = workflowPost({ file: "notes.txt" });
 
