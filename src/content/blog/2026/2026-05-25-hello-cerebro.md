@@ -3,7 +3,7 @@ title: "Hello Cerebro"
 description: "Introducing a tool to reduce cognitive load of when context switching between many side projects. For when minimalism isn't your style."
 pubDate: "2026-05-25"
 tags: ["ai", "tools", "rust", "notes"]
-categrories: ["code"]
+categories: ["code"]
 ---
 
 I want to introduce a tool that I've been working on for a few weeks.

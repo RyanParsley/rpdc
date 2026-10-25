@@ -3,7 +3,7 @@ title: "Billy Is Not Slop"
 description: "A comparison of Ikea furniture and agentic coding. My apologies to Ikea."
 pubDate: "2026-08-29T20:10:00-05:00"
 tags: ["ai", "code"]
-categrories: ["code", "architecture", "LLM"]
+categories: ["code", "architecture", "LLM"]
 ---
 
 Some woodworkers really dislike Ikea furniture. You assemble it, but you don't
