@@ -36,6 +36,12 @@ export default [
 			],
 			"no-var": "error",
 			"prefer-const": ["error", { destructuring: "all" }],
+			// agents/typescript-pedant-agent.md: "interface over type - use
+			// interfaces for object shapes". Scope of the rule is object-literal
+			// aliases only, so unions like `SyndicationPlatform` are untouched.
+			// Filed as #285; 8 sites converted in the same PR so the count cannot
+			// grow back.
+			"@typescript-eslint/consistent-type-definitions": ["error", "interface"],
 		},
 	},
 	// Must stay last: turns off every ESLint rule that disagrees with Prettier,

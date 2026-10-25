@@ -1,11 +1,11 @@
 ---
-type Props = {
+interface Props {
 	name: string;
 	description: string;
 	tags?: { url: string; name: string }[] | undefined;
 	url: string;
 	image?: { src: string; alt: string } | undefined;
-};
+}
 const { description, name, image, tags = [], url } = Astro.props;
 ---
 
