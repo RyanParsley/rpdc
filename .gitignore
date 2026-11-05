@@ -8,7 +8,13 @@ coverage/
 .astro/
 
 # dependencies
-node_modules/
+# No trailing slash on purpose. `node_modules/` matches directories only, so a
+# symlinked node_modules - which is what a worktree gets when someone points it at
+# the primary checkout's install to save 647M - shows up as an untracked file. That
+# makes `git status` permanently dirty in that worktree, and a routine `git add -A`
+# there would commit a symlink whose target is an absolute path on one machine.
+# `node_modules` matches the directory, the symlink, and nested installs.
+node_modules
 
 # logs
 npm-debug.log*
